@@ -11,12 +11,14 @@
     top: ['tee', 'hoodie', 'dress', 'suit', 'apron'],
     face: ['none', 'shortbeard', 'beard', 'mustache', 'stubble'],
     height: ['small', 'medium', 'tall'],
+    build: ['slim', 'medium', 'large'],
     topColor: ['#e45757', '#f29b38', '#f2d43a', '#4fb65f', '#3a8ed8', '#7a5fd6', '#e36fae', '#3b4252'],
     acc: ['none', 'glasses', 'cap', 'bow', 'headband', 'visor']
   };
   var AV_LABEL = { hair: { short: 'Short', spiky: 'Spiky', long: 'Long', ponytail: 'Ponytail', curly: 'Curly', buns: 'Two buns', bun: 'Top bun', wavy: 'Long & wavy', bald: 'Bald' },
     eyes: { round: 'Round', happy: 'Happy', wink: 'Wink' }, top: { tee: 'T-shirt', hoodie: 'Hoodie', dress: 'Dress', suit: 'Suit', apron: 'Apron' },
     height: { small: 'Small', medium: 'Medium', tall: 'Tall' },
+    build: { slim: 'Slim', medium: 'Medium', large: 'Large' },
     face: { none: 'None', shortbeard: 'Short beard', beard: 'Full beard', mustache: 'Mustache', stubble: 'Stubble' },
     acc: { none: 'None', glasses: 'Glasses', cap: 'Cap', bow: 'Bow', headband: 'Headband', visor: 'Visor' } };
   function randAvatar() {
@@ -34,6 +36,7 @@
   var STYLE_LABEL = { chibi: 'Chibi', sticker: 'Sticker', soft: 'Soft', pixel: 'Pixel' };
   /* Height (handheld-RPG "trainer" proportions): small for kids, tall for grown-ups. Town sprites also scale with it. */
   var HEIGHT_T = { small: { body: 1.1, head: 0.86, cy: 44.5 }, medium: { body: 1.16, head: 0.8, cy: 41 }, tall: { body: 1.22, head: 0.74, cy: 38 } };
+  var BUILD_X = { slim: 0.86, medium: 1, large: 1.15 };
   var HEIGHT_PX = { small: 0.8, medium: 0.95, tall: 1.14 };
   function drawAvatar(a, style) {
     a = a || randAvatar();
@@ -71,7 +74,7 @@
       s += '<circle cx="' + m[4] + '" cy="' + (m[5] + 2) + '" r="5.5" fill="' + skin + '" stroke="' + sd + '" stroke-width="2"/>';
     });
     // body
-    var torso = a.top === 'dress' ? 'M44 83 Q60 78 76 83 Q84 86 85 96 L93 132 Q60 140 27 132 L35 96 Q36 86 44 83 Z' : 'M44 83 Q60 78 76 83 Q84 86 85 96 L83 122 Q60 128 37 122 L35 96 Q36 86 44 83 Z';
+    var torso = a.top === 'dress' ? 'M44 83 Q60 78 76 83 Q84 86 85 96 L93 132 Q60 140 27 132 L35 96 Q36 86 44 83 Z' : 'M44 83 Q60 78 76 83 Q84 86 85 96 Q81 108 83 122 Q60 128 37 122 Q39 108 35 96 Q36 86 44 83 Z';
     s += '<path d="' + torso + '" fill="' + tc + '" stroke="' + td + '" stroke-width="2.2" stroke-linejoin="round"/>';
     s += '<path d="' + (a.top === 'dress' ? 'M74 84 Q84 86 85 96 L93 132 Q86 135 78 136 Q80 106 74 84 Z' : 'M74 84 Q84 86 85 96 L83 122 Q78 124 72 125 Q77 104 74 84 Z') + '" fill="#000" opacity=".1"/>';
     s += '<path d="M44 86 Q52 83 58 83" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".3"/>';
@@ -145,7 +148,8 @@
     var shadowPart = s.slice(0, iShadow), back = restyle(s.slice(iShadow, iBack)), body = restyle(s.slice(iBack, iBody)), head = restyle(s.slice(iBody));
     var headT = '', bodyT = '';
     var ht = HEIGHT_T[a.height] || HEIGHT_T.small;
-    if (ht) { bodyT = ' transform="translate(0 152) scale(1 ' + ht.body + ') translate(0 -152)"'; headT = ' transform="translate(60 ' + ht.cy + ') scale(' + ht.head + ') translate(-60 -54)"'; }
+    var bx = BUILD_X[a.build] || 1;
+    if (ht) { bodyT = ' transform="translate(60 152) scale(' + bx + ' ' + ht.body + ') translate(-60 -152)"'; headT = ' transform="translate(60 ' + ht.cy + ') scale(' + ht.head + ') translate(-60 -54)"'; }
     var inner = shadowPart + '<g' + headT + '>' + back + '</g><g' + bodyT + '>' + body + '</g><g' + headT + '>' + head + '</g>';
     if (style === 'sticker') inner = '<defs><filter id="stk" x="-15%" y="-15%" width="130%" height="130%"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feFlood flood-color="#ffffff"/><feComposite in2="d" operator="in" result="w"/><feMerge><feMergeNode in="w"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#stk)">' + inner + '</g>';
     return '<svg viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Character"' + (style === 'pixel' ? ' data-pixel="1"' : '') + '>' + inner + '</svg>';

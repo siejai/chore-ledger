@@ -197,6 +197,7 @@
     return '<section class="stack creator"><div><h2>' + (d.avatar ? 'Change your look' : adult ? 'Design your character' : 'Make your character') + '</h2><p class="note">' + (adult ? 'The kids see you in town at the spot you pick.' : 'This is you in the town. Everyone sees it when they visit.') + '</p></div>' +
       '<div class="av-preview">' + avatarSvg(a, adult) + '</div>' +
       (adult ? '' : '<div class="av-row"><span class="av-l">Height</span><div class="wrap">' + [['small', 'Small'], ['medium', 'Tall']].map(function (h) { return '<button type="button" class="cat" data-pact="av" data-k="height" data-v="' + h[0] + '" aria-pressed="' + (a.height === h[0]) + '">' + h[1] + '</button>'; }).join('') + '</div></div>') +
+      '<div class="av-row"><span class="av-l">Build</span><div class="wrap">' + ['slim', 'medium', 'large'].map(function (v) { return '<button type="button" class="cat" data-pact="av" data-k="build" data-v="' + v + '" aria-pressed="' + ((a.build || 'medium') === v) + '">' + window.CHAR.AV_LABEL.build[v] + '</button>'; }).join('') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Skin</span><div class="wrap">' + AV.skin.map(function (c, i) { return sw('skin', i, c); }).join('') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Hair</span><div class="wrap">' + word('hair') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Hair color</span><div class="wrap">' + AV.hairColor.map(function (c, i) { return sw('hairColor', i, c); }).join('') + '</div></div>' +
