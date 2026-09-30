@@ -1,0 +1,22 @@
+{
+ "id": "./bank.html",
+ "name": "Bank of Daddy",
+ "short_name": "Bank of Daddy",
+ "start_url": "./bank.html",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#123f36",
+ "theme_color": "#123f36",
+ "icons": [
+  {
+   "src": "icons/bank-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/bank-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}

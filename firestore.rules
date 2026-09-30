@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Only the household sign-in(s) listed here can read or write anything.
+    // Replace the address with the email you created in Firebase Authentication.
+    function household() {
+      return request.auth != null && request.auth.token.email in ['family@example.com'];
+    }
+    match /{document=**} {
+      allow read, write: if household();
+    }
+  }
+}
