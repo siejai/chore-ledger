@@ -320,6 +320,7 @@
     return img(key, function () { return Pz().petSvg(p, mood, f); });
   }
   function avatarImage(pid) { var a = Pz().doc(pid).avatar, key = 'av|' + JSON.stringify(a); return img(key, function () { return Pz().avatarSvg(a); }); }
+  function avatarPx(av) { return Math.round(54 * ((window.CHAR.HEIGHT_PX || {})[(av && av.height) || 'small'] || 1)); }
   function itemImage(id) { return img('item|' + id, function () { return A().itemArt(id); }); }
   function eggImage() { return img('egg', function () { return CRE.egg(); }); }
 
@@ -748,10 +749,10 @@
     }
     hostSpots().forEach(function (h) {
       list.push({ y: h.y, draw: function () {
-        var im = img('av|' + JSON.stringify(h.avatar), function () { return Pz().avatarSvg(h.avatar); });
-        sprite(im, h.x, h.y, 50, Math.sin(W.t * 1.5 + h.x) * 0.8, -1, 0, true);
+        var im = img('av|' + JSON.stringify(h.avatar), function () { return Pz().avatarSvg(h.avatar, true); });
+        sprite(im, h.x, h.y, avatarPx(h.avatar), Math.sin(W.t * 1.5 + h.x) * 0.8, -1, 0, true);
         ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        var tw = ctx.measureText(h.name).width + 10, cx = h.x * T + 16, cy = h.y * T - 24;
+        var tw = ctx.measureText(h.name).width + 10, cx = h.x * T + 16, cy = h.y * T + T - 2 - avatarPx(h.avatar) - 6;
         ctx.fillStyle = 'rgba(255,255,255,.92)'; rr(ctx, cx - tw / 2, cy - 8, tw, 16, 5); ctx.fill();
         ctx.fillStyle = '#17211e'; ctx.fillText(h.name, cx, cy);
       } });
@@ -771,7 +772,7 @@
     }
     list.push({ y: pp.y + 0.01, draw: function () {
       var bob = W.P.moving ? -Math.abs(Math.sin(W.t * 11)) * 3 : 0;
-      sprite(avatarImage(W.pid), pp.x, pp.y, 50, bob, W.P.face, 0, true);
+      sprite(avatarImage(W.pid), pp.x, pp.y, avatarPx(Pz().kidAv(Pz().doc(W.pid).avatar)), bob, W.P.face, 0, true);
       if (W.ship) { carryDraw(pp.x, pp.y, 58, W.ship.carry.slice(0, 3)); if (W.ship.mop) mopDraw(pp.x, pp.y); }
     } });
     if (W.ship && W.ship.carry.length > 3) list.push({ y: petPos.y + 0.02, draw: function () { carryDraw(petPos.x, petPos.y, 50, W.ship.carry.slice(3)); } });

@@ -1082,8 +1082,8 @@
     var st = S.settings, act = activePeople(), h = '<div class="stack" style="margin-bottom:10px">';
     if (S.parent && window.Pets) {
       var md = window.Pets.doc(S.parent.id), spot = md.spot || '';
-      h += '<section class="card stack tight you-card"><h2>You in town</h2><div class="you-row"><div class="you-av">' + (md.avatar ? window.CHAR.drawAvatar(md.avatar) : '<span class="note">No character yet</span>') + '</div>' +
-        '<div class="grow stack tight"><p class="note">Grown-ups get a character but no pet. Pick where you hang out, and the kids will find you there.</p>' +
+      h += '<section class="card stack tight you-card"><h2>You in town</h2><div class="you-row"><div class="you-av">' + (md.avatar ? window.CHAR.drawAvatar(window.Pets.adultAv(md.avatar)) : '<span class="note">No character yet</span>') + '</div>' +
+        '<div class="grow stack tight"><p class="note">Grown-ups get a character but no pet, and are always drawn tall so the kids can spot an approver. Pick where you hang out and the kids will find you there.</p>' +
         '<button class="btn primary" type="button" data-act="adultAv">' + (md.avatar ? 'Change my look' : 'Design my character') + '</button></div></div>' +
         (md.avatar ? '<div class="seg town spots" role="group" aria-label="Where you hang out">' + window.Pets.SPOTS.map(function (sp) {
           var label = sp[0] === 'bank' ? bankName() : sp[1];

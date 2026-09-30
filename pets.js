@@ -30,19 +30,22 @@
   function clamp(v) { return Math.max(0, Math.min(100, Math.round(v))); }
   function num(v) { return Math.max(0, Number(v) || 0); }
   function assign(a, b) { for (var k in b) if (b.hasOwnProperty(k)) a[k] = b[k]; return a; }
-  function avatarSvg(a) { return window.CHAR.drawAvatar(a); }
+  /* Grown-ups are always tall and kids never are, so approvers stand out at a glance. A kid's "Tall" is the medium size. */
+  function avatarSvg(a, adult) { return window.CHAR.drawAvatar(adult ? adultAv(a) : kidAv(a)); }
+  function kidAv(av) { if (!av || (av.height !== 'tall' && av.height)) return av; var o = assign({}, av); o.height = av.height === 'tall' ? 'medium' : 'small'; return o; }
   /* Grown-ups (parents) have a character but no pet. Their avatar lives in pets/{parentId} with a spot where they hang out in town. */
   var SPOTS = [['bank', 'The bank'], ['store', 'The Store'], ['park', 'The Park'], ['gate', 'Adventure Gate'], ['square', 'Town square'], ['', 'Not in town']];
   var HOST_LINE = { bank: 'Welcome to the bank! Here is your account.', store: 'Welcome to the Store! Meals keep your pet full, and bath kits (soap and shampoo) keep it clean.',
     park: 'Great day for a game of fetch!', gate: 'Big jobs done? Then adventure awaits!', square: 'Hi there! How is your pet doing today?' };
+  function adultAv(av) { if (!av || av.height === 'tall') return av; var o = assign({}, av); o.height = 'tall'; return o; }
   function hosts(kind) {
     return (S().settings.parents || []).filter(function (p) { var d = doc(p.id); return d.avatar && d.spot === kind; })
-      .map(function (p) { return { id: p.id, name: p.name, avatar: doc(p.id).avatar }; });
+      .map(function (p) { return { id: p.id, name: p.name, avatar: adultAv(doc(p.id).avatar) }; });
   }
   function hostScene(kind) {
     var hs = hosts(kind); if (!hs.length) return '';
     var line = kind === 'bank' ? 'Welcome to ' + C().bankName() + '! Here is your account.' : HOST_LINE[kind];
-    return '<div class="shop-scene host-scene">' + hs.map(function (h) { return '<div class="shopkeeper">' + avatarSvg(h.avatar) + '<small>' + esc(h.name) + '</small></div>'; }).join('') +
+    return '<div class="shop-scene host-scene">' + hs.map(function (h) { return '<div class="shopkeeper">' + avatarSvg(h.avatar, true) + '<small>' + esc(h.name) + '</small></div>'; }).join('') +
       '<div class="speech">' + esc(line) + '</div></div>';
   }
   function adultCreatorHtml(parentId) { G.adultId = parentId; return creatorHtml(parentId, true); }
@@ -184,12 +187,16 @@
   /* ----- character creator ----- */
   function creatorHtml(pid, adult) {
     var AV = window.CHAR.AV, L = window.CHAR.AV_LABEL, d = doc(pid);
+    var fresh = !G.dirtyAvatar;
     var a = G.dirtyAvatar || (d.avatar ? assign({}, d.avatar) : window.CHAR.randAvatar());
+    if (adult) a.height = 'tall';
+    else if (a.height !== 'medium') a.height = 'small';
     G.dirtyAvatar = a;
     function sw(key, i, color) { return '<button type="button" class="sw" style="background:' + color + '" data-pact="av" data-k="' + key + '" data-v="' + i + '" aria-pressed="' + (a[key] === i) + '" aria-label="' + key + ' ' + (i + 1) + '"></button>'; }
     function word(key) { return AV[key].map(function (v) { return '<button type="button" class="cat" data-pact="av" data-k="' + key + '" data-v="' + v + '" aria-pressed="' + (a[key] === v) + '">' + L[key][v] + '</button>'; }).join(''); }
     return '<section class="stack creator"><div><h2>' + (d.avatar ? 'Change your look' : adult ? 'Design your character' : 'Make your character') + '</h2><p class="note">' + (adult ? 'The kids see you in town at the spot you pick.' : 'This is you in the town. Everyone sees it when they visit.') + '</p></div>' +
-      '<div class="av-preview">' + avatarSvg(a) + '</div>' +
+      '<div class="av-preview">' + avatarSvg(a, adult) + '</div>' +
+      (adult ? '' : '<div class="av-row"><span class="av-l">Height</span><div class="wrap">' + [['small', 'Small'], ['medium', 'Tall']].map(function (h) { return '<button type="button" class="cat" data-pact="av" data-k="height" data-v="' + h[0] + '" aria-pressed="' + (a.height === h[0]) + '">' + h[1] + '</button>'; }).join('') + '</div></div>') +
       '<div class="av-row"><span class="av-l">Skin</span><div class="wrap">' + AV.skin.map(function (c, i) { return sw('skin', i, c); }).join('') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Hair</span><div class="wrap">' + word('hair') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Hair color</span><div class="wrap">' + AV.hairColor.map(function (c, i) { return sw('hairColor', i, c); }).join('') + '</div></div>' +
@@ -362,7 +369,7 @@
     var a = b.getAttribute('data-pact'), pid = me(), g = G.game;
     switch (a) {
       case 'av': var k = b.getAttribute('data-k'), v = b.getAttribute('data-v'); G.dirtyAvatar[k] = /^\d+$/.test(v) ? Number(v) : v; C().schedule(); break;
-      case 'avRandom': G.dirtyAvatar = window.CHAR.randAvatar(); C().schedule(); break;
+      case 'avRandom': var keepH = G.dirtyAvatar && G.dirtyAvatar.height; G.dirtyAvatar = window.CHAR.randAvatar(); if (keepH) G.dirtyAvatar.height = keepH; C().schedule(); break;
       case 'avEdit': G.creator = true; G.dirtyAvatar = null; G.room = null; if (window.World) window.World.unmount(); C().go(); break;
       case 'avCancel': G.creator = false; G.dirtyAvatar = null; if (G.adultId) { G.adultId = null; S().avEditFor = null; } C().go(); break;
       case 'avSave':
@@ -436,6 +443,6 @@
   window.Pets = {
     render: render, onClick: onClick, onSubmit: onSubmit, reset: reset, miniHtml: miniHtml,
     state: state, prices: prices, feed: feed, petSvg: petSvg, avatarSvg: avatarSvg, speciesName: speciesName, doc: doc,
-    roomHtml: roomHtml, mountGame: mountGame, hosts: hosts, SPOTS: SPOTS, HOST_LINE: HOST_LINE, adultCreatorHtml: adultCreatorHtml, G: G, NEEDS: NEEDS, GOOD: GOOD, LOW: LOW, coin: coin, friendCard: friendCard
+    roomHtml: roomHtml, mountGame: mountGame, hosts: hosts, adultAv: adultAv, kidAv: kidAv, SPOTS: SPOTS, HOST_LINE: HOST_LINE, adultCreatorHtml: adultCreatorHtml, G: G, NEEDS: NEEDS, GOOD: GOOD, LOW: LOW, coin: coin, friendCard: friendCard
   };
 })();
