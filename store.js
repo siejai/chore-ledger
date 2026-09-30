@@ -107,9 +107,9 @@
   function Fire(cfg) { this.cfg = cfg; this.user = null; }
   Fire.prototype.init = function () {
     var self = this;
-    return loadScript('vendor/firebase-app.js')
-      .then(function () { return loadScript('vendor/firebase-auth.js'); })
-      .then(function () { return loadScript('vendor/firebase-firestore.js'); })
+    return loadScript('firebase-app.js')
+      .then(function () { return loadScript('firebase-auth.js'); })
+      .then(function () { return loadScript('firebase-firestore.js'); })
       .then(function () {
         firebase.initializeApp(self.cfg);
         self.fs = firebase.firestore();

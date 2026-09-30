@@ -1,7 +1,7 @@
 /* Offline shell: network first, cached copy when offline. Bump VERSION when files change. */
-var VERSION = 'cl-v6';
-var SHELL = ['./', 'index.html', 'styles.css', 'config.js', 'bank.html', 'js/starter.js', 'js/creatures.js', 'js/avatar.js', 'js/pets.js', 'js/adventure.js', 'js/world.js', 'js/store.js', 'js/app.js',
-  'vendor/firebase-app.js', 'vendor/firebase-auth.js', 'vendor/firebase-firestore.js', 'icons/icon-192.png'];
+var VERSION = 'cl-v7';
+var SHELL = ['./', 'index.html', 'styles.css', 'config.js', 'bank.html', 'starter.js', 'creatures.js', 'avatar.js', 'pets.js', 'adventure.js', 'world.js', 'store.js', 'app.js',
+  'firebase-app.js', 'firebase-auth.js', 'firebase-firestore.js', 'icon-192.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
 });
