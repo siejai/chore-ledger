@@ -35,7 +35,7 @@
     wx.clearRect(0, 0, n * w, h);
     wx.drawImage(im, sx, sy, n * w, h, 0, 0, n * w, h);
     var src = wx.getImageData(0, 0, n * w, h).data, W3 = n * w * 4;
-    var po = pat >= 0 ? (3 + ((pat / 3) | 0)) * w * 4 + (pat % 3) : 0, P = pat >= 0 ? hexLin(opt.ink) : null;
+    var po = pat >= 0 ? (3 + ((pat / 3) | 0)) * w * 4 + (pat % 3) : 0, P = pat >= 0 ? hexLin(opt.ink) : null, kk = opt && opt.k ? opt.k : 1;
     var tmp = canvas(w, h), tx = tmp.getContext('2d'), od = tx.createImageData(w, h), d = od.data;
     var M = hexLin(pal.main), D = hexLin(pal.dark), L = hexLin(pal.light), A = hexLin(pal.accent);
     var dn = parseInt(String(pal.dark).slice(1), 16);
@@ -47,7 +47,7 @@
         var cov = wm + wd + wl + wa;
         if (cov + fa + ln < 0.004) { d[o + 3] = 0; continue; }
         var sh = S2L[src[b + 1]] / K, r = 0, g = 0, bl = 0, wp = 0;
-        if (pat >= 0) { wp = src[a + po] / 255; if (wp > wm) wp = wm; wm -= wp; }
+        if (pat >= 0) { wp = src[a + po] / 255 * kk; if (wp > wm) wp = wm; wm -= wp; }
         if (cov > 0) {
           r = (wm * M[0] + wd * D[0] + wl * L[0] + wa * A[0]) * sh;
           g = (wm * M[1] + wd * D[1] + wl * L[1] + wa * A[1]) * sh;
@@ -99,7 +99,7 @@
     var im = new Image();
     im.onload = function () { PIMG[layer] = im; PSTATE[layer] = 'ready'; notify(); };
     im.onerror = function () { PSTATE[layer] = 'failed'; };
-    im.src = 'people-' + layer + '.webp';
+    im.src = 'people-' + layer + '.webp' + (PM.ver && PM.ver[layer] ? '?v=' + PM.ver[layer] : '');
   }
   function shade(hex, amt) {
     var n = parseInt(String(hex).slice(1), 16), r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
@@ -110,14 +110,15 @@
     /* spec: { h: small|medium|tall, b: slim|medium|large, top, hair, face, acc, skin, hairColor, topColor, pants (bool), pantsColor,
        topPat, topInk, pantsPat, pantsInk } (colours as hex, patterns by name, 'solid' = none) */
     if (!PM || C3D.off) return null;
-    var hasPants = !!(PM.layers && PM.layers.pants), need = ['body', 'top', 'hair', 'face', 'acc'].concat(hasPants ? ['pants'] : []), i;
+    var hasPants = !!(PM.layers && PM.layers.pants), hasFr = !!(PM.layers && PM.layers.fringe) && !!(spec.bangs || spec.tendrils);
+    var need = ['body', 'top', 'hair', 'face', 'acc'].concat(hasPants ? ['pants'] : []).concat(hasFr ? ['fringe'] : []), i;
     for (i = 0; i < need.length; i++) { if (PSTATE[need[i]] === 'failed') return null; }
     var ready = true;
     for (i = 0; i < need.length; i++) if (PSTATE[need[i]] !== 'ready') { pload(need[i]); ready = false; }
     if (!ready) return false;
     view = view || 'three';
     var key = [spec.h, spec.b, spec.top, spec.hair, spec.face, spec.acc, spec.skin, spec.hairColor, spec.topColor, view,
-      spec.pants, spec.pantsColor, spec.topPat, spec.topInk, spec.pantsPat, spec.pantsInk, spec.hairFx, spec.hair2].join('|');
+      spec.pants, spec.pantsColor, spec.topPat, spec.topInk, spec.pantsPat, spec.pantsInk, spec.hairFx, spec.hair2, spec.bangs, spec.tendrils].join('|');
     if (PCACHE[key]) return PCACHE[key];
     var T = view === 'three' ? PM.T.clay : PM.T.toon, out = canvas(T, T);
     var skin = { main: spec.skin, dark: shade(spec.skin, -38), light: shade(spec.skin, 28), accent: '#ff9aa8' };
@@ -128,9 +129,14 @@
     var hb = spec.h + '.' + spec.b, parts = [['body', hb, skin]];
     if (hasPants && spec.pants !== false) parts.push(['pants', hb, pants, po(spec.pantsPat, spec.pantsInk)]);
     /* hair 2nd colour: masks in the hair sheet; a beard with grey sides goes salt-and-pepper */
-    var hfx = spec.hairFx ? { n: 4, pat: HPATS.indexOf(spec.hairFx), ink: spec.hair2 || '#8f8e93' } : null;
-    var beard = hfx && spec.hairFx === 'sides' ? { main: mix(spec.hairColor, spec.hair2, 0.4), dark: shade(mix(spec.hairColor, spec.hair2, 0.4), -34), light: shade(mix(spec.hairColor, spec.hair2, 0.4), 40), accent: spec.hairColor } : hair;
-    parts.push(['top', hb + '.' + spec.top, top, po(spec.topPat, spec.topInk)], ['face', spec.h + '.' + spec.face, beard], ['hair', spec.h + '.' + spec.hair, hair, hfx], ['acc', spec.h + '.' + spec.acc, top]);
+    /* strength: grey at the sides and highlights are blended in softly rather than painted solid */
+    var hfx = spec.hairFx ? { n: 4, pat: HPATS.indexOf(spec.hairFx), ink: spec.hair2 || '#8f8e93', k: { sides: 0.5, streaks: 0.6, tips: 0.9 }[spec.hairFx] || 1 } : null;
+    var bm = hfx && spec.hairFx === 'sides' ? mix(spec.hairColor, spec.hair2, 0.18) : null;
+    var beard = bm ? { main: bm, dark: shade(bm, -34), light: shade(bm, 40), accent: spec.hairColor } : hair;
+    parts.push(['top', hb + '.' + spec.top, top, po(spec.topPat, spec.topInk)], ['face', spec.h + '.' + spec.face, beard], ['hair', spec.h + '.' + spec.hair, hair, hfx]);
+    if (hasFr && spec.tendrils) parts.push(['fringe', spec.h + '.tendrils_' + spec.tendrils, hair, hfx ? { n: 4, pat: hfx.pat, ink: hfx.ink, k: hfx.k } : null]);
+    if (hasFr && spec.bangs) parts.push(['fringe', spec.h + '.bangs_' + spec.bangs, hair, hfx ? { n: 4, pat: hfx.pat, ink: hfx.ink, k: hfx.k } : null]);
+    parts.push(['acc', spec.h + '.' + spec.acc, top]);
     var SUB = PM.sub || {};
     for (i = 0; i < parts.length; i++) {
       var L = PM.layers[parts[i][0]], e = L && L[parts[i][1]], r = e && e[view], op = parts[i][3] || null, ns = SUB[parts[i][0]] || 3;

@@ -511,6 +511,7 @@
       top: pick(adult ? ['tee', 'tee', 'hoodie', 'dress', 'suit'] : ['tee', 'tee', 'hoodie', 'dress']),
       acc: pick(['none', 'none', 'none', 'cap', 'glasses', 'bow']), face: adult ? pick(['none', 'none', 'none', 'beard', 'shortbeard', 'mustache', 'stubble']) : 'none',
       height: adult ? 'tall' : pick(['small', 'medium']), build: pick(['slim', 'medium', 'large']),
+      bangs: pick(['none', 'none', 'none', 'straight', 'curly']), tendrils: pick(['none', 'none', 'none', 'none', 'straight', 'curly']),
       pantsColor: n('pantsColor'), topPat: pick(['solid', 'solid', 'solid', 'solid', 'dots', 'stripes', 'plaid', 'stars', 'hearts', 'camo']), pantsPat: pick(['solid', 'solid', 'solid', 'solid', 'solid', 'plaid', 'camo', 'stripes']) };
   }
   function deckOk(x, y) { var t = tile(x, y); return t === DECK || t === WET || t === PATH; }

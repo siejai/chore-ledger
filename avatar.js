@@ -7,7 +7,8 @@
     skin: ['#ffe0c7', '#f5c9a3', '#e0a878', '#c68652', '#9a5f35', '#6b3f22'],
     /* colours are saved by index, so new ones go on the end; ORDER sets how the creator lays them out */
     hairColor: ['#2b1d16', '#5a3a22', '#a0652d', '#e0b35a', '#f2e1a8', '#c2442e', '#141317', '#43281a', '#8f8e93', '#dcdad5'],
-    hairFx: ['none', 'streaks', 'sides', 'tips'],   // hair 2nd colour: highlights, grey at the sides, ombre tips
+    hairFx: ['none', 'streaks', 'sides', 'tips'],
+    bangs: ['none', 'straight', 'curly'], tendrils: ['none', 'straight', 'curly'],   // own layer over any hairstyle   // hair 2nd colour: highlights, grey at the sides, ombre tips
     hair: ['short', 'spiky', 'long', 'ponytail', 'curly', 'buns', 'bun', 'wavy', 'longcurly', 'bob', 'pigtails', 'bald'],
     eyes: ['round', 'happy', 'wink'],
     top: ['tee', 'hoodie', 'dress', 'suit', 'apron'],
@@ -37,6 +38,7 @@
     face: { none: 'None', shortbeard: 'Short beard', beard: 'Full beard', mustache: 'Mustache', stubble: 'Stubble' },
     acc: { none: 'None', glasses: 'Glasses', cap: 'Cap', bow: 'Bow', headband: 'Headband', visor: 'Visor' },
     hairFx: { none: 'None', streaks: 'Highlights', sides: 'Gray sides', tips: 'Tips' },
+    bangs: { none: 'None', straight: 'Straight', curly: 'Curly' }, tendrils: { none: 'None', straight: 'Straight', curly: 'Curly' },
     pattern: { solid: 'Plain', dots: 'Polka dots', stripes: 'Stripes', plaid: 'Plaid', stars: 'Stars', hearts: 'Hearts', camo: 'Camo' } };
   function randAvatar() {
     function r(n) { return Math.floor(Math.random() * n); }
@@ -68,7 +70,8 @@
     var pc = AV.pantsColor[a.pantsColor] || AV.pantsColor[0], tp = a.topPat || 'solid', pp = a.pantsPat || 'solid';
     var fx = a.hairFx && a.hairFx !== 'none' ? a.hairFx : '', hc2 = fx ? AV.hairColor[a.hair2] || hair2Default(fx) : '';
     var p = C3D.person({ h: h, b: a.build || 'medium', top: a.top || 'tee', hair: hairK, face: faceK, acc: accK, skin: skin, hairColor: hc, topColor: tc,
-      pants: a.top !== 'dress', pantsColor: pc, topPat: tp, topInk: patInk(tc, tp), pantsPat: pp, pantsInk: patInk(pc, pp), hairFx: fx, hair2: hc2 }, view);
+      pants: a.top !== 'dress', pantsColor: pc, topPat: tp, topInk: patInk(tc, tp), pantsPat: pp, pantsInk: patInk(pc, pp), hairFx: fx, hair2: hc2,
+      bangs: a.hair === 'bald' || !a.bangs || a.bangs === 'none' ? '' : a.bangs, tendrils: a.hair === 'bald' || !a.tendrils || a.tendrils === 'none' ? '' : a.tendrils }, view);
     if (p === null) return null;
     if (p === false) return '<svg viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Character"><ellipse cx="60" cy="154" rx="26" ry="5" fill="rgba(0,0,0,.12)"/></svg>';
     var A = p.a, T = p.T, gx = A.ground[0], gy = A.ground[1], k = (148 / TOT3[h]) * p.span / T;
@@ -82,7 +85,13 @@
     var rx = p.er[0] * hr * 1.05, ry = p.er[1] * hr * 1.05, s = '<ellipse cx="60" cy="154" rx="' + f1(hr * 0.75) + '" ry="5" fill="rgba(0,0,0,.14)"/>';
     s += '<image x="' + f1(X(0)) + '" y="' + f1(Y(0)) + '" width="' + f1(T * k) + '" height="' + f1(T * k) + '" preserveAspectRatio="none" xlink:href="' + p.url + '"/>';
     var face = '';
-    [c0, c1].forEach(function (c) { if (c) face += sq(c, '<ellipse cx="' + f1(c.x) + '" cy="' + f1(c.y) + '" rx="' + f1(hr * 0.17) + '" ry="' + f1(hr * 0.1) + '" fill="#ff8fa3" opacity=".5"/>'); });
+    /* blush sits a little in from the cheek anchor (so it stays on the face when the head is turned) and hides under a beard */
+    if (faceK !== 'beard' && faceK !== 'shortbeard') [c0, c1].forEach(function (c) {
+      if (!c) return;
+      if (m) { c.x += (m.x - c.x) * 0.3; c.y += (m.y - c.y) * 0.12; }
+      if (c.sx < 0.6) return;
+      face += sq(c, '<ellipse cx="' + f1(c.x) + '" cy="' + f1(c.y) + '" rx="' + f1(hr * 0.15) + '" ry="' + f1(hr * 0.09) + '" fill="#ff8fa3" opacity=".5"/>');
+    });
     if (a.face === 'stubble' && m) face += sq(m, '<ellipse cx="' + f1(m.x) + '" cy="' + f1(m.y + hr * 0.06) + '" rx="' + f1(hr * 0.6) + '" ry="' + f1(hr * 0.28) + '" fill="' + hc + '" opacity=".28"/>');
     if (m) {
       var mw = hr * 0.16, beard = faceK !== 'none';
@@ -185,6 +194,12 @@
         s += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + c[2] + '" fill="' + hc + '" stroke="' + hd + '" stroke-width="1.5"/>';
       });
     } else s += '<path d="' + front[a.hair || 'short'] + '" fill="' + hc + '" stroke="' + hd + '" stroke-width="2" stroke-linejoin="round"/>';
+    if (a.hair !== 'bald') {
+      if (a.bangs === 'straight') s += '<path d="M33 44 L87 44 L87 32 Q60 20 33 32 Z" fill="' + hc + '" stroke="' + hd + '" stroke-width="2" stroke-linejoin="round"/>';
+      if (a.bangs === 'curly') [36, 45, 54, 63, 72, 81].forEach(function (x, i) { s += '<circle cx="' + x + '" cy="' + (38 + (i % 2) * 3) + '" r="6.5" fill="' + hc + '" stroke="' + hd + '" stroke-width="1.5"/>'; });
+      if (a.tendrils === 'straight') s += '<path d="M31 48 Q34 64 30 82 M89 48 Q86 64 90 82" fill="none" stroke="' + hc + '" stroke-width="3.5" stroke-linecap="round"/>';
+      if (a.tendrils === 'curly') [[31, 52], [29, 59], [32, 66], [29, 73], [31, 80], [89, 52], [91, 59], [88, 66], [91, 73], [89, 80]].forEach(function (c) { s += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="3.6" fill="' + hc + '" stroke="' + hd + '" stroke-width="1.2"/>'; });
+    }
     var fx2 = a.hairFx && a.hairFx !== 'none' && a.hair !== 'bald' ? a.hairFx : '', h2 = fx2 ? AV.hairColor[a.hair2] || hair2Default(fx2) : '';
     if (fx2 === 'sides') s += '<path d="M27 58 Q26 46 31 40 Q33 50 34 60 Z M93 58 Q94 46 89 40 Q87 50 86 60 Z" fill="' + h2 + '" opacity=".9"/>';
     if (fx2 === 'streaks') s += '<path d="M42 24 Q38 34 36 46 M54 21 Q51 30 50 38 M68 21 Q71 30 72 38 M80 26 Q84 36 86 46" fill="none" stroke="' + h2 + '" stroke-width="3" stroke-linecap="round" opacity=".85"/>';

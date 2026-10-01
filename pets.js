@@ -226,6 +226,8 @@
       '<div class="av-row"><span class="av-l">Hair color</span><div class="wrap">' + swatches('hairColor') + '</div></div>' +
       (a.hair === 'bald' ? '' : '<div class="av-row"><span class="av-l">Hair 2nd color</span><div class="wrap">' + word2('hairFx', a.hairFx || 'none') + '</div>' +
         (a.hairFx && a.hairFx !== 'none' ? '<div class="wrap" style="margin-top:6px">' + swatches('hair2', 'hairColor') + '</div>' : '') + '</div>') +
+      (a.hair === 'bald' ? '' : '<div class="av-row"><span class="av-l">Bangs</span><div class="wrap">' + word2('bangs', a.bangs || 'none') + '</div></div>' +
+        '<div class="av-row"><span class="av-l">Tendrils</span><div class="wrap">' + word2('tendrils', a.tendrils || 'none') + '</div></div>') +
       '<div class="av-row"><span class="av-l">Eyes</span><div class="wrap">' + word('eyes') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Outfit</span><div class="wrap">' + word('top') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Outfit color</span><div class="wrap">' + swatches('topColor') + '</div></div>' +
