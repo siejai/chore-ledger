@@ -122,7 +122,7 @@
     tab: LS.get(MODE === 'bank' ? 'cl.ptab' : 'cl.tab') || (MODE === 'bank' ? 'approvals' : 'log'), keepTried: false,
     sel: null, date: today(), dateAuto: true, q: '', cat: 'all', sort: 'cat', quest: null,
     hist: { pid: 'all', range: '7', status: 'all' }, older: null,
-    apMode: LS.get('cl.apmode') || 'chore', apClosed: {}, queue: [],
+    apMode: LS.get('cl.apmode') || 'chore', apClosed: {}, apSkip: {}, logMode: LS.get('cl.logmode') || 'person', chOpen: null, chPick: {}, queue: [],
     bankPid: null, bankForm: null, allTx: null,
     edit: null, cq: '', showArchived: false, armed: null, dirty: false,
     wiz: { people: [], starter: true, imported: null }
@@ -161,6 +161,32 @@
   function activePeople() { return S.people.filter(function (p) { return p.active !== false; }); }
   function person(id) { return find(S.people, function (p) { return p.id === id; }); }
   function pIndex(p) { return p ? ((typeof p.order === 'number' ? p.order : 0) % 7) : 0; }
+  /* each person's color follows the shirt color they picked for their character (falls back to the palette) */
+  var AV_TOP = ['#e45757', '#f29b38', '#f2d43a', '#4fb65f', '#3a8ed8', '#7a5fd6', '#e36fae', '#8a93a6', '#a33a55', '#7f8f33', '#1f9a94', '#c4198f'];
+  function pAvatar(p) {
+    if (!p) return null; var pets = S.pets || {}, d = pets[p.id];
+    if (d && d.avatar) return d.avatar;
+    var nm = String(p.name || '').trim().toLowerCase(), par = (S.settings.parents || []).filter(function (x) { return String(x.name || '').trim().toLowerCase() === nm; })[0];
+    if (!par && isAdult(p.id)) {
+      /* no name match: the allowance account belongs to the first parent, other grown-ups take the remaining parents in order */
+      var ps = S.settings.parents || [], taken = {}, adults = (S.people || []).filter(function (x) { return isAdult(x.id); });
+      adults.forEach(function (x) { var n = String(x.name || '').trim().toLowerCase(); ps.forEach(function (q) { if (String(q.name || '').trim().toLowerCase() === n) taken[q.id] = 1; }); });
+      var free = ps.filter(function (q) { return !taken[q.id]; });
+      if (isDad(p.id)) par = free[0];
+      else { var rest = free.slice(isDad(S.settings.dadPid) && person(S.settings.dadPid) ? 1 : 0), i = adults.filter(function (x) { return !isDad(x.id); }).indexOf(p); par = rest[i]; }
+    }
+    return par && pets[par.id] && pets[par.id].avatar || null;
+  }
+  function pColor(p) { var a = pAvatar(p); return a && typeof a.topColor === 'number' ? AV_TOP[a.topColor] || null : null; }
+  function pKey(p) { return String(p && p.id || '').replace(/[^A-Za-z0-9_-]/g, '_'); }
+  function pCls(p) { return p ? 'p' + pIndex(p) + ' pc-' + pKey(p) : 'p0'; }
+  var pcsLast = '';
+  function paintPersonColors() {
+    var css = (S.people || []).map(function (p) { var c = pColor(p); return c ? '.pc-' + pKey(p) + '{--pc:' + c + '}' : ''; }).join('');
+    if (css === pcsLast) return; pcsLast = css;
+    var el = document.getElementById('pcStyle'); if (!el) { el = document.createElement('style'); el.id = 'pcStyle'; document.head.appendChild(el); }
+    el.textContent = css;
+  }
   function pname(id) { var p = person(id); return p ? p.name : 'Unknown'; }
   function isPerson(id) { return !!person(id); }
   function isDad(id) { return !!id && id === S.settings.dadPid; }
@@ -298,10 +324,20 @@
     var due = lastAllowanceDay(day);
     if (!st.allowanceLast) { saveSettings({ allowanceLast: due }).catch(function () {}); return; }
     if (st.allowanceLast >= due) return;
-    var ops = [], d = addDays(st.allowanceLast, 7), n = 0;
-    while (d <= due && n < 8) { ops = ops.concat(txOps(st.dadPid, st.allowanceCents, 'allowance', 'Weekly allowance (' + fmtDate(d) + ')')); d = addDays(d, 7); n++; }
+    /* paydays that fall inside the vacation dates are skipped (no paycheck on vacation) */
+    var vac = st.vacation || {}, pause = st.allowanceVacPause !== false && vac.from && vac.to;
+    var ops = [], d = addDays(st.allowanceLast, 7), n = 0, skipped = 0, guard = 0;
+    while (d <= due && n < 8 && guard++ < 60) {
+      if (pause && d >= vac.from && d <= vac.to) skipped++;
+      else { ops = ops.concat(txOps(st.dadPid, st.allowanceCents, 'allowance', 'Weekly allowance (' + fmtDate(d) + ')')); n++; }
+      d = addDays(d, 7);
+    }
     ops.push({ t: 'update', c: 'meta', id: 'settings', d: { allowanceLast: due } });
-    DB.commit(ops).then(function () { toast(money(st.allowanceCents * n) + ' weekly allowance deposited to ' + pname(st.dadPid)); }, fail);
+    DB.commit(ops).then(function () {
+      var msg = n ? money(st.allowanceCents * n) + ' weekly allowance deposited to ' + pname(st.dadPid) : '';
+      if (skipped) msg += (msg ? '. ' : '') + 'Skipped ' + skipped + ' payday' + (skipped > 1 ? 's' : '') + ' during vacation';
+      if (msg) toast(msg);
+    }, fail);
   }
 
   /* ================= approval queue (swipe + undo) ================= */
@@ -342,7 +378,7 @@
       touchAdmin();
       if (!S.sel || !isPerson(S.sel)) S.sel = isPerson(S.me) ? S.me : (kids()[0] || activePeople()[0] || {}).id;
       runAllowance();
-    } else { S.edit = null; S.bankForm = null; S.quest = null; S.avEditFor = null; }
+    } else { S.edit = null; S.bankForm = null; S.quest = null; S.avEditFor = null; S.txEdit = null; }
     go();
   }
   function needAdmin() {
@@ -402,7 +438,7 @@
   }
   function header(D) {
     var p = person(S.me);
-    var who = p ? '<span class="dot p' + pIndex(p) + '"></span>' + esc(p.name) : (S.me === '@parent' ? 'Parent' : 'Who?');
+    var who = p ? '<span class="dot ' + pCls(p) + '"></span>' + esc(p.name) : (S.me === '@parent' ? 'Parent' : 'Who?');
     var showTabs = S.phase === 'app' && !(MODE === 'bank' && !S.admin) && !S.picking && !!S.me;
     var tabs = tabsFor().map(function (t) {
       var badge = '';
@@ -410,7 +446,7 @@
       if (t[0] === 'bank' && D && D.reqPend.length && S.admin) badge = '<span class="badge">' + D.reqPend.length + '</span>';
       return '<button role="tab" data-tab="' + t[0] + '" aria-selected="' + (S.tab === t[0]) + '">' + t[1] + badge + '</button>';
     }).join('');
-    var title = MODE === 'bank' ? '<h1 class="bod-title">' + esc(bankName()) + '</h1>' : '<h1>Chore Ledger</h1>';
+    var title = MODE === 'bank' ? '<h1 class="bod-title">' + esc(bankName()) + '</h1>' : '<h1>Chore Quest</h1>';
     var right = S.phase !== 'app' || (MODE === 'family' && !ROLE) ? '' : MODE === 'bank'
       ? (S.admin ? '<span class="modeflag">' + esc(S.parent.name) + '</span><button class="btn small" type="button" data-act="adminToggle">Lock</button>' : '')
       : '<button class="who-btn" type="button" data-act="pick">' + who + '</button>' +
@@ -421,6 +457,7 @@
   }
   var lastShell = '';
   function render() {
+    paintPersonColors();
     raf = 0;
     var ae = document.activeElement;
     var typing = ae && view.contains(ae) && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName) && ae.type !== 'search' && ae.type !== 'file';
@@ -461,7 +498,7 @@
     else if (S.tab === 'pet') { if (window.Pets) window.Pets.render(view, D); else view.innerHTML = '<p class="note">The pet game did not load.</p>'; }
     else if (S.tab === 'approvals') renderApprovals(D);
     else if (S.tab === 'bank') renderBank(D);
-    else if (S.tab === 'history') renderHistory(D);
+    else if (S.tab === 'history') { if (S.admin && S.mtg && S.mtg.open) renderMeeting(); else renderHistory(D); }
     else renderSetup(D);
   }
   function allReady() { var r = S.ready; return r.people && r.chores && r.entries && r.txns && r.reqs && r.settings && r.pets && r.adv; }
@@ -476,7 +513,7 @@
 
   /* ----- login (Firebase mode) ----- */
   function renderLogin() {
-    root.innerHTML = '<div class="picker"><h1>' + (MODE === 'bank' ? 'Family bank' : 'Chore Ledger') + '</h1><p class="note" style="margin:6px 0 16px">Sign in once on this device with the household account.</p>' +
+    root.innerHTML = '<div class="picker"><h1>' + (MODE === 'bank' ? 'Family bank' : 'Chore Quest') + '</h1><p class="note" style="margin:6px 0 16px">Sign in once on this device with the household account.</p>' +
       '<form data-form="login" class="stack tight"><label class="field" for="lgEmail"><span>Household email</span><input id="lgEmail" type="email" autocomplete="username"></label>' +
       '<label class="field" for="lgPw"><span>Password</span><input id="lgPw" type="password" autocomplete="current-password"></label>' +
       '<button class="btn primary block" type="submit">Sign in</button></form></div>';
@@ -561,7 +598,7 @@
         var d = JSON.parse(r.result);
         if (!d || !d.people || !d.people.length || !d.chores) throw new Error('bad');
         S.wiz.imported = d; renderWizard(); toast('Family file loaded. Add your parent name and PIN, then create.');
-      } catch (e) { toast('That file is not a Chore Ledger family file.', true); }
+      } catch (e) { toast('That file is not a Chore Quest family file.', true); }
     };
     r.readAsText(file);
   }
@@ -593,14 +630,20 @@
     view.innerHTML = '<div class="picker"><h2>Who is using the app?</h2>' +
       ps.map(function (p) {
         var pet = window.Pets ? window.Pets.miniHtml(p.id) : '';
-        return '<button type="button" class="chip pick p' + pIndex(p) + (p.id === S.lastMe ? ' last' : '') + '" data-act="choose" data-pid="' + esc(p.id) + '">' + (pet || '<span class="dot"></span>') + '<span class="grow">' + esc(p.name) + '</span></button>';
+        return '<button type="button" class="chip pick ' + pCls(p) + (p.id === S.lastMe ? ' last' : '') + '" data-act="choose" data-pid="' + esc(p.id) + '">' + (pet || '<span class="dot"></span>') + '<span class="grow">' + esc(p.name) + '</span></button>';
       }).join('') +
       '<button type="button" class="chip pick" data-act="choose" data-pid="@parent"><span class="dot"></span><span class="grow">Parent</span></button>' +
       '<p class="note" style="margin-top:10px">Pick your name each time. The app comes back here after 5 minutes without use.</p></div>';
   }
 
   /* ----- Chores (log) ----- */
+  function logModeSeg() {
+    return '<div class="seg" role="group" aria-label="Log chores"><button type="button" data-act="logMode" data-m="person" aria-pressed="' + (S.logMode !== 'chore') + '">By person</button>' +
+      '<button type="button" data-act="logMode" data-m="chore" aria-pressed="' + (S.logMode === 'chore') + '">By chore</button></div>';
+  }
   function renderLog(D) {
+    if (S.admin && S.logMode === 'chore') { renderLogByChore(D); return; }
+    if (S.admin && (!S.sel || !isPerson(S.sel))) S.sel = (kids()[0] || activePeople()[0] || {}).id;
     var pid = logTarget();
     if (!pid) {
       view.innerHTML = '<div class="banner info">Unlock parent mode to log chores for anyone, or tap the name button at the top to pick a person.' +
@@ -609,6 +652,7 @@
     }
     if (!$('#logList')) {
       view.innerHTML = '<section class="stack">' +
+        '<div id="logModeBox"></div>' +
         '<div id="chips" class="wrap"></div>' +
         '<div class="wrap end"><label class="field w-md" for="date"><span>Date</span><input type="date" id="date"></label>' +
         '<button class="btn" id="todayBtn" data-act="today" type="button">Today</button></div>' +
@@ -624,10 +668,11 @@
     }
     $('#chips').innerHTML = S.admin ? activePeople().map(function (p) {
       var x = D.T(p.id);
-      return '<button type="button" class="chip p' + pIndex(p) + '" data-act="sel" data-pid="' + esc(p.id) + '" aria-pressed="' + (p.id === pid) + '"><span class="dot"></span>' + esc(p.name) +
+      return '<button type="button" class="chip ' + pCls(p) + '" data-act="sel" data-pid="' + esc(p.id) + '" aria-pressed="' + (p.id === pid) + '"><span class="dot"></span>' + esc(p.name) +
         (x.pendN ? '<b title="waiting for approval">' + x.pendN + '</b>' : '') + '</button>';
     }).join('') : '';
     $('#chips').hidden = !S.admin;
+    $('#logModeBox').innerHTML = S.admin ? logModeSeg() : '';
     var di = $('#date'); if (di && document.activeElement !== di) di.value = S.date;
     $('#todayBtn').hidden = S.date === D.t;
     var req = S.settings.requireApproval !== false;
@@ -641,6 +686,99 @@
     renderQuestBox();
     renderPassBox(pid);
     updateLogList(pid);
+  }
+  /* ----- Chores tab, by chore (parent mode): tap a chore to see everyone assigned and mark or approve them together ----- */
+  function boardChores() {
+    var vac = window.ADV && ADV.onVacation();
+    return S.chores.filter(function (c) { return c.active !== false && (c.who || []).length && (!vac || !c.homeOnly); });
+  }
+  function choreStatus(cid, pid) {
+    var es = S.entries.filter(function (e) { return e.cid === cid && e.pid === pid && e.date === S.date; }), qd = queuedIds();
+    if (es.some(function (e) { return e.status === 'pending' && !qd[e.id]; })) return 'wait';
+    if (es.some(function (e) { return e.status === 'approved' || (e.status === 'pending' && qd[e.id]); })) return 'ok';
+    if (es.some(function (e) { return e.status === 'rejected'; })) return 'no';
+    return 'none';
+  }
+  function picked(cid, pid, st) { var k = cid + '|' + pid; return S.chPick.hasOwnProperty(k) ? S.chPick[k] : st === 'wait'; }
+  function renderLogByChore(D) {
+    if (!$('#choreList')) {
+      view.innerHTML = '<section class="stack">' + '<div id="logModeBox">' + logModeSeg() + '</div>' +
+        '<div class="wrap end"><label class="field w-md" for="date"><span>Date</span><input type="date" id="date"></label>' +
+        '<button class="btn" id="todayBtn" data-act="today" type="button">Today</button></div>' +
+        '<p class="note">Tap a chore to see everyone it is assigned to. Tick who did it, then approve them all at once. Anyone not logged yet gets logged and approved.</p>' +
+        '<div class="cats" id="cats"></div>' +
+        '<div class="wrap"><div class="field w-lg"><input type="search" id="q" placeholder="Search chores" aria-label="Search chores"></div></div>' +
+        '<ul class="list board" id="choreList"></ul></section>';
+      $('#q').value = S.q;
+    }
+    var di = $('#date'); if (di && document.activeElement !== di) di.value = S.date;
+    $('#todayBtn').hidden = S.date === D.t;
+    updateChoreBoard();
+  }
+  function updateChoreBoard() {
+    var ul = $('#choreList'); if (!ul) return;
+    var all = boardChores(), cats = catList(all), per = {}, waits = {}, nwait = 0;
+    all.forEach(function (c) { var n = catName(c); per[n] = (per[n] || 0) + 1; });
+    var ids = {}, qd = queuedIds(); all.forEach(function (c) { ids[c.id] = 1; });
+    S.entries.forEach(function (e) { if (e.date === S.date && e.status === 'pending' && !qd[e.id] && ids[e.cid] && !waits[e.cid]) { waits[e.cid] = 1; nwait++; } });
+    if (S.cat === '$w' && !nwait) S.cat = 'all';
+    if (S.cat !== 'all' && S.cat !== '$' && S.cat !== '$w' && cats.indexOf(S.cat) < 0) S.cat = 'all';
+    $('#cats').innerHTML = cats.length > 1 || nwait ? '<button type="button" class="cat" data-act="cat" data-cat="all" aria-pressed="' + (S.cat === 'all') + '">All<small>' + all.length + '</small></button>' +
+      (nwait ? '<button type="button" class="cat" data-act="cat" data-cat="$w" aria-pressed="' + (S.cat === '$w') + '">Waiting<small>' + nwait + '</small></button>' : '') +
+      (cats.length > 1 ? cats.map(function (n) { return '<button type="button" class="cat" data-act="cat" data-cat="' + esc(n) + '" aria-pressed="' + (S.cat === n) + '">' + esc(n) + '<small>' + per[n] + '</small></button>'; }).join('') : '') : '';
+    var list = all.filter(function (c) { return S.cat === 'all' ? true : S.cat === '$w' ? !!waits[c.id] : S.cat === '$' ? c.bountyCents > 0 : catName(c) === S.cat; });
+    var q = trim(S.q).toLowerCase();
+    if (q) list = list.filter(function (c) { return c.name.toLowerCase().indexOf(q) >= 0 || catName(c).toLowerCase().indexOf(q) >= 0; });
+    var order = catList(S.chores);
+    list.sort(function (a, b) { return (order.indexOf(catName(a)) - order.indexOf(catName(b))) || ((a.order || 0) - (b.order || 0)); });
+    if (!list.length) { ul.innerHTML = '<li class="empty">No chores match.</li>'; return; }
+    ul.innerHTML = list.map(function (c) {
+      var ppl = (c.who || []).map(person).filter(function (p) { return p && p.active !== false; });
+      var sts = ppl.map(function (p) { return choreStatus(c.id, p.id); });
+      var nw = sts.filter(function (x) { return x === 'wait'; }).length, nok = sts.filter(function (x) { return x === 'ok'; }).length, open = S.chOpen === c.id;
+      var tags = (nw ? '<span class="tag pend">' + nw + ' waiting</span>' : '') + (nok ? '<span class="tag ok">' + nok + ' of ' + ppl.length + ' done</span>' : '') +
+        (!nw && !nok ? '<span class="tag">' + ppl.length + ' assigned</span>' : '') + (c.bountyCents > 0 ? '<span class="tag bounty">' + money(c.bountyCents) + ' bounty</span>' : '');
+      var h = '<li class="crow' + (open ? ' open' : '') + (nw ? ' has-wait' : '') + '"><button type="button" class="crow-head" data-act="chOpen" data-cid="' + esc(c.id) + '" aria-expanded="' + open + '">' +
+        '<span class="rname">' + esc(c.name) + '<span class="meta">' + tags + '</span></span><span class="pts mono">+' + c.pts + '</span><span class="chev" aria-hidden="true">' + (open ? '&#9652;' : '&#9662;') + '</span></button>';
+      if (open) {
+        var n = 0;
+        h += '<div class="crow-body">' + ppl.map(function (p, i) {
+          var st = sts[i], on = st === 'ok' || picked(c.id, p.id, st);
+          if (on && st !== 'ok') n++;
+          var lab = { wait: 'waiting', ok: 'approved', no: 'sent back', none: 'not yet' }[st];
+          var pend = st === 'wait' ? find(S.entries, function (e) { return e.cid === c.id && e.pid === p.id && e.date === S.date && e.status === 'pending' && !e.questId; }) : null;
+          return '<div class="cperson ' + pCls(p) + '"><label class="cp-main"><input type="checkbox" data-act="chPick" data-cid="' + esc(c.id) + '" data-pid="' + esc(p.id) + '"' + (on ? ' checked' : '') + (st === 'ok' ? ' disabled' : '') + '>' +
+            '<span class="dot"></span><span class="grow">' + esc(p.name) + '</span><span class="cp-st st-' + st + '">' + lab + '</span></label>' +
+            (pend ? '<button class="btn small danger" type="button" data-act="rjUnit" data-key="e' + esc(pend.id) + '" aria-label="Send back ' + esc(p.name) + '">&#10005;</button>' : '') + '</div>';
+        }).join('') +
+          '<div class="crow-foot"><button class="btn small" type="button" data-act="chAll" data-cid="' + esc(c.id) + '">Everyone</button><button class="btn small" type="button" data-act="chNone" data-cid="' + esc(c.id) + '">Nobody</button>' +
+          '<button class="btn primary" type="button" data-act="chGo" data-cid="' + esc(c.id) + '"' + (n ? '' : ' disabled') + '>Approve ' + (n || '') + '</button></div></div>';
+      }
+      return h + '</li>';
+    }).join('');
+  }
+  function choreGo(cid) {
+    var c = find(S.chores, function (x) { return x.id === cid; }); if (!c) return;
+    var ppl = (c.who || []).map(person).filter(function (p) { return p && p.active !== false; });
+    var wait = [], fresh = [];
+    ppl.forEach(function (p) {
+      var st = choreStatus(cid, p.id);
+      if (st === 'ok' || !picked(cid, p.id, st)) return;
+      if (st === 'wait') wait.push(p.id); else fresh.push(p.id);
+    });
+    var units = pendingUnits().filter(function (u) { return u.cid === cid && u.entries.some(function (e) { return wait.indexOf(e.pid) >= 0; }); });
+    var names = wait.concat(fresh).map(pname);
+    if (units.length) queueDecision(units, 'approved', c.name + ' (' + wait.map(pname).join(', ') + ')');
+    if (fresh.length) {
+      if (c.bountyCents > 0) {
+        var sh = {}, each = Math.floor(100 / fresh.length), left = 100 - each * fresh.length;
+        fresh.forEach(function (pid, i) { sh[pid] = each + (i === 0 ? left : 0); });
+        addQuest(c, sh, S.date);
+      } else saveEntries(fresh.map(function (pid) { return newEntry(pid, S.date, c); })).catch(fail);
+    }
+    Object.keys(S.chPick).forEach(function (k) { if (k.indexOf(cid + '|') === 0) delete S.chPick[k]; });
+    if (names.length) toast('Approved ' + c.name + ': ' + names.join(', '));
+    schedule();
   }
   function renderPassBox(pid) {
     var box = $('#passBox'); if (!box || !window.ADV) return;
@@ -663,7 +801,7 @@
       '<p class="note">' + money(c.bountyCents) + ' plus ' + c.pts + ' pts. If others helped, split it by how much of the work each person did.</p>' +
       '<div class="list">' + ps.map(function (p) {
         var v = q.shares[p.id] || 0;
-        return '<div class="row' + (v ? ' done' : '') + '"><span class="dot p' + pIndex(p) + '" style="margin-right:8px"></span><div class="rname">' + esc(p.name) +
+        return '<div class="row' + (v ? ' done' : '') + '"><span class="dot ' + pCls(p) + '" style="margin-right:8px"></span><div class="rname">' + esc(p.name) +
           (v ? '<div class="meta note">' + money(Math.floor(c.bountyCents * v / 100)) + '</div>' : '') + '</div>' +
           '<div class="step"><button type="button" data-act="qshare" data-pid="' + esc(p.id) + '" data-d="-10"' + (v ? '' : ' disabled') + ' aria-label="Less for ' + esc(p.name) + '">&minus;</button>' +
           '<span class="n" style="min-width:48px">' + v + '%</span><button type="button" class="plus" data-act="qshare" data-pid="' + esc(p.id) + '" data-d="10"' + (total >= 100 ? ' disabled' : '') + ' aria-label="More for ' + esc(p.name) + '">+</button></div></div>';
@@ -687,6 +825,7 @@
       '<button type="button" class="plus" data-act="inc" data-cid="' + esc(c.id) + '" aria-label="Log: ' + esc(c.name) + '">+</button></div></li>';
   }
   function updateLogList(pid) {
+    if (S.admin && S.logMode === 'chore') { updateChoreBoard(); return; }
     var ul = $('#logList'); if (!ul) return;
     pid = pid || logTarget();
     var cnt = {}, used = {};
@@ -698,8 +837,8 @@
         if (e.status === 'approved') x.a++; else if (e.status === 'pending') x.p++; else x.r++;
       }
     });
-    var vac = window.ADV && ADV.onVacation() && S.chores.some(function (c) { return c.travel && c.active !== false; });
-    var mine = S.chores.filter(function (c) { return c.active !== false && (c.who || []).indexOf(pid) >= 0 && (!vac || c.travel); });
+    var vac = window.ADV && ADV.onVacation();
+    var mine = S.chores.filter(function (c) { return c.active !== false && (c.who || []).indexOf(pid) >= 0 && (!vac || !c.homeOnly); });
     var cats = catList(mine);
     if (S.cat !== 'all' && S.cat !== '$' && cats.indexOf(S.cat) < 0) S.cat = 'all';
     var per = {}; mine.forEach(function (c) { var n = catName(c); per[n] = (per[n] || 0) + 1; });
@@ -778,28 +917,47 @@
     h += '<p class="note swipe-hint">Swipe right to approve, left to deny. Undo appears at the bottom.</p>';
     h += groupUnits(units, mode).map(function (g) {
       var open = !S.apClosed[g.key], n = g.units.length, p = g.pid ? person(g.pid) : null;
-      if (n === 1) return '<div class="agrp single"><div class="list">' + swipeRow(g.units[0], 'full', t) + '</div></div>';
+      if (n === 1 && mode !== 'chore') return '<div class="agrp single"><div class="list">' + swipeRow(g.units[0], 'full', t) + '</div></div>';
       var names = uniq(g.units.map(function (u) { return mode === 'chore' ? unitWho(u) : u.name; }));
       var sum = names.slice(0, 4).join(', ') + (names.length > 4 ? ' +' + (names.length - 4) + ' more' : '');
-      var head = '<div class="agrp-head"><div class="grow"><div class="agrp-title">' + (p ? '<span class="dot p' + pIndex(p) + '"></span> ' : '') + esc(g.title) + '</div>' +
+      var picked = g.units.filter(function (u) { return !S.apSkip[u.key]; }).length;
+      var btn = picked === n ? 'Approve' + (n > 1 ? ' all ' + n : '') : 'Approve ' + picked + ' of ' + n;
+      var head = '<div class="agrp-head"><div class="grow"><div class="agrp-title">' + (p ? '<span class="dot ' + pCls(p) + '"></span> ' : '') + esc(g.title) + '</div>' +
         '<div class="note">' + n + ' waiting &middot; ' + n0(g.pts) + ' pts' + (g.cents ? ' &middot; ' + money(g.cents) + ' bounty' : '') + '</div>' +
-        (open ? '' : '<div class="note agrp-sum">' + esc(sum) + '</div>') + '</div>' +
-        '<div class="agrp-btns"><button class="btn small primary" type="button" data-act="apGroup" data-key="' + esc(g.key) + '">Approve ' + (n > 1 ? 'all ' + n : '') + '</button>' +
+        (open || mode === 'chore' ? '' : '<div class="note agrp-sum">' + esc(sum) + '</div>') + '</div>' +
+        '<div class="agrp-btns"><button class="btn small primary" type="button" data-act="apGroup" data-key="' + esc(g.key) + '"' + (picked ? '' : ' disabled') + '>' + btn + '</button>' +
         '<button class="btn small" type="button" data-act="apToggle" data-key="' + esc(g.key) + '" aria-expanded="' + open + '">' + (open ? 'Hide' : 'Show') + '</button></div></div>';
-      var body = !open ? '' : '<div class="list">' + g.units.map(function (u) { return swipeRow(u, mode, t); }).join('') + '</div>';
-      return '<div class="agrp">' + head + body + '</div>';
+      var body = !open ? '' : '<div class="list">' + g.units.map(function (u) { return swipeRow(u, mode, t, mode === 'chore'); }).join('') + '</div>';
+      return '<div class="agrp">' + head + (mode === 'chore' ? roster(g, t) : '') + body + '</div>';
     }).join('');
     h += '<div class="ap-foot"><button class="btn primary block" type="button" data-act="apRest">Approve remaining (' + units.length + ')</button></div>';
     if (window.ADV) h += ADV.passesAdminHtml();
     view.innerHTML = h + '</section>';
   }
-  function swipeRow(u, mode, t) {
+  /* everyone assigned to a chore and where they are with it today: waiting, approved, sent back, or not done yet */
+  function roster(g, t) {
+    var ch = find(S.chores, function (c) { return c.id === g.cid; });
+    var ids = ch && ch.who && ch.who.length ? ch.who : [];
+    if (!ids.length) return '';
+    var chips = ids.map(function (pid) {
+      var p = person(pid); if (!p || p.active === false) return '';
+      var es = S.entries.filter(function (e) { return e.cid === g.cid && e.pid === pid && e.date === t; }), st = 'none', lab = 'not yet';
+      if (es.some(function (e) { return e.status === 'pending'; })) { st = 'wait'; lab = 'waiting'; }
+      else if (es.some(function (e) { return e.status === 'approved'; })) { st = 'ok'; lab = 'approved'; }
+      else if (es.some(function (e) { return e.status === 'rejected'; })) { st = 'no'; lab = 'sent back'; }
+      return '<span class="rchip st-' + st + ' ' + pCls(p) + '"><span class="dot"></span>' + esc(p.name) + ' <small>' + lab + '</small></span>';
+    }).join('');
+    return chips ? '<div class="roster" aria-label="Assigned today">' + chips + '</div>' : '';
+  }
+  function swipeRow(u, mode, t, sel) {
     var who = unitWho(u), label, sub;
     var up = !u.quest ? person(u.entries[0].pid) : null;
     if (mode === 'full') { label = u.name; sub = who + ' &middot; '; }
     else { label = mode === 'chore' ? who : u.name + (u.quest ? ' (' + who + ')' : ''); sub = ''; }
     return '<div class="swipe-wrap"><div class="swipe-bg"><span class="ok">Approve</span><span class="no">Deny</span></div>' +
-      '<div class="hrow swipe' + (up ? ' p' + pIndex(up) : '') + '" data-key="' + esc(u.key) + '">' + (up && mode !== 'person' ? '<span class="dot"></span>' : '') + '<div class="desc">' + esc(label) +
+      '<div class="hrow swipe' + (up ? ' ' + pCls(up) : '') + '" data-key="' + esc(u.key) + '">' +
+      (sel ? '<label class="ap-sel" aria-label="Include in Approve"><input type="checkbox" data-act="apSel" data-key="' + esc(u.key) + '"' + (S.apSkip[u.key] ? '' : ' checked') + '></label>' : '') +
+      (up && mode !== 'person' ? '<span class="dot"></span>' : '') + '<div class="desc">' + esc(label) +
       '<small>' + (mode === 'full' ? esc(who) + ' &middot; ' : '') + (u.date === t ? 'Today' : esc(fmtDate(u.date))) + ' ' + esc(fmtTime(u.ts)) + (u.cents ? ' &middot; ' + money(u.cents) + ' bounty' : '') + '</small></div>' +
       '<span class="amt plus">+' + u.pts + '</span>' +
       '<span class="ap-btns"><button class="btn small ok-btn" type="button" data-act="apUnit" data-key="' + esc(u.key) + '" aria-label="Approve">&#10003;</button><button class="btn small danger" type="button" data-act="rjUnit" data-key="' + esc(u.key) + '" aria-label="Deny">&#10005;</button></span></div></div>';
@@ -828,7 +986,7 @@
   function pt(e) { var t = e.touches && e.touches[0] || e.changedTouches && e.changedTouches[0] || e; return { x: t.clientX, y: t.clientY }; }
   function swipeStart(e) {
     var el = e.target.closest ? e.target.closest('.swipe') : null;
-    if (!el || (e.target.closest('button'))) return;
+    if (!el || e.target.closest('button') || e.target.closest('.ap-sel')) return;
     var p = pt(e); drag = { el: el, x0: p.x, y0: p.y, dx: 0, on: false };
   }
   function swipeMove(e) {
@@ -906,18 +1064,61 @@
     if (D.reqPend.length) h += '<div><h2>Purchase requests</h2>' + reqList(D.reqPend, true) + '</div>';
     h += '<div><h2>Accounts</h2><ul class="accts">' + ps.map(function (p) {
       var b = Number(p.balance) || 0, meta = acctMeta(p, D);
-      return '<li><button type="button" class="acct p' + pIndex(p) + '" data-act="acct" data-pid="' + esc(p.id) + '"><span class="dot"></span><span class="nm">' + esc(p.name) + (meta ? '<small>' + meta + '</small>' : '') + '</span>' +
+      return '<li><button type="button" class="acct ' + pCls(p) + '" data-act="acct" data-pid="' + esc(p.id) + '"><span class="dot"></span><span class="nm">' + esc(p.name) + (meta ? '<small>' + meta + '</small>' : '') + '</span>' +
         '<span class="bal' + (b < 0 ? ' neg' : '') + '">' + money(b) + '</span><span class="chev">&rsaquo;</span></button></li>';
     }).join('') + '</ul></div>';
     var recent = S.txns.slice(0, 15);
     h += '<div><h2>Recent activity</h2>' + (recent.length ? '<div class="list ledger">' + recent.map(function (t) { return txRow(t, true); }).join('') + '</div>' : '<p class="note">No money has moved yet.</p>') + '</div>';
     view.innerHTML = h + '</section>';
   }
+  var PENCIL = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5 4 20z" fill="#f2c14e" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.5 7l3 3" stroke="currentColor" stroke-width="1.8"/><path d="M4 20l1-4.5 3 3z" fill="currentColor"/></svg>';
   function txRow(t, showName) {
-    var p = person(t.pid), by = t.by ? parentName(t.by) : '';
-    return '<div class="hrow p' + pIndex(p) + '">' + (showName ? '<span class="dot"></span>' : '') + '<div class="desc">' + esc(t.memo || KIND[t.kind] || 'Transaction') +
-      '<small>' + (showName ? esc(pname(t.pid)) + ' &middot; ' : '') + esc(KIND[t.kind] || '') + ' &middot; ' + esc(fmtShort(t.ts)) + (by && S.admin ? ' &middot; ' + esc(by) : '') + '</small></div>' +
-      '<span class="amt ' + (t.cents >= 0 ? 'plus' : 'minus') + '">' + signed(t.cents) + '</span></div>';
+    var p = person(t.pid), by = t.by ? parentName(t.by) : '', edit = S.admin;
+    var h = '<div class="hrow ' + pCls(p) + (S.txEdit === t.id ? ' editing' : '') + '">' + (showName ? '<span class="dot"></span>' : '') + '<div class="desc">' + esc(t.memo || KIND[t.kind] || 'Transaction') +
+      '<small>' + (showName ? esc(pname(t.pid)) + ' &middot; ' : '') + esc(KIND[t.kind] || '') + ' &middot; ' + esc(fmtShort(t.ts)) + (by && S.admin ? ' &middot; ' + esc(by) : '') +
+      (t.edited && S.admin ? ' &middot; edited' + (t.editedBy ? ' by ' + esc(parentName(t.editedBy)) : '') : '') + '</small></div>' +
+      '<span class="amt ' + (t.cents >= 0 ? 'plus' : 'minus') + '">' + signed(t.cents) + '</span>' +
+      (edit && S.txEdit !== t.id ? '<button class="tx-edit-btn" type="button" data-act="txEdit" data-id="' + esc(t.id) + '" aria-label="Edit this transaction" title="Edit">' + PENCIL + '</button>' : '') + '</div>';
+    if (edit && S.txEdit === t.id) {
+      var partner = txPartner(t);
+      h += '<form class="tx-edit card" data-form="txedit" data-id="' + esc(t.id) + '">' +
+        '<div class="wrap end"><label class="field w-lg" for="teMemo"><span>Description</span><input type="text" id="teMemo" maxlength="80" value="' + esc(t.memo || '') + '"></label>' +
+        '<label class="field w-sm" for="teAmt"><span>Amount ($)</span><input type="text" id="teAmt" inputmode="decimal" value="' + dollars(Math.abs(t.cents)) + '"></label></div>' +
+        '<p class="note">' + (t.cents < 0 ? 'This comes out of' : 'This goes into') + ' ' + esc(pname(t.pid)) + '’s balance, which updates to match.' +
+        (partner ? ' It is a transfer, so ' + esc(pname(partner.pid)) + '’s side changes too.' : '') +
+        (t.kind === 'payday' || t.kind === 'bounty' ? ' Deleting it does not un-pay the chores.' : '') + '</p>' +
+        '<div class="wrap"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="txCancel">Cancel</button>' +
+        '<button class="btn' + (S.armed === 'txdel' + t.id ? ' danger' : '') + '" type="button" data-act="txDelete" data-id="' + esc(t.id) + '">' + (S.armed === 'txdel' + t.id ? 'Tap again to delete' : 'Delete') + '</button></div></form>';
+    }
+    return h;
+  }
+  /* the other half of a transfer: linked by pair id, or (older transfers) same timestamp and opposite amount */
+  function txPartner(t) {
+    if (t.kind !== 'transfer') return null;
+    var pool = S.txns.concat(S.allTx ? S.allTx.list : []), hit = null;
+    pool.forEach(function (x) {
+      if (hit || x.id === t.id || x.kind !== 'transfer') return;
+      if ((t.pair && x.pair === t.pair) || (!t.pair && x.ts === t.ts && x.cents === -t.cents)) hit = x;
+    });
+    return hit;
+  }
+  function findTx(id) { var pool = S.txns.concat(S.allTx ? S.allTx.list : []); for (var i = 0; i < pool.length; i++) if (pool[i].id === id) return pool[i]; return null; }
+  function txSaveOps(t, memo, cents) {
+    var delta = cents - t.cents, stamp = { edited: Date.now(), editedBy: S.parent ? S.parent.id : '' };
+    var ops = [{ t: 'update', c: 'txns', id: t.id, d: assign({ memo: memo, cents: cents }, stamp) }];
+    if (delta) ops.push({ t: 'update', c: 'people', id: t.pid, d: { balance: DB.inc(delta) } });
+    var partner = txPartner(t);
+    if (partner && delta) {
+      ops.push({ t: 'update', c: 'txns', id: partner.id, d: assign({ cents: -cents }, stamp) });
+      ops.push({ t: 'update', c: 'people', id: partner.pid, d: { balance: DB.inc(-delta) } });
+    }
+    return ops;
+  }
+  function txDeleteOps(t) {
+    var ops = [{ t: 'delete', c: 'txns', id: t.id }, { t: 'update', c: 'people', id: t.pid, d: { balance: DB.inc(-t.cents) } }];
+    var partner = txPartner(t);
+    if (partner) ops.push({ t: 'delete', c: 'txns', id: partner.id }, { t: 'update', c: 'people', id: partner.pid, d: { balance: DB.inc(-partner.cents) } });
+    return ops;
   }
   function reqList(list, showName) {
     return '<div class="list">' + list.map(function (r) {
@@ -932,7 +1133,7 @@
             (short ? '<small class="note fullrow">Balance is ' + money(p ? p.balance : 0) + '. Approving goes below zero.</small>' : '');
         } else if (owner) acts = '<button class="btn small" type="button" data-act="reqCancel" data-id="' + esc(r.id) + '">Cancel</button>';
       }
-      return '<div class="hrow p' + pIndex(p) + '">' + (showName ? '<span class="dot"></span>' : '') + '<div class="desc">' + esc(r.item) +
+      return '<div class="hrow ' + pCls(p) + '">' + (showName ? '<span class="dot"></span>' : '') + '<div class="desc">' + esc(r.item) +
         '<small>' + (showName ? esc(pname(r.pid)) + ' &middot; ' : '') + esc(fmtShort(r.ts)) + (r.note ? ' &middot; ' + esc(r.note) : '') + '</small></div>' +
         '<span class="amt minus">' + money(r.cents) + '</span>' + stamp + acts + '</div>';
     }).join('') + '</div>';
@@ -1019,7 +1220,7 @@
   }
   function renderHistory() {
     var rows = histRows(), f = S.hist;
-    var html = '<section><h2>Chore history</h2><div class="wrap end">' +
+    var html = (S.admin ? meetingCard() : '') + '<section><h2>Chore history</h2><div class="wrap end">' +
       (S.admin ? '<label class="field w-md" for="hPid"><span>Person</span><select id="hPid" data-hist="pid">' + opt('all', 'Everyone', f.pid) +
         S.people.map(function (p) { return opt(esc(p.id), esc(p.name) + (p.active === false ? ' (archived)' : ''), f.pid); }).join('') + '</select></label>' : '') +
       '<label class="field w-md" for="hRange"><span>Period</span><select id="hRange" data-hist="range">' + opt('7', 'Last 7 days', f.range) + opt('30', 'Last 30 days', f.range) + opt('month', 'This month', f.range) + opt('all', 'Everything', f.range) + '</select></label>' +
@@ -1040,7 +1241,7 @@
             var canRm = !r.paid && !r.bountyPaid && (r.status === 'pending' || S.admin);
             if (S.admin && r.status === 'rejected') acts += '<button class="btn small" type="button" data-act="reopen" data-id="' + esc(r.id) + '">Reopen</button>';
             if (canRm) acts += '<button class="btn small' + (S.armed === key ? ' danger' : '') + '" type="button" data-act="rm" data-id="' + esc(r.id) + '">' + (S.armed === key ? 'Confirm remove' : 'Remove') + '</button>';
-            return '<div class="hrow p' + pIndex(p) + (r.status === 'rejected' ? ' rej' : '') + '"><span class="dot"></span><div class="desc">' + esc(r.name) + (r.questId ? ' (' + r.share + '%)' : '') +
+            return '<div class="hrow ' + pCls(p) + (r.status === 'rejected' ? ' rej' : '') + '"><span class="dot"></span><div class="desc">' + esc(r.name) + (r.questId ? ' (' + r.share + '%)' : '') +
               '<small>' + esc(pname(r.pid)) + ' &middot; ' + esc(fmtTime(r.ts)) + (by && r.status !== 'pending' ? ' &middot; ' + (r.status === 'approved' ? 'approved' : 'denied') + ' by ' + esc(by) : '') +
               (r.bountyCents ? ' &middot; ' + money(r.bountyCents) + ' bounty' : '') + (r.paid ? ' &middot; paid' : '') + '</small></div>' + tagFor(r.status) +
               '<span class="amt plus">+' + r.pts + '</span>' + acts + '</div>';
@@ -1048,6 +1249,161 @@
       }).join('');
     }
     view.innerHTML = html + '</section>';
+  }
+  /* ================= family meeting =================
+   * A meeting is a marker (meetings/{id}: ts, date, by, notes, snap). The report covers everything since the chosen marker;
+   * snap holds each kid's pet level, stage, tickets, Mess Defense round and balance so the report can show what changed. */
+  function mtgLoadList() {
+    return DB.query({ c: 'meetings', orderBy: ['ts', 'desc'], limit: 25 }).then(function (l) {
+      l.sort(function (a, b) { return b.ts - a.ts; }); S.mtgList = l; return l;
+    });
+  }
+  function meetingCard() {
+    if (!S.mtgList) { if (!S.mtgListLoading) { S.mtgListLoading = true; mtgLoadList().then(schedule, function () { S.mtgList = []; }); } }
+    var last = (S.mtgList || [])[0], days = last ? Math.max(0, Math.round((parseD(today()) - parseD(last.date)) / 864e5)) : 0;
+    return '<section class="card mtg-card"><div class="row-flex"><div class="grow"><h2>Family meeting</h2><p class="note">' +
+      (last ? 'Everything since your last meeting on ' + esc(fmtDate(last.date)) + ' (' + (days === 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago') + ').'
+        : 'Chores, money, pets and games since the last meeting. Start your first meeting to set the marker.') + '</p></div>' +
+      '<button class="btn primary" type="button" data-act="mtgOpen">Open report</button></div></section>';
+  }
+  function mtgSince() {
+    var m = S.mtg, list = S.mtgList || [], k = m.since;
+    if (k === '7' || k === '30') return { ts: parseD(addDays(today(), -Number(k))).getTime(), label: 'Last ' + k + ' days', snap: null };
+    var mt = find(list, function (x) { return x.id === k; }) || list[0];
+    if (!mt) return { ts: parseD(addDays(today(), -30)).getTime(), label: 'Last 30 days', snap: null, none: true };
+    return { ts: mt.ts, label: 'Since the meeting on ' + fmtDate(mt.date), date: mt.date, snap: mt.snap || null, meeting: mt };
+  }
+  function mtgLoad() {
+    var m = S.mtg, tok = m.tok = (m.tok || 0) + 1; m.loading = true; schedule();
+    var sn = mtgSince(), from = dstr(new Date(sn.ts));
+    Promise.all([
+      DB.query({ c: 'entries', where: [['date', '>=', from]] }),
+      DB.query({ c: 'txns', where: [['ts', '>=', sn.ts]] })
+    ]).then(function (r) {
+      if (S.mtg !== m || m.tok !== tok) return;
+      m.entries = r[0].filter(function (e) { return e.ts ? e.ts >= sn.ts : e.date >= from; });
+      m.txns = r[1]; m.loading = false; schedule();
+    }, function (e) { m.loading = false; fail(e); });
+  }
+  function mtgSnap() {
+    var snap = {};
+    S.people.forEach(function (p) {
+      if (p.active === false) return;
+      var d = (S.pets || {})[p.id] || {}, pet = d.pet || {};
+      snap[p.id] = { balance: Number(p.balance) || 0, level: Number(pet.level) || 0, stage: Number(pet.stage) || 0, sp: pet.sp || '', name: pet.name || '',
+        tickets: Number(d.tickets) || 0, def: Number(d.defLevel) || 0, house: (d.house || []).length };
+    });
+    return snap;
+  }
+  function mtgData() {
+    var m = S.mtg, sn = mtgSince(), snap = sn.snap || {}, out = [], adults = [];
+    var nDays = Math.max(1, Math.round((parseD(today()) - parseD(dstr(new Date(sn.ts)))) / 864e5));
+    activePeople().forEach(function (p) {
+      var es = (m.entries || []).filter(function (e) { return e.pid === p.id; });
+      var ok = es.filter(function (e) { return e.status === 'approved'; }), pts = 0, byName = {}, dayset = {};
+      ok.forEach(function (e) { pts += Number(e.pts) || 0; byName[e.name] = (byName[e.name] || 0) + 1; dayset[e.date] = 1; });
+      var top = Object.keys(byName).sort(function (a, b) { return byName[b] - byName[a]; }).slice(0, 3).map(function (k) { return { name: k, n: byName[k] }; });
+      var row = { p: p, done: ok.length, pts: pts, waiting: es.filter(function (e) { return e.status === 'pending'; }).length,
+        back: es.filter(function (e) { return e.status === 'rejected'; }).length, days: Object.keys(dayset).length, top: top };
+      if (isAdult(p.id)) { if (es.length) adults.push(row); return; }
+      var tx = (m.txns || []).filter(function (t) { return t.pid === p.id; }), inC = 0, outC = 0, spent = [];
+      tx.forEach(function (t) { var c = Number(t.cents) || 0; if (c >= 0) inC += c; else { outC += c; spent.push(t); } });
+      spent.sort(function (a, b) { return a.cents - b.cents; });
+      var d = (S.pets || {})[p.id] || {}, pet = d.pet || null, was = snap[p.id] || null;
+      row.money = { inC: inC, outC: outC, bal: Number(p.balance) || 0, spent: spent.slice(0, 3) };
+      row.pet = pet; row.was = was;
+      row.lv = pet && was && was.sp === pet.sp ? (Number(pet.level) || 0) - was.level : null;
+      row.evolved = !!(pet && was && was.sp === pet.sp && (pet.stage || 0) > was.stage);
+      row.newPet = !!(pet && was && was.sp && was.sp !== pet.sp);
+      row.tickets = Number(d.tickets) || 0; row.dTickets = was ? row.tickets - was.tickets : null;
+      row.def = Number(d.defLevel) || 0; row.dDef = was ? row.def - was.def : null;
+      row.movedIn = (d.house || []).filter(function (h) { return h.retired && h.retired >= dstr(new Date(sn.ts)); });
+      out.push(row);
+    });
+    return { sn: sn, kids: out, adults: adults, nDays: nDays };
+  }
+  function mtgShout(kids) {
+    function best(f, min) { var b = null; kids.forEach(function (r) { var v = f(r); if (v != null && v >= (min || 1) && (!b || v > f(b))) b = r; }); return b; }
+    var sh = [], a = best(function (r) { return r.done; }), b = best(function (r) { return r.pts; }), c = best(function (r) { return r.lv; }), d = best(function (r) { return r.days; }, 2);
+    if (a) sh.push(['Most chores', a.p.name + ' (' + a.done + ')']);
+    if (b && b !== a) sh.push(['Most points', b.p.name + ' (' + n0(b.pts) + ')']);
+    if (c) sh.push(['Biggest pet glow-up', c.p.name + ' (+' + c.lv + ' level' + (c.lv === 1 ? '' : 's') + ')']);
+    if (d && d !== a) sh.push(['Most days helping', d.p.name + ' (' + d.days + ')']);
+    kids.forEach(function (r) { if (r.evolved) sh.push(['Evolved!', r.p.name + '’s ' + (r.pet.name || 'pet') + ' is now a ' + (window.Pets ? Pets.speciesName(r.pet) : 'new form')]); });
+    return sh;
+  }
+  function delta(n, unit) { return n == null ? '' : n > 0 ? ' <b class="up">(+' + n0(n) + (unit || '') + ')</b>' : n < 0 ? ' <span class="note">(' + n0(n) + (unit || '') + ')</span>' : ''; }
+  function renderMeeting() {
+    var m = S.mtg, list = S.mtgList || [];
+    if (m.since != null && !m.entries && !m.loading) mtgLoad();
+    var sel = '<label class="field grow" for="mtgSince"><span>Since</span><select id="mtgSince" data-mtg="since">' +
+      list.map(function (x, i) { return opt(esc(x.id), (i === 0 ? 'Last meeting, ' : 'Meeting, ') + esc(fmtDate(x.date)), m.since || (list[0] && list[0].id)); }).join('') +
+      opt('7', 'Last 7 days', m.since) + opt('30', 'Last 30 days', m.since) + '</select></label>';
+    var h = '<section class="mtg"><div class="row-flex"><button class="btn small" type="button" data-act="mtgClose">&larr; History</button></div>' +
+      '<h2 style="margin-top:10px">Family meeting</h2><div class="wrap end">' + sel + '</div>';
+    if (m.since == null || m.loading || !m.entries) { view.innerHTML = h + '<p class="note" style="margin-top:14px">Gathering everything up&hellip;</p></section>'; return; }
+    var D = mtgData(), sn = D.sn, kids = D.kids, tot = { done: 0, pts: 0, inC: 0, lv: 0 };
+    kids.concat(D.adults).forEach(function (r) { tot.done += r.done; tot.pts += r.pts; });
+    kids.forEach(function (r) { tot.inC += r.money.inC; if (r.lv > 0) tot.lv += r.lv; });
+    h += '<p class="note" style="margin-top:8px">' + esc(sn.label) + ' &middot; ' + D.nDays + ' day' + (D.nDays === 1 ? '' : 's') + (sn.none ? ' (no meeting yet)' : '') + '</p>';
+    if (sn.meeting && sn.meeting.notes) h += '<div class="card mtg-notes"><div class="grp" style="margin:-14px -14px 10px;border-radius:var(--r) var(--r) 0 0">Notes from that meeting</div><p style="white-space:pre-wrap;margin:0">' + esc(sn.meeting.notes) + '</p></div>';
+    h += '<div class="mtg-tot">' + [[n0(tot.done), 'chores done'], [n0(tot.pts), 'points'], [money(tot.inC), 'earned by kids'], [sn.snap ? n0(tot.lv) : '&ndash;', 'pet levels']].map(function (x) {
+      return '<div class="card"><div class="big-num">' + x[0] + '</div><div class="note">' + x[1] + '</div></div>'; }).join('') + '</div>';
+    var sh = mtgShout(kids);
+    if (sh.length) h += '<div class="card mtg-shout"><h3>Shout-outs</h3>' + sh.map(function (x) { return '<div class="hrow"><span class="tag">' + esc(x[0]) + '</span><span class="grow">' + esc(x[1]) + '</span></div>'; }).join('') + '</div>';
+    h += kids.map(function (r) {
+      var p = r.p, pet = r.pet, parts = [];
+      var head = '<div class="mtg-kid-head"><span class="dot ' + pCls(p) + '"></span><strong class="grow">' + esc(p.name) + '</strong><span class="mono">' + n0(r.pts) + ' pts</span></div>';
+      var chores = '<div class="mtg-line"><b>Chores</b> ' + (r.done ? r.done + ' done on ' + r.days + ' day' + (r.days === 1 ? '' : 's') : 'none yet') +
+        (r.waiting ? ' &middot; ' + r.waiting + ' waiting' : '') + (r.back ? ' &middot; ' + r.back + ' sent back' : '') +
+        (r.top.length ? '<br><small class="note">' + r.top.map(function (t) { return esc(t.name) + (t.n > 1 ? ' &times;' + t.n : ''); }).join(', ') + '</small>' : '') + '</div>';
+      var mon = '<div class="mtg-line"><b>Money</b> ' + (r.money.inC ? '<span class="amt plus">+' + money(r.money.inC) + '</span> in' : 'nothing in') + (r.money.outC ? ' &middot; <span class="amt">' + money(r.money.outC) + '</span> out' : '') +
+        ' &middot; now ' + money(r.money.bal) + (r.money.spent.length ? '<br><small class="note">Spent on: ' + r.money.spent.map(function (t) { return esc(t.memo || KIND[t.kind] || 'something') + ' ' + money(-t.cents); }).join(', ') + '</small>' : '') + '</div>';
+      var petl = '';
+      if (pet) {
+        petl = '<div class="mtg-line mtg-pet"><span class="mini-pet">' + (window.Pets ? Pets.petSvg(pet, 'happy') : '') + '</span><div class="grow"><b>' + esc(pet.name || 'Pet') + '</b> the ' + esc(window.Pets ? Pets.speciesName(pet) : '') +
+          ' &middot; Lv ' + (pet.level || 0) + delta(r.lv) + (r.evolved ? ' <span class="tag">Evolved!</span>' : '') + (r.newPet ? ' <span class="tag">New pet!</span>' : '') +
+          '<br><small class="note">' + n0(r.tickets) + ' tickets' + delta(r.dTickets) + (r.def ? ' &middot; Mess Defense round ' + r.def + delta(r.dDef) : '') +
+          (r.movedIn.length ? ' &middot; moved into the house: ' + r.movedIn.map(function (x) { return esc(x.name); }).join(', ') : '') + '</small></div></div>';
+      }
+      return '<div class="card mtg-kid ' + pCls(p) + '">' + head + chores + mon + petl + '</div>';
+    }).join('');
+    if (D.adults.length) h += '<div class="card"><h3>Grown-ups pitched in</h3>' + D.adults.map(function (r) { return '<div class="hrow"><span class="dot ' + pCls(r.p) + '"></span><span class="grow" style="margin-left:8px">' + esc(r.p.name) + '</span><span class="mono">' + r.done + ' chore' + (r.done === 1 ? '' : 's') + '</span></div>'; }).join('') + '</div>';
+    h += '<div class="card stack tight"><h3>Wrap up</h3><label class="field" for="mtgNotes"><span>Notes and agreements for this meeting (optional)</span><textarea id="mtgNotes" rows="3" placeholder="e.g. Xander takes over trash night. Pizza if everyone hits 100 points.">' + esc(m.notes || '') + '</textarea></label>' +
+      '<p class="note">Starting a new meeting saves these notes and today’s levels and balances, so the next report starts from here.</p>' +
+      '<div class="wrap"><button class="btn" type="button" data-act="mtgShare">Share summary</button><button class="btn primary' + (S.armed === 'mtgStart' ? ' danger' : '') + '" type="button" data-act="mtgStart">' + (S.armed === 'mtgStart' ? 'Tap again to start' : 'Start new meeting') + '</button></div></div>';
+    view.innerHTML = h + '</section>';
+  }
+  function mtgText() {
+    var D = mtgData(), t = ['Family meeting, ' + fmtDate(today()), D.sn.label + ' (' + D.nDays + ' days)', ''];
+    mtgShout(D.kids).forEach(function (x) { t.push('★ ' + x[0] + ': ' + x[1]); });
+    D.kids.forEach(function (r) {
+      if (!r.done && !r.money.inC && !r.money.outC && !r.pet) return;
+      t.push('', r.p.name + ': ' + r.done + ' chore' + (r.done === 1 ? '' : 's') + ', ' + n0(r.pts) + ' pts' + (r.money.inC ? ', +' + money(r.money.inC) : '') + (r.money.outC ? ', ' + money(r.money.outC) + ' spent' : '') + ', balance ' + money(r.money.bal));
+      if (r.pet) t.push('  ' + (r.pet.name || 'Pet') + ' Lv ' + (r.pet.level || 0) + (r.lv ? ' (+' + r.lv + ')' : '') + (r.evolved ? ', evolved!' : '') + ', ' + r.tickets + ' tickets');
+    });
+    if (S.mtg.notes) t.push('', 'Notes: ' + S.mtg.notes);
+    return t.join('\n');
+  }
+  function mtgShare() {
+    var el = $('#mtgNotes'); if (el) S.mtg.notes = el.value;
+    var txt = mtgText();
+    if (navigator.share) { navigator.share({ title: 'Family meeting', text: txt }).catch(function () {}); return; }
+    function fallback() {
+      var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+      var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta); toast(ok ? 'Summary copied. Paste it into your family chat.' : 'Could not copy on this device.', !ok);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { toast('Summary copied. Paste it into your family chat.'); }, fallback);
+    else fallback();
+  }
+  function mtgStart() {
+    var el = $('#mtgNotes'); if (el) S.mtg.notes = el.value;
+    var id = DB.newId('meetings'), rec = { ts: Date.now(), date: today(), by: S.parent ? S.parent.id : '', notes: trim(S.mtg.notes || ''), snap: mtgSnap() };
+    DB.commit([{ t: 'set', c: 'meetings', id: id, d: rec }]).then(function () {
+      toast('New meeting started. The next report picks up from here.');
+      S.mtg = { open: false }; S.mtgList = null; S.mtgListLoading = false; go();
+    }, fail);
   }
   function downloadCsv() {
     var rows = histRows();
@@ -1099,6 +1455,7 @@
       '<div class="wrap end"><label class="field w-md" for="dad"><span>Weekly allowance goes to</span><select id="dad"><option value="">Nobody</option>' + act.map(function (p) { return opt(esc(p.id), esc(p.name), st.dadPid); }).join('') + '</select></label>' +
       '<label class="field w-sm" for="allow"><span>Amount ($)</span><input type="text" id="allow" inputmode="decimal" value="' + dollars(st.allowanceCents) + '"></label>' +
       '<label class="field w-md" for="aday"><span>Every</span><select id="aday">' + DAYS.map(function (d, i) { return opt(String(i), d, String(st.allowanceDay)); }).join('') + '</select></label></div>' +
+      '<div class="checks"><label><input type="checkbox" id="aVacPause"' + (st.allowanceVacPause !== false ? ' checked' : '') + '>Pause the weekly allowance during vacation (uses the vacation dates below)</label></div>' +
       '<div class="wrap end"><label class="field w-sm" for="fcoins"><span>Food coins per kitchen chore</span><input type="number" id="fcoins" min="1" step="1" value="' + (st.foodCoins || 10) + '"></label>' +
       '<label class="field w-sm" for="mprice"><span>Meal price</span><input type="number" id="mprice" min="1" step="1" value="' + (st.mealPrice || 10) + '"></label>' +
       '<label class="field w-sm" for="ccoins"><span>Care coins per self-care chore</span><input type="number" id="ccoins" min="1" step="1" value="' + (st.careCoins || 10) + '"></label>' +
@@ -1121,7 +1478,7 @@
       '<label class="field w-sm" for="vMin"><span>Minutes a day on vacation</span><input type="number" id="vMin" min="5" step="5" value="' + ac.vacMinutes + '"></label></div>' +
       '<div class="checks"><label><input type="checkbox" id="vAuto"' + (ac.vacAutoPass ? ' checked' : '') + '>On vacation, passes are automatic (no approvals needed in the car)</label></div>' +
       '<div class="wrap"><button class="btn primary" type="submit">Save</button>' + (S.chores.some(function (c) { return c.travel; }) ? '' : '<button class="btn" type="button" data-act="addTravel">Add travel chores</button>') + '</div>' +
-      '<p class="note">Mark big jobs in the chore editor. A kid earns a pass when their big jobs are approved; when every big job in the house is done, everyone gets a pass and can find a rare egg. During vacation the chore list shows only travel chores, pets get hungry and dirty half as fast and never starve.</p></form>';
+      '<p class="note">Mark big jobs in the chore editor. A kid earns a pass when their big jobs are approved; when every big job in the house is done, everyone gets a pass and can find a rare egg. During vacation every chore still works (untick Works while traveling in the chore editor for home-only ones), big jobs come from the trip big jobs, and pets get hungry and dirty half as fast and never starve.</p></form>';
     var parents = st.parents || [];
     h += '<section class="stack tight"><h2>Parents</h2><div class="list">' + parents.map(function (p) {
       var me = S.parent && p.id === S.parent.id;
@@ -1138,7 +1495,7 @@
       '<p class="note">Each parent unlocks with their own PIN, and the history shows who approved what. On shared devices parent mode locks after 10 minutes without use.</p></section>';
     h += '<section class="stack tight"><h2>People</h2><div class="list">' + S.people.map(function (p) {
       var off = p.active === false;
-      return '<div class="srow' + (off ? ' off' : '') + ' p' + pIndex(p) + '"><span class="dot"></span><label class="field grow" for="pn_' + esc(p.id) + '"><span>' + (off ? 'Archived' : 'Name') + '</span>' +
+      return '<div class="srow' + (off ? ' off' : '') + ' ' + pCls(p) + '"><span class="dot"></span><label class="field grow" for="pn_' + esc(p.id) + '"><span>' + (off ? 'Archived' : 'Name') + '</span>' +
         '<input type="text" id="pn_' + esc(p.id) + '" data-act="rename" data-pid="' + esc(p.id) + '" value="' + esc(p.name) + '" maxlength="40"></label>' +
         (isDad(p.id) ? '<span class="tag plain">Grown-up</span>' : '<button class="btn small" type="button" data-act="toggleAdult" data-pid="' + esc(p.id) + '" aria-pressed="' + !!p.adult + '">' + (p.adult ? 'Grown-up' : 'Kid') + '</button>') +
         '<button class="btn small" type="button" data-act="togglePerson" data-pid="' + esc(p.id) + '">' + (off ? 'Restore' : 'Archive') + '</button></div>';
@@ -1173,7 +1530,7 @@
         var who = (c.who || []).map(pname), nd = needOf(c);
         html += '<li class="srow' + (c.active === false ? ' off' : '') + '"><div class="grow">' + esc(c.name) + (c.active === false ? ' (archived)' : '') +
           (nd ? ' <span class="tag plain">' + NEED_LABEL[nd] + '</span>' : '') + (c.bountyCents > 0 ? ' <span class="tag bounty">' + money(c.bountyCents) + '</span>' : '') +
-          (c.major ? ' <span class="tag big">Big job' + (c.majorEach ? ', everyone' : '') + '</span>' : '') + (c.travel ? ' <span class="tag plain">Travel</span>' : '') +
+          (c.major ? ' <span class="tag big">Big job' + (c.majorEach ? ', everyone' : '') + '</span>' : '') + (c.travel && c.major ? ' <span class="tag plain">Trip big job</span>' : '') + (c.homeOnly ? ' <span class="tag plain">Home only</span>' : '') +
           '<br><small>' + (who.length ? esc(who.join(', ')) : 'Nobody assigned') + '</small></div>' +
           '<span class="pts mono">+' + c.pts + '</span><button class="btn small" type="button" data-act="editChore" data-cid="' + esc(c.id) + '">Edit</button></li>';
       });
@@ -1193,9 +1550,11 @@
       '<fieldset><legend>Who can do it</legend><div class="checks">' + act.map(function (p) {
         return '<label><input type="checkbox" name="who" value="' + esc(p.id) + '"' + (who.indexOf(p.id) >= 0 ? ' checked' : '') + '>' + esc(p.name) + '</label>';
       }).join('') + '</div></fieldset>' +
-      '<div class="checks"><label><input type="checkbox" id="ceMajor"' + (c && c.major ? ' checked' : '') + '>Big job (counts toward Adventure Passes)</label>' +
+      '<div class="checks"><label><input type="checkbox" id="ceTravel"' + (c && c.homeOnly ? '' : ' checked') + '>Works while traveling</label>' +
+      '<label><input type="checkbox" id="ceMajor"' + (c && c.major ? ' checked' : '') + '>Big job (counts toward Adventure Passes)</label>' +
       '<label><input type="checkbox" id="ceEach"' + (c && c.majorEach ? ' checked' : '') + '>Everyone assigned must do it</label>' +
-      '<label><input type="checkbox" id="ceTravel"' + (c && c.travel ? ' checked' : '') + '>Travel chore (shown in vacation mode)</label></div>' +
+      '<label><input type="checkbox" id="ceTrip"' + (c && c.travel ? ' checked' : '') + '>Big job on trips only (not at home)</label>' +
+      '</div>' +
       '<fieldset><legend>Big job on these days (none checked means every day)</legend><div class="checks">' + ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(function (dl, i) {
         return '<label><input type="checkbox" name="mday" value="' + i + '"' + (c && c.majorDays && c.majorDays.indexOf(i) >= 0 ? ' checked' : '') + '>' + dl + '</label>';
       }).join('') + '</div></fieldset>' +
@@ -1231,7 +1590,7 @@
     if (tabBtn) {
       flushQueue();
       S.tab = tabBtn.getAttribute('data-tab'); LS.set(MODE === 'bank' ? 'cl.ptab' : 'cl.tab', S.tab);
-      S.edit = null; S.bankForm = null; S.bankPid = null; S.picking = false; S.quest = null; S.avEditFor = null;
+      S.edit = null; S.bankForm = null; S.bankPid = null; S.picking = false; S.quest = null; S.avEditFor = null; S.txEdit = null;
       if (window.Pets) window.Pets.reset();
       go(); return;
     }
@@ -1257,6 +1616,12 @@
         S.tab = S.me === '@parent' ? S.tab : 'log'; go(); break;
       case 'sel': S.sel = d('pid'); S.quest = null; schedule(); break;
       case 'cat': S.cat = d('cat'); updateLogList(); break;
+      case 'logMode': S.logMode = d('m'); LS.set('cl.logmode', S.logMode); S.cat = 'all'; view.innerHTML = ''; go(); break;
+      case 'chOpen': S.chOpen = S.chOpen === d('cid') ? null : d('cid'); updateChoreBoard(); break;
+      case 'chAll': case 'chNone':
+        (function (cid, on) { var c = find(S.chores, function (x) { return x.id === cid; }); if (!c) return; (c.who || []).forEach(function (pid) { S.chPick[cid + '|' + pid] = on; }); })(d('cid'), a === 'chAll');
+        updateChoreBoard(); break;
+      case 'chGo': if (needAdmin()) choreGo(d('cid')); break;
       case 'today': S.date = today(); S.dateAuto = true; schedule(); break;
       case 'inc':
         c = find(S.chores, function (x) { return x.id === d('cid'); }); pid = logTarget();
@@ -1293,7 +1658,12 @@
         break;
       case 'apMode': S.apMode = d('m'); LS.set('cl.apmode', S.apMode); go(); break;
       case 'apToggle': S.apClosed[d('key')] = !S.apClosed[d('key')]; go(); break;
-      case 'apGroup': case 'apUnit': if (needAdmin()) decide(d('key'), 'approved'); break;
+      case 'apGroup':
+        if (!needAdmin()) break;
+        var gu = unitsFor(d('key')).filter(function (u) { return !S.apSkip[u.key]; });
+        if (gu.length) queueDecision(gu, 'approved', unitLabel(gu));
+        break;
+      case 'apUnit': if (needAdmin()) decide(d('key'), 'approved'); break;
       case 'rjUnit': if (needAdmin()) decide(d('key'), 'rejected'); break;
       case 'apRest':
         if (!needAdmin()) break;
@@ -1317,6 +1687,11 @@
           .then(function (l) { S.older = l; go(); }, fail);
         break;
       case 'csv': downloadCsv(); break;
+      case 'mtgOpen': if (!needAdmin()) break; S.mtg = { open: true, since: null }; window.scrollTo(0, 0);
+        mtgLoadList().then(function (l) { if (S.mtg && S.mtg.since == null) { S.mtg.since = l[0] ? l[0].id : '30'; schedule(); } }, fail); go(); break;
+      case 'mtgClose': S.mtg = null; go(); break;
+      case 'mtgShare': mtgShare(); break;
+      case 'mtgStart': if (needAdmin()) confirmTap('mtgStart', mtgStart); break;
       /* bank */
       case 'acct': S.bankPid = d('pid'); S.bankForm = null; S.allTx = null; go(); break;
       case 'bankHome': S.bankPid = null; S.bankForm = null; go(); break;
@@ -1325,6 +1700,15 @@
         if ((f === 'deposit' || f === 'withdraw' || f === 'transfer') && !needAdmin()) break;
         S.bankForm = S.bankForm === f ? null : f; go();
         setTimeout(function () { var i = $('#rqItem') || $('#mAmt') || $('#tAmt'); if (i) i.focus(); }, 80);
+        break;
+      case 'txEdit': if (!needAdmin()) break; S.txEdit = d('id'); S.armed = null; go(); break;
+      case 'txCancel': S.txEdit = null; go(); break;
+      case 'txDelete':
+        if (!needAdmin()) break;
+        confirmTap('txdel' + d('id'), function () {
+          var dt = findTx(d('id')); if (!dt) return;
+          DB.commit(txDeleteOps(dt)).then(function () { S.txEdit = null; S.allTx = null; toast('Transaction deleted'); go(); }, fail);
+        });
         break;
       case 'allTx':
         var ap = d('pid');
@@ -1389,7 +1773,11 @@
     else if (t.id === 'wzFile') wizImport(t.files && t.files[0]);
     else if (t.name === 'wzStarter') S.wiz.starter = t.value === '1';
     else if (t.getAttribute('data-hist')) { S.hist[t.getAttribute('data-hist')] = t.value; go(); }
+    else if (t.getAttribute('data-mtg') === 'since' && S.mtg) { S.mtg.since = t.value; S.mtg.entries = null; S.mtg.loading = false; go(); }
+    else if (t.id === 'mtgNotes' && S.mtg) S.mtg.notes = t.value;
     else if (a === 'showArch') { S.showArchived = t.checked; updateChoreList(); }
+    else if (a === 'chPick') { S.chPick[t.getAttribute('data-cid') + '|' + t.getAttribute('data-pid')] = !!t.checked; updateChoreBoard(); }
+    else if (a === 'apSel') { var sk = t.getAttribute('data-key'); if (t.checked) delete S.apSkip[sk]; else S.apSkip[sk] = 1; go(); }
     else if (a === 'rename') {
       var nm = trim(t.value);
       if (nm && needAdmin()) DB.commit([{ t: 'update', c: 'people', id: t.getAttribute('data-pid'), d: { name: nm } }]).catch(fail);
@@ -1428,6 +1816,13 @@
     if (!needAdmin()) return;
     if (kind === 'newpin') submitPin('change', val('npin'), val('npin2'), '', function () { f.reset(); });
     else if (kind === 'addparent') submitPin('add', val('apPin'), val('apPin2'), val('apName'), function () { f.reset(); });
+    else if (kind === 'txedit') {
+      var et = findTx(f.getAttribute('data-id')), eAmt = parseMoney(val('teAmt'));
+      if (!et) { S.txEdit = null; go(); return; }
+      if (!(eAmt > 0)) { toast('Enter an amount like 5.00, or use Delete.', true); return; }
+      var eCents = et.cents < 0 ? -eAmt : eAmt;
+      DB.commit(txSaveOps(et, trim(val('teMemo')), eCents)).then(function () { S.txEdit = null; S.allTx = null; toast('Transaction updated'); go(); }, fail);
+    }
     else if (kind === 'money') {
       var k = f.getAttribute('data-kind'), amt = parseMoney(val('mAmt'));
       if (!(amt > 0)) { toast('Enter an amount like 5.00', true); return; }
@@ -1436,7 +1831,8 @@
     } else if (kind === 'transfer') {
       var to = val('tTo'), tAmt = parseMoney(val('tAmt')), memo = trim(val('tMemo')), from = S.bankPid;
       if (!to || !(tAmt > 0)) { toast('Pick who gets it and an amount.', true); return; }
-      var tops = txOps(from, -tAmt, 'transfer', 'To ' + pname(to) + (memo ? ': ' + memo : '')).concat(txOps(to, tAmt, 'transfer', 'From ' + pname(from) + (memo ? ': ' + memo : '')));
+      var pair = DB.newId('txns');
+      var tops = txOps(from, -tAmt, 'transfer', 'To ' + pname(to) + (memo ? ': ' + memo : ''), { pair: pair }).concat(txOps(to, tAmt, 'transfer', 'From ' + pname(from) + (memo ? ': ' + memo : ''), { pair: pair }));
       DB.commit(tops).then(function () { S.bankForm = null; toast('Sent ' + money(tAmt) + ' to ' + pname(to)); go(); }, fail);
     } else if (kind === 'person') {
       var name = trim(val('newName')); if (!name) return;
@@ -1453,7 +1849,7 @@
       if (isNaN(bounty)) { toast('Enter the bounty like 5.00, or leave it empty.', true); return; }
       var who = $$('input[name=who]', f).filter(function (x) { return x.checked; }).map(function (x) { return x.value; });
       var mdays = $$('input[name=mday]', f).filter(function (x) { return x.checked; }).map(function (x) { return Number(x.value); });
-      var data = { name: cname, pts: pts, who: who, cat: cat, need: need, bountyCents: bounty, major: $('#ceMajor').checked, majorEach: $('#ceEach').checked, majorDays: mdays, travel: $('#ceTravel').checked };
+      var data = { name: cname, pts: pts, who: who, cat: cat, need: need, bountyCents: bounty, major: $('#ceMajor').checked, majorEach: $('#ceEach').checked, majorDays: mdays, travel: $('#ceTrip').checked, homeOnly: !$('#ceTravel').checked };
       var op = cid ? { t: 'update', c: 'chores', id: cid, d: data }
         : { t: 'set', c: 'chores', id: DB.newId('chores'), d: assign(data, { active: true, order: S.chores.reduce(function (m, c) { return Math.max(m, c.order || 0); }, 0) + 1 }) };
       var eff = catList(S.chores).filter(function (x) { return x !== 'Other'; });
@@ -1470,7 +1866,7 @@
     } else if (kind === 'money2') {
       var rate = parseFloat(val('rate')), e1 = parseMoney(val('evo1')), e2 = parseMoney(val('evo2')), al = parseMoney(val('allow'));
       if (!(rate >= 0) || isNaN(e1) || isNaN(e2) || isNaN(al)) { toast('Check the numbers: use amounts like 5.00', true); return; }
-      var p2 = { foodCoins: Math.max(1, Math.round(Number(val('fcoins')) || 10)), mealPrice: Math.max(1, Math.round(Number(val('mprice')) || 10)), careCoins: Math.max(1, Math.round(Number(val('ccoins')) || 10)), kitPrice: Math.max(1, Math.round(Number(val('kprice')) || 10)), bankName: trim(val('bname')) || 'Family Bank', requireApproval: $('#reqAppr').checked, centsPerPoint: rate, petEvolve1Cents: e1, petEvolve2Cents: e2, dadPid: val('dad'), allowanceCents: al, allowanceDay: Number(val('aday')) };
+      var p2 = { foodCoins: Math.max(1, Math.round(Number(val('fcoins')) || 10)), mealPrice: Math.max(1, Math.round(Number(val('mprice')) || 10)), careCoins: Math.max(1, Math.round(Number(val('ccoins')) || 10)), kitPrice: Math.max(1, Math.round(Number(val('kprice')) || 10)), bankName: trim(val('bname')) || 'Family Bank', requireApproval: $('#reqAppr').checked, centsPerPoint: rate, petEvolve1Cents: e1, petEvolve2Cents: e2, dadPid: val('dad'), allowanceCents: al, allowanceDay: Number(val('aday')), allowanceVacPause: $('#aVacPause').checked };
       if (p2.dadPid !== S.settings.dadPid || p2.allowanceDay !== Number(S.settings.allowanceDay) || !S.settings.allowanceLast) p2.allowanceLast = lastAllowanceDay(p2.allowanceDay);
       saveSettings(p2).then(function () { toast('Saved'); go(); }, fail);
     }
@@ -1508,6 +1904,7 @@
     watch('txns', { c: 'txns', orderBy: ['ts', 'desc'], limit: 300 }, function (a) { S.txns = a; });
     watch('reqs', { c: 'requests', orderBy: ['ts', 'desc'], limit: 150 }, function (a) { S.reqs = a; });
     watch('pets', { c: 'pets' }, function (a) { var m = {}; a.forEach(function (p) { m[p.id] = p; }); S.pets = m; });
+    if (window.C3D) C3D.onReady(function () { schedule(); });
     watch('settings', { c: 'meta', id: 'settings' }, function (d) { S.settingsDoc = d; S.settings = assign({}, DEFAULTS, d || {}); });
     watch('adv', { c: 'adv', id: today() }, function (d) { S.adv = d || {}; });
     setInterval(function () {
@@ -1524,7 +1921,7 @@
   /* Shared helpers for the pet game (js/pets.js). */
   window.CL = {
     S: S, schedule: schedule, go: go, toast: toast, fail: fail, esc: esc, money: money, today: today, addDays: addDays, daysBetween: daysBetween,
-    fmtDate: fmtDate, person: person, pname: pname, pIndex: pIndex, isPerson: isPerson, isDad: isDad, isAdult: isAdult, kids: kids, activePeople: activePeople,
+    fmtDate: fmtDate, person: person, pname: pname, pIndex: pIndex, pCls: pCls, pColor: pColor, isPerson: isPerson, isDad: isDad, isAdult: isAdult, kids: kids, activePeople: activePeople,
     txOps: txOps, accountHtml: accountHtml, needAdmin: needAdmin, logTarget: logTarget, confirmTap: confirmTap, bankName: bankName
   };
 

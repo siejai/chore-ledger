@@ -14,7 +14,7 @@
   var GRASS = 0, PATH = 1, TREE = 2, WATER = 3, FLOWER = 4, SOLID = 6, DOOR = 7, SAND = 8, SWIM = 9, VINE = 10, CAVE = 11, ROCK = 12, PIER = 13, EXIT = 14, WET = 15, PALM = 16, DECK = 17, RAIL = 18, POOL = 19, TABLE = 20, CHAIR = 21, COUNTER = 22;
   var ROOF = ['#c2571a', '#127a6e', '#6d3fcf', '#c0306f', '#2956c9', '#55801a', '#b3262a'];
   var HOUSE_SPOTS = [[2, 8], [7, 8], [18, 8], [23, 8], [18, 14], [23, 14], [2, 20], [7, 20], [18, 20], [23, 20]];
-  var ABIL = { Fire: ['light'], Water: ['swim'], Leaf: ['climb'], Cosmic: ['light', 'swim', 'climb'] };
+  var ABIL = { Fire: ['light'], Water: ['swim'], Leaf: ['climb'], Cosmic: ['light', 'swim', 'climb'], Mythic: ['light', 'swim', 'climb'] };
   var W = { pid: null, region: 'town', map: null, mw: 30, mh: 26, key: '', bld: [], bg: null, bgs: {}, cv: null, ctx: null, root: null, run: false, last: 0, t: 0,
     P: null, pet: null, held: null, imgs: {}, msg: '', msgUntil: 0, scale: 1, cw: 0, ch: 0, dpr: 1, obj: null, fish: null };
   var RAF = window.requestAnimationFrame ? function (f) { window.requestAnimationFrame(f); } : function (f) { setTimeout(function () { f(Date.now()); }, 16); };
@@ -44,13 +44,14 @@
     }
     building('bank', 3, 1, 6, 5, 3, { title: C().bankName() });
     building('store', 20, 1, 6, 5, 2, { title: 'Store' });
+    building('prizes', 16, 1, 3, 4, 1, { title: 'Prize Shop' });
     set(26, 4, SOLID); set(26, 5, SOLID);
     building('park', 2, 14, 10, 4, 4, { title: 'Park' });
     building('gate', 13, 25, 4, 1, 1, { title: 'Adventure Gate' });
     set(15, 25, DOOR);
     people.slice(0, HOUSE_SPOTS.length).forEach(function (p, i) {
       var s = HOUSE_SPOTS[i];
-      building('house', s[0], s[1], 4, 4, 1, { owner: p.id, title: p.name, color: ROOF[C().pIndex(p)] });
+      building('house', s[0], s[1], 4, 4, 1, { owner: p.id, title: p.name, color: C().pColor(p) || ROOF[C().pIndex(p)] });
     });
     rect(10, 1, 3, 4, WATER);
     [[17, 2], [18, 3], [27, 2], [12, 9], [12, 10], [27, 9], [27, 15], [12, 21], [12, 22], [27, 21], [16, 9], [16, 21], [9, 15]].forEach(function (t) { if (m[t[1]][t[0]] === GRASS) set(t[0], t[1], TREE); });
@@ -118,7 +119,7 @@
     return !!(allowDoor && (t === DOOR || t === EXIT));
   }
   function buildingAt(x, y) { for (var i = 0; i < W.bld.length; i++) { var b = W.bld[i]; if (x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) return b; } return null; }
-  function bfs(sx, sy, tx, ty, allowDoor) {
+  function bfs(sx, sy, tx, ty, allowDoor, okFn) {
     if (sx === tx && sy === ty) return [];
     var prev = {}, q = [[sx, sy]], k = function (x, y) { return x + ',' + y; };
     prev[k(sx, sy)] = null;
@@ -128,7 +129,7 @@
         var nx = c[0] + dirs[i][0], ny = c[1] + dirs[i][1], key = k(nx, ny);
         if (prev.hasOwnProperty(key)) continue;
         var isTarget = nx === tx && ny === ty;
-        if (!walk(nx, ny, allowDoor && isTarget)) continue;
+        if (okFn ? !okFn(nx, ny) : !walk(nx, ny, allowDoor && isTarget)) continue;
         prev[key] = c;
         if (isTarget) {
           var out = [[nx, ny]], p = c;
@@ -279,8 +280,8 @@
       sign(g, b, '#6b4a2a', '#fff');
       return;
     }
-    var roof = b.kind === 'bank' ? '#123f36' : b.kind === 'store' ? '#b3262a' : b.color;
-    var wall = b.kind === 'bank' ? '#efe6cf' : b.kind === 'store' ? '#fff4e0' : '#f6ecd9';
+    var roof = b.kind === 'bank' ? '#123f36' : b.kind === 'store' ? '#b3262a' : b.kind === 'prizes' ? '#6d3fcf' : b.color;
+    var wall = b.kind === 'bank' ? '#efe6cf' : b.kind === 'store' ? '#fff4e0' : b.kind === 'prizes' ? '#fff6d8' : '#f6ecd9';
     g.fillStyle = 'rgba(0,0,0,.15)'; g.fillRect(x + 4, y + h - 4, w, 6);
     g.fillStyle = wall; g.fillRect(x + 2, y + h * 0.4, w - 4, h * 0.6);
     g.fillStyle = roof; g.beginPath(); g.moveTo(x - 2, y + h * 0.45); g.lineTo(x + 10, y + 4); g.lineTo(x + w - 10, y + 4); g.lineTo(x + w + 2, y + h * 0.45); g.closePath(); g.fill();
@@ -314,12 +315,29 @@
     e.img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgFn());
     return null;
   }
-  function petImage(pid, mood) {
-    var st = Pz().state(pid); if (!st.pet) return null;
-    var f = st.flags, p = st.pet, key = 'pet|' + pid + '|' + p.sp + p.stage + p.pal + '|' + (p.wear || '') + '|' + (p.dye || '') + '|' + mood + '|' + (f.thin ? 1 : 0) + (f.dirty ? 1 : 0) + (f.tired ? 1 : 0) + (f.pudgy ? 1 : 0);
-    return img(key, function () { return Pz().petSvg(p, mood, f); });
+  /* animation frames: blink now and then, tail swings, wings flap (faster while walking) */
+  function petFrame(mood, seed, moving) {
+    if (mood === 'asleep' || mood === 'eat') return { b: 0, t: 0, w: 1 };
+    var t = W.t + seed;
+    return { b: (t % 3.8) < 0.14 ? 1 : 0, t: [0, 7, 0, -7][Math.floor(t * (moving ? 6 : 3)) % 4], w: [1, 0.9][Math.floor(t * (moving ? 8 : 2.5)) % 2] };
   }
-  function avatarImage(pid) { var a = Pz().doc(pid).avatar, key = 'av|' + JSON.stringify(a); return img(key, function () { return Pz().avatarSvg(a); }); }
+  var petLast = {};
+  if (window.C3D) C3D.onReady(function () { for (var k in W.imgs) if ((k.indexOf('pet|') === 0 || k.indexOf('av|') === 0) && W.imgs.hasOwnProperty(k)) delete W.imgs[k]; petLast = {}; });
+  /* 3D pets have front, side and back views: walking down shows the face, up shows the back, sideways the profile */
+  function is3d(p) { return !!(window.C3D && !C3D.off && p && C3D.has(p.sp)); }
+  function petView(p, dir) { return !is3d(p) ? '' : dir === 'up' ? 'back' : dir === 'side' ? 'side' : 'front'; }
+  function petImage(pid, mood, moving, dir) {
+    var st = Pz().state(pid); if (!st.pet) return null;
+    var f = st.flags, p = st.pet, fr = petFrame(mood, pid.length * 0.7, moving), view = petView(p, dir);
+    if (view) { fr.t = 0; fr.w = 1; }
+    var base = 'pet|' + pid + '|' + p.sp + p.stage + p.pal + '|' + (p.wear || '') + '|' + (p.dye || '') + '|' + mood + '|' + (f.thin ? 1 : 0) + (f.dirty ? 1 : 0) + (f.tired ? 1 : 0) + (f.pudgy ? 1 : 0) + '|' + view;
+    var im = img(base + '|' + fr.b + fr.t + fr.w, function () { return Pz().petSvg(p, mood, f, { blink: !!fr.b, tailRot: fr.t, wingFlap: fr.w === 1 ? 0 : fr.w, view: view || undefined }); });
+    if (im) { petLast[base] = im; return im; }
+    return petLast[base] || null;
+  }
+  function people3d() { return !!(window.C3D && C3D.hasPeople && C3D.hasPeople()); }
+  function actorView(dir) { return !people3d() ? '' : dir === 'up' ? 'back' : dir === 'side' ? 'side' : 'front'; }
+  function avatarImage(pid, view) { var a = Pz().doc(pid).avatar, key = 'av|' + JSON.stringify(a) + '|' + (view || ''); return img(key, function () { return Pz().avatarSvg(a, false, view ? { view: view } : null); }); }
   function avatarPx(av) { return Math.round(54 * ((window.CHAR.HEIGHT_PX || {})[(av && av.height) || 'small'] || 1)); }
   function itemImage(id) { return img('item|' + id, function () { return A().itemArt(id); }); }
   function eggImage() { return img('egg', function () { return CRE.egg(); }); }
@@ -329,18 +347,19 @@
     W.P = { x: sx, y: sy, tx: sx, ty: sy, fx: sx, fy: sy, moving: false, path: [], face: 1 };
     var px = walk(sx + 1, sy) ? sx + 1 : walk(sx - 1, sy) ? sx - 1 : sx, py = sy;
     if (px === sx) py = walk(sx, sy + 1) ? sy + 1 : sy;
-    W.pet = { x: px, y: py, tx: px, ty: py, fx: px, fy: py, moving: false, queue: [], face: -1, mode: 'follow', until: 0, t: 0 };
+    W.pet = { x: px, y: py, tx: px, ty: py, fx: px, fy: py, moving: false, queue: [], face: -1, dir: 'down', mode: 'follow', until: 0, t: 0 };
   }
   function placeAtHome() {
     var home = null;
     W.bld.forEach(function (b) { if (b.kind === 'house' && b.owner === W.pid) home = b; });
     placeAt(home ? home.door.x : 14, home ? home.door.y + 1 : 12);
   }
-  function stepTo(a, x, y) { a.fx = a.x; a.fy = a.y; a.tx = x; a.ty = y; a.moving = true; a.prog = 0; if (x !== a.x) a.face = x > a.x ? 1 : -1; }
+  function stepTo(a, x, y) { a.fx = a.x; a.fy = a.y; a.tx = x; a.ty = y; a.moving = true; a.prog = 0; if (x !== a.x) a.face = x > a.x ? 1 : -1; a.dir = y !== a.y ? (y > a.y ? 'down' : 'up') : x !== a.x ? 'side' : (a.dir || 'down'); }
   function playerTryDir(dir) {
     var d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[dir]; if (!d) return false;
     var P = W.P, nx = P.x + d[0], ny = P.y + d[1];
     if (d[0]) P.face = d[0];
+    P.dir = d[1] > 0 ? 'down' : d[1] < 0 ? 'up' : 'side';
     if (!walk(nx, ny, true)) { blocked(nx, ny); return false; }
     playerStep(nx, ny); return true;
   }
@@ -481,11 +500,28 @@
   /* ================= cruise ship: the Lido Deck clean-up ================= */
   var CARRY_NAME = { plate: 'plate', glass: 'glass', towel: 'towel' };
   var GUEST = ['#f1c7a3', '#d9a47a', '#a8744f', '#6f4a33', '#f5d6c0'];
+  /* passengers are random grown-ups and kids built with the character creator's pieces */
+  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function randomPassenger() {
+    var AV = window.CHAR && window.CHAR.AV, adult = Math.random() < 0.5;
+    if (!AV) return null;
+    var n = function (k) { return Math.floor(Math.random() * AV[k].length); };
+    return { skin: n('skin'), hairColor: n('hairColor'), topColor: n('topColor'), eyes: pick(['round', 'round', 'happy']),
+      hair: pick(adult ? ['short', 'long', 'ponytail', 'curly', 'bun', 'wavy', 'bald', 'spiky', 'longcurly', 'bob'] : ['short', 'spiky', 'long', 'ponytail', 'curly', 'buns', 'bun', 'longcurly', 'bob', 'pigtails']),
+      top: pick(adult ? ['tee', 'tee', 'hoodie', 'dress', 'suit'] : ['tee', 'tee', 'hoodie', 'dress']),
+      acc: pick(['none', 'none', 'none', 'cap', 'glasses', 'bow']), face: adult ? pick(['none', 'none', 'none', 'beard', 'shortbeard', 'mustache', 'stubble']) : 'none',
+      height: adult ? 'tall' : pick(['small', 'medium']), build: pick(['slim', 'medium', 'large']),
+      pantsColor: n('pantsColor'), topPat: pick(['solid', 'solid', 'solid', 'solid', 'dots', 'stripes', 'plaid', 'stars', 'hearts', 'camo']), pantsPat: pick(['solid', 'solid', 'solid', 'solid', 'solid', 'plaid', 'camo', 'stripes']) };
+  }
+  function deckOk(x, y) { var t = tile(x, y); return t === DECK || t === WET || t === PATH; }
+  function passengerImage(av, view) { return img('av|' + JSON.stringify(av) + '|' + (view || ''), function () { return window.CHAR.drawAvatar(av, null, view ? { view: view } : null); }); }
   function newShip() {
     W.ship = { items: {}, puddles: [], carry: [], done: 0, tickets: 0, next: Date.now() + 3000, mop: null, hintAt: 0, pops: [],
       swim: [0, 1, 2].map(function (i) { return { x: 9 + i * 2.5, y: 12 + (i % 2), ph: Math.random() * 6, c: ['#e45757', '#f2d43a', '#6d3fcf'][i] }; }),
-      guests: {} };
-    W.slots.forEach(function (s, i) { if (s.kind === 'dine' || (s.kind === 'chair' && i % 2)) W.ship.guests[s.x + ',' + s.y] = GUEST[i % GUEST.length]; });
+      guests: {}, walkers: [] };
+    W.slots.forEach(function (s, i) { if (s.kind === 'dine' || (s.kind === 'chair' && i % 2)) W.ship.guests[s.x + ',' + s.y] = randomPassenger() || GUEST[i % GUEST.length]; });
+    var spots = []; for (var yy = 0; yy < W.mh; yy++) for (var xx = 0; xx < W.mw; xx++) if (deckOk(xx, yy)) spots.push([xx, yy]);
+    for (var k = 0; k < 3 && spots.length; k++) { var sp0 = pick(spots), av = randomPassenger(); if (av) W.ship.walkers.push({ x: sp0[0], y: sp0[1], tx: sp0[0], ty: sp0[1], fx: sp0[0], fy: sp0[1], moving: false, path: [], face: 1, dir: 'down', av: av, wait: 1 + k * 2, goal: null }); }
     for (var i = 0; i < 6; i++) spawnTask(true);
   }
   function capacity() { var st = Pz().state(W.pid), f = st.flags || {}; return st.pet && !f.thin && !f.dirty && !f.tired && !f.pudgy ? 4 : 3; }
@@ -511,9 +547,9 @@
   }
   function shipTick(now) {
     var S = W.ship;
-    if (now >= S.next) { spawnTask(false); S.next = now + 3800 + Math.random() * 2600; }
+    if (now >= S.next) { spawnTask(false); S.next = now + 6500 + Math.random() * 3500; }
     S.pops = S.pops.filter(function (p) { return now - p.t0 < 1200; });
-    W.slots.forEach(function (s) { var key = s.x + ',' + s.y; if (s.back && now >= s.back && !S.items[key]) { s.back = 0; if (s.kind === 'dine' || Math.random() < 0.5) S.guests[key] = GUEST[Math.floor(Math.random() * GUEST.length)]; } });
+    W.slots.forEach(function (s) { var key = s.x + ',' + s.y; if (s.back && now >= s.back && !S.items[key]) { s.back = 0; if (s.kind === 'dine' || Math.random() < 0.5) S.guests[key] = randomPassenger() || GUEST[Math.floor(Math.random() * GUEST.length)]; } });
   }
   function puddleAt(x, y) { var list = W.ship ? W.ship.puddles : []; for (var i = 0; i < list.length; i++) if (list[i].x === x && list[i].y === y) return list[i]; return null; }
   function nearStation(s) { var P = W.P, dx = Math.max(s.x - P.x, 0, P.x - (s.x + s.w - 1)), dy = Math.abs(P.y - s.y); return dx + dy === 1; }
@@ -568,7 +604,7 @@
   function closePrizes() { var el = W.root && W.root.querySelector('.prizes'); if (el) { el.hidden = true; el.innerHTML = ''; } }
   function buyPrize(id) {
     A().buyPrize(W.pid, id).then(function (res) {
-      closePrizes(); A().reveal(res); setTimeout(hud, 80);
+      closePrizes(); A().reveal(res); setTimeout(function () { hud(); if (Pz().G.room && Pz().G.room.kind === 'prizes') renderRoom(true); }, 120);
     }, C().fail);
   }
   function itemDraw(kind, cx, cy, sc) {
@@ -599,6 +635,12 @@
     ctx.fillStyle = 'rgba(255,255,255,.8)'; for (var i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(cx - 10 + i * 8 + Math.sin(W.t * 9 + i) * 3, cy + 2 - ((W.t * 30 + i * 7) % 12), 2, 0, 7); ctx.fill(); }
   }
   function guestDraw(key, s, col) {
+    if (col && typeof col === 'object') {
+      var v = people3d() ? 'front' : '', im = passengerImage(col, v), h = Math.round(46 * ((window.CHAR.HEIGHT_PX || {})[col.height] || 1) * (s.kind === 'chair' ? 0.8 : 0.92));
+      if (s.kind === 'chair') sprite(im, s.x, s.y - 0.35, h, 0, 1, 0, true);
+      else { sprite(im, s.x - 0.7, s.y + 0.05, h, Math.sin(W.t * 3 + s.x) * 0.6, 1, 0, true); if (s.kind === 'dine') { var c2 = W.ctx, cx2 = s.x * T + 16, cy2 = s.y * T + 16; c2.fillStyle = '#fff'; c2.beginPath(); c2.arc(cx2 - 3, cy2, 5, 0, 7); c2.fill(); c2.fillStyle = '#c9793a'; c2.fillRect(cx2 - 5, cy2 - 2, 4, 3); } }
+      return;
+    }
     var ctx = W.ctx, cx = s.x * T + 16, cy = s.y * T + 16, i = (s.x * 7 + s.y) % 5, shirt = ['#e45757', '#3a8ed8', '#f2d43a', '#6fcf8f', '#b58cff'][i];
     if (s.kind === 'chair') {
       ctx.fillStyle = col; ctx.beginPath(); ctx.arc(cx, s.y * T + 8, 5.5, 0, 7); ctx.fill();
@@ -611,6 +653,39 @@
     ctx.fillStyle = col; ctx.beginPath(); ctx.arc(gx, cy - 9 + bob, 6, 0, 7); ctx.fill();
     ctx.fillStyle = '#3a2a1a'; ctx.beginPath(); ctx.arc(gx, cy - 12 + bob, 5.5, Math.PI, 0); ctx.fill();
     if (s.kind === 'dine') { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx - 3, cy, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#c9793a'; ctx.fillRect(cx - 5, cy - 2, 4, 3); }
+  }
+  /* walking passengers stroll the deck and leave a mess where they stop: a plate, a glass, a towel or a wet puddle */
+  function walkersStep(dt) {
+    var S = W.ship; if (!S || !S.walkers) return;
+    S.walkers.forEach(function (w) {
+      if (w.moving) { moveActor(w, 2.0, dt); return; }
+      if (w.path.length) { var n = w.path.shift(); if (deckOk(n[0], n[1]) && !(W.P.x === n[0] && W.P.y === n[1])) stepTo(w, n[0], n[1]); else w.path = []; return; }
+      if (w.goal) {
+        var g = w.goal; w.goal = null; w.wait = 2 + Math.random() * 3; w.dir = 'down';
+        if (outstanding() < 9) {
+          if (g.slot) { var key = g.slot.x + ',' + g.slot.y; if (!S.items[key]) { S.items[key] = g.kind; delete S.guests[key]; pop(g.slot.x, g.slot.y, 'Oops!', '#c0561c'); } }
+          else if (!puddleAt(w.x, w.y)) { S.puddles.push({ x: w.x, y: w.y, born: Date.now() }); pop(w.x, w.y, 'Drip!', '#2f7fb8'); }
+        }
+        return;
+      }
+      if ((w.wait -= dt) > 0) return;
+      var r = Math.random(), target = null, goal = null;
+      if (r < 0.75) {
+        var want = pick([['dine'], ['drink', 'dine'], ['chair']]), kind = want[0] === 'chair' ? 'towel' : want[0] === 'drink' ? 'glass' : 'plate';
+        var open = W.slots.filter(function (s) { return want.indexOf(s.kind) >= 0 && !S.items[s.x + ',' + s.y]; });
+        if (open.length) {
+          var sl = pick(open), adj = [[sl.x, sl.y + 1], [sl.x, sl.y - 1], [sl.x - 1, sl.y], [sl.x + 1, sl.y]].filter(function (p) { return deckOk(p[0], p[1]); });
+          if (adj.length) { target = pick(adj); goal = { slot: sl, kind: kind }; }
+        }
+      } else {
+        var wet = W.wet.filter(function (p) { return deckOk(p[0], p[1]); });
+        if (wet.length) { target = pick(wet); goal = { wet: true }; }
+      }
+      if (!target) { w.wait = 2; return; }
+      var path = bfs(w.x, w.y, target[0], target[1], false, deckOk);
+      if (!path || !path.length) { w.wait = 1.5; return; }
+      w.path = path.slice(0, 40); w.goal = goal;
+    });
   }
   function shipDraw(list) {
     var S = W.ship, ctx = W.ctx;
@@ -629,6 +704,14 @@
         var cx = s.x * T + 16, cy = s.y * T + (s.kind === 'chair' ? 18 : 14);
         itemDraw(it, cx, cy, s.kind === 'chair' ? 1.2 : 1);
         sparkles(cx, cy - 4, 10, '#fff');
+      } });
+    });
+    (S.walkers || []).forEach(function (w) {
+      var wp = pos(w);
+      list.push({ y: wp.y + 0.005, draw: function () {
+        var p3 = people3d(), v = p3 ? (w.dir === 'up' ? 'back' : w.dir === 'side' ? 'side' : 'front') : '', h = Math.round(54 * ((window.CHAR.HEIGHT_PX || {})[w.av.height] || 1) * 0.92);
+        var im = passengerImage(w.av, v);
+        sprite(im, wp.x, wp.y, h, w.moving ? -Math.abs(Math.sin(W.t * 9 + w.fx)) * 2 : 0, v ? (v === 'side' ? -w.face : 1) : w.face, 0, true);
       } });
     });
     S.puddles.forEach(function (p) {
@@ -698,7 +781,7 @@
     else if (P.moving) { if (moveActor(P, 4.2, dt)) arrived(P); }
     else if (P.path.length) arrived(P);
     else if (W.held) playerTryDir(W.held);
-    if (W.region === 'ship' && W.ship) shipTick(now);
+    if (W.region === 'ship' && W.ship) { shipTick(now); walkersStep(dt); }
     if (W.run) updatePet(dt, now);
     if (W.fish) { var f = W.fish; f.pos += f.dir * f.speed * dt; if (f.pos > 1) { f.pos = 1; f.dir = -1; } if (f.pos < 0) { f.pos = 0; f.dir = 1; } var hk = W.root.querySelector('.fish-hook'); if (hk) hk.style.left = (f.pos * 100) + '%'; }
     if (W.region !== 'town') {
@@ -731,7 +814,7 @@
         if (b.owner === W.pid) return;
         var st = Pz().state(b.owner); if (!st.pet) return;
         list.push({ y: b.door.y + 1, draw: function () {
-          sprite(petImage(b.owner, st.mood.key), b.door.x + 2, b.door.y + 1, 48, Math.sin(W.t * 2 + b.x) * 1, -1, 0);
+          sprite(petImage(b.owner, st.mood.key, false, 'down'), b.door.x + 2, b.door.y + 1, 48, Math.sin(W.t * 2 + b.x) * 1, is3d(st.pet) ? 1 : -1, 0);
           if (CRE.byId(st.pet.sp).rare) sparkles((b.door.x + 2) * T + 16, (b.door.y + 1) * T - 10, 22, '#ffe27a');
         } });
       });
@@ -749,8 +832,8 @@
     }
     hostSpots().forEach(function (h) {
       list.push({ y: h.y, draw: function () {
-        var im = img('av|' + JSON.stringify(h.avatar), function () { return Pz().avatarSvg(h.avatar, true); });
-        sprite(im, h.x, h.y, avatarPx(h.avatar), Math.sin(W.t * 1.5 + h.x) * 0.8, -1, 0, true);
+        var hv = actorView('down'), im = img('av|' + JSON.stringify(h.avatar) + '|' + hv, function () { return Pz().avatarSvg(h.avatar, true, hv ? { view: hv } : null); });
+        sprite(im, h.x, h.y, avatarPx(h.avatar), Math.sin(W.t * 1.5 + h.x) * 0.8, hv ? 1 : -1, 0, true);
         ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         var tw = ctx.measureText(h.name).width + 10, cx = h.x * T + 16, cy = h.y * T + T - 2 - avatarPx(h.avatar) - 6;
         ctx.fillStyle = 'rgba(255,255,255,.92)'; rr(ctx, cx - tw / 2, cy - 8, tw, 16, 5); ctx.fill();
@@ -764,7 +847,8 @@
       var digging = dump || pet.mode === 'dig';
       list.push({ y: petPos.y, draw: function () {
         var bob = pet.moving ? -Math.abs(Math.sin(W.t * 10)) * 3 : (digging ? Math.sin(W.t * 18) * 2 : Math.sin(W.t * 2) * 1);
-        sprite(petImage(W.pid, mood), petPos.x, petPos.y, 54, bob, pet.face, digging ? Math.sin(W.t * 14) * 0.15 : 0);
+        var pv = petView(st.pet, pet.dir);
+        sprite(petImage(W.pid, mood, pet.moving, pet.dir), petPos.x, petPos.y, 54, bob, pv ? (pv === 'side' ? -pet.face : 1) : pet.face, digging ? Math.sin(W.t * 14) * 0.15 : 0);
         if (digging) trash(petPos.x, petPos.y, dump);
         if (pet.mode === 'nap') zzz(petPos.x, petPos.y);
         if (CRE.byId(st.pet.sp).rare) sparkles(petPos.x * T + 16, petPos.y * T - 12, 24, '#ffe27a');
@@ -772,7 +856,8 @@
     }
     list.push({ y: pp.y + 0.01, draw: function () {
       var bob = W.P.moving ? -Math.abs(Math.sin(W.t * 11)) * 3 : 0;
-      sprite(avatarImage(W.pid), pp.x, pp.y, avatarPx(Pz().kidAv(Pz().doc(W.pid).avatar)), bob, W.P.face, 0, true);
+      var av = actorView(W.P.dir);
+      sprite(avatarImage(W.pid, av), pp.x, pp.y, avatarPx(Pz().kidAv(Pz().doc(W.pid).avatar)), bob, av ? (av === 'side' ? -W.P.face : 1) : W.P.face, 0, true);
       if (W.ship) { carryDraw(pp.x, pp.y, 58, W.ship.carry.slice(0, 3)); if (W.ship.mop) mopDraw(pp.x, pp.y); }
     } });
     if (W.ship && W.ship.carry.length > 3) list.push({ y: petPos.y + 0.02, draw: function () { carryDraw(petPos.x, petPos.y, 50, W.ship.carry.slice(3)); } });
@@ -899,7 +984,7 @@
   function hostSpots() {
     if (W.region !== 'town') return [];
     var out = [], used = {};
-    ['bank', 'store', 'park', 'gate', 'square'].forEach(function (kind) {
+    ['bank', 'store', 'prizes', 'park', 'gate', 'square'].forEach(function (kind) {
       Pz().hosts(kind).forEach(function (h, i) {
         var b = null; W.bld.forEach(function (x) { if (x.kind === kind) b = x; });
         var x, y;
@@ -919,7 +1004,7 @@
     hostSpots().forEach(function (h) {
       if (Math.abs(h.x - P.x) + Math.abs(h.y - P.y) > 1 || Date.now() - (greeted[h.id] || 0) < 30000) return;
       greeted[h.id] = Date.now();
-      var nm = C().pname(W.pid), line = h.kind === 'bank' ? 'Come on in, ' + nm + '! Your account is inside.' : h.kind === 'store' ? 'Hi ' + nm + '! Need a meal or a bath kit?' : h.kind === 'park' ? 'Want to play fetch, ' + nm + '?' : h.kind === 'gate' ? 'Big jobs done, ' + nm + '? Then adventure awaits!' : 'Hi ' + nm + '! How is your pet doing?';
+      var nm = C().pname(W.pid), line = h.kind === 'bank' ? 'Come on in, ' + nm + '! Your account is inside.' : h.kind === 'store' ? 'Hi ' + nm + '! Need a meal or a bath kit?' : h.kind === 'prizes' ? 'Got tickets, ' + nm + '? Come see the prizes!' : h.kind === 'park' ? 'Want to play fetch, ' + nm + '?' : h.kind === 'gate' ? 'Big jobs done, ' + nm + '? Then adventure awaits!' : 'Hi ' + nm + '! How is your pet doing?';
       say(h.name + ': ' + line, 3000);
     });
   }

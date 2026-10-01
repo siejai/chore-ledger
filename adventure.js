@@ -35,6 +35,8 @@
     surfboard: { name: 'Surfboard', kind: 'toy', r: 'rare' },
     lifering: { name: 'Life ring', kind: 'toy', r: 'uncommon' },
     shipbottle: { name: 'Ship in a bottle', kind: 'toy', r: 'rare' },
+    mopbot: { name: 'Mop-Bot plush', kind: 'toy', r: 'uncommon' },
+    trophy: { name: 'Clean House Trophy', kind: 'toy', r: 'rare' },
     dye_ocean: { name: 'Ocean dye', kind: 'dye', r: 'uncommon', pal: { main: '#3f7fd0', dark: '#1d3f7a', light: '#eef5ff', accent: '#ffffff', name: 'Ocean' } },
     dye_coral: { name: 'Coral dye', kind: 'dye', r: 'uncommon', pal: { main: '#ff7f6e', dark: '#b8453a', light: '#fff0ea', accent: '#ffd1a8', name: 'Coral' } },
     dye_seafoam: { name: 'Seafoam dye', kind: 'dye', r: 'uncommon', pal: { main: '#7fd8c4', dark: '#2f8a78', light: '#effcf8', accent: '#ffe08a', name: 'Seafoam' } },
@@ -64,6 +66,8 @@
     else if (id === 'surfboard') v += '<ellipse cx="30" cy="30" rx="9" ry="26" fill="#4fd1c5" stroke="#1d7a70" stroke-width="2" transform="rotate(25 30 30)"/><path d="M22 14 L40 48" stroke="#fff" stroke-width="3" transform="rotate(0)"/>';
     else if (id === 'lifering') v += '<circle cx="30" cy="30" r="20" fill="none" stroke="#f2f2f2" stroke-width="12"/><circle cx="30" cy="30" r="20" fill="none" stroke="#e8553c" stroke-width="12" stroke-dasharray="15.7 15.7"/><circle cx="30" cy="30" r="26" fill="none" stroke="#b8b0a4" stroke-width="1.5"/><circle cx="30" cy="30" r="14" fill="none" stroke="#b8b0a4" stroke-width="1.5"/>';
     else if (id === 'shipbottle') v += '<rect x="10" y="20" width="40" height="26" rx="12" fill="#d9f1f7" stroke="#7fb8c8" stroke-width="2"/><rect x="48" y="28" width="8" height="10" rx="2" fill="#a8703a"/><path d="M18 38 h24 l-4 5 h-16 Z" fill="#8a5a2b"/><path d="M29 38 V22 M29 23 l9 12 h-9 Z M28 25 l-7 10 h7 Z" fill="#fff" stroke="#555" stroke-width="1"/><path d="M12 42 q9 -3 18 0 q9 3 18 0" fill="none" stroke="#3a8ed8" stroke-width="2"/>';
+    else if (id === 'mopbot') v += '<ellipse cx="30" cy="50" rx="22" ry="5" fill="#f4f1ea" stroke="#9aa4b2" stroke-width="1.5"/><circle cx="30" cy="32" r="18" fill="#2a4a8f" stroke="#162a5a" stroke-width="2"/><rect x="18" y="26" width="24" height="8" rx="4" fill="#8fd8ff"/><circle cx="24" cy="30" r="2" fill="#2b2233"/><circle cx="36" cy="30" r="2" fill="#2b2233"/><path d="M26 40 q4 3 8 0" stroke="#fff" stroke-width="2" fill="none"/><path d="M30 14 v-6" stroke="#162a5a" stroke-width="2"/><circle cx="30" cy="7" r="3" fill="#e45757"/>';
+    else if (id === 'trophy') v += '<path d="M18 10 h24 v12 a12 12 0 0 1 -24 0 Z" fill="#f2c14e" stroke="#a67c12" stroke-width="2"/><path d="M18 14 h-6 a6 6 0 0 0 6 10 M42 14 h6 a6 6 0 0 1 -6 10" fill="none" stroke="#a67c12" stroke-width="2"/><rect x="27" y="33" width="6" height="10" fill="#e8b83a"/><rect x="18" y="43" width="24" height="8" rx="2" fill="#8a5a2b"/><path d="M24 16 l3 6 l3 -6 l3 6" stroke="#fff" stroke-width="1.5" fill="none" opacity=".8"/>';
     else if (it.kind === 'shell') {
       if (id === 'starfish') v += '<path d="M30 6 L36 24 L54 24 L40 35 L45 53 L30 42 L15 53 L20 35 L6 24 L24 24 Z" fill="#f29b6e" stroke="#b8553a" stroke-width="2"/>';
       else if (id === 'sanddollar') v += '<circle cx="30" cy="30" r="20" fill="#efe3c8" stroke="#bfae88" stroke-width="2"/><path d="M30 18 v8 M20 26 l7 5 M40 26 l-7 5 M24 40 l5 -6 M36 40 l-5 -6" stroke="#bfae88" stroke-width="2"/>';
@@ -176,6 +180,7 @@
     h += '<h2>Where to?</h2><div class="regions">' +
       '<button type="button" class="region beach" data-pact="goRegion" data-r="beach"' + (can ? '' : ' disabled') + '><strong>Sunny Beach</strong><small>Dig for treasure, fish off the pier, and find chests only some pets can reach.</small></button>' +
       '<button type="button" class="region cruise" data-pact="goRegion" data-r="ship"' + (can ? '' : ' disabled') + '><strong>Cruise Ship</strong><small>Work on the Lido Deck: clear plates, return glasses to the bar, mop pool puddles and collect towels for deck tickets.</small></button>' +
+      '<button type="button" class="region defense" data-pact="goRegion" data-r="defense"' + (can ? '' : ' disabled') + '><strong>Mess Defense</strong><small>Mess monsters are invading the house! Place your pets and combine Fire, Water and Leaf to stop them.' + (Pets.doc(pid).defLevel ? ' Next: Round ' + (Number(Pets.doc(pid).defLevel) + 1) + '.' : '') + '</small></button>' +
       '<div class="region locked"><strong>Whispering Forest</strong><small>Coming soon</small></div>' +
       '<div class="region locked"><strong>Crystal Caves</strong><small>Coming soon</small></div></div>';
     if (!can) h += '<p class="note">' + (!Pets.doc(pid).pet ? 'You need a pet to go on an adventure.' : !p.has ? 'Earn a pass first.' : !p.open ? 'The gate is closed right now. Come back during adventure hours.' : 'You used all your adventure time today.') + '</p>';
@@ -246,7 +251,7 @@
   }
 
   /* ================= cruise ship: deck tickets and the prize desk ================= */
-  var PRIZES = [{ id: 'crate', cost: 60 }, { id: 'sailor', cost: 60 }, { id: 'lifering', cost: 100 }, { id: 'dye_ocean', cost: 150 }, { id: 'shipbottle', cost: 250 }, { id: 'captain', cost: 400 }];
+  var PRIZES = [{ id: 'crate', cost: 60 }, { id: 'sailor', cost: 60 }, { id: 'lifering', cost: 100 }, { id: 'mopbot', cost: 120 }, { id: 'dye_ocean', cost: 150 }, { id: 'shipbottle', cost: 250 }, { id: 'dye_gold', cost: 300 }, { id: 'trophy', cost: 320 }, { id: 'crown', cost: 350 }, { id: 'captain', cost: 400 }];
   function tickets(pid) { return Number(Pets.doc(pid).tickets) || 0; }
   function addTickets(pid, n, tasks) {
     if (EXP) EXP.tickets = (EXP.tickets || 0) + n;
@@ -306,7 +311,7 @@
     var kids = C().activePeople().filter(function (p) { return !C().isAdult(p.id); });
     return '<section class="stack tight"><h2>Adventure passes today</h2><div class="list">' + kids.map(function (p) {
       var pi = passInfo(p.id);
-      return '<div class="hrow"><span class="dot p' + C().pIndex(p) + '"></span><div class="desc">' + esc(p.name) + '<small>' +
+      return '<div class="hrow"><span class="dot ' + C().pCls(p) + '"></span><div class="desc">' + esc(p.name) + '<small>' +
         (pi.has ? (pi.golden ? 'Golden pass' : 'Pass') + ': ' + pi.left + ' of ' + pi.minutes + ' min left' : 'No pass: ' + pi.done + ' of ' + pi.need + ' big jobs') + '</small></div>' +
         '<button class="btn small" type="button" data-act="grantPass" data-pid="' + esc(p.id) + '">+30 min</button></div>';
     }).join('') + '</div><p class="note">House clean: ' + houseStatus().done + ' of ' + houseStatus().total + ' big jobs approved today' + (onVacation() ? ' (vacation mode)' : '') + '.</p></section>';

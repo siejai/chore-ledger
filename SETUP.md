@@ -10,7 +10,7 @@ GitHub Pages works well because the code has no family data in it.
 3. **Firestore**: *Build > Firestore Database > Create database*, pick a location near you, **production mode**.
 4. **Rules**: in Firestore open *Rules*, paste the contents of `firestore.rules`, change `family@example.com`
    to the household email from step 2, and *Publish*.
-5. **Web config**: gear icon > *Project settings* > *Your apps* > web icon `</>`, register "Chore Ledger"
+5. **Web config**: gear icon > *Project settings* > *Your apps* > web icon `</>`, register "Chore Quest"
    (skip Firebase Hosting) and copy the `firebaseConfig` values.
 
 ## 2. Connect

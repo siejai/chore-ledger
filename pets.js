@@ -31,12 +31,12 @@
   function num(v) { return Math.max(0, Number(v) || 0); }
   function assign(a, b) { for (var k in b) if (b.hasOwnProperty(k)) a[k] = b[k]; return a; }
   /* Grown-ups are always tall and kids never are, so approvers stand out at a glance. A kid's "Tall" is the medium size. */
-  function avatarSvg(a, adult) { return window.CHAR.drawAvatar(adult ? adultAv(a) : kidAv(a)); }
+  function avatarSvg(a, adult, opts) { return window.CHAR.drawAvatar(adult ? adultAv(a) : kidAv(a), null, opts); }
   function kidAv(av) { if (!av || (av.height !== 'tall' && av.height)) return av; var o = assign({}, av); o.height = av.height === 'tall' ? 'medium' : 'small'; return o; }
   /* Grown-ups (parents) have a character but no pet. Their avatar lives in pets/{parentId} with a spot where they hang out in town. */
-  var SPOTS = [['bank', 'The bank'], ['store', 'The Store'], ['park', 'The Park'], ['gate', 'Adventure Gate'], ['square', 'Town square'], ['', 'Not in town']];
+  var SPOTS = [['bank', 'The bank'], ['store', 'The Store'], ['prizes', 'Prize Shop'], ['park', 'The Park'], ['gate', 'Adventure Gate'], ['square', 'Town square'], ['', 'Not in town']];
   var HOST_LINE = { bank: 'Welcome to the bank! Here is your account.', store: 'Welcome to the Store! Meals keep your pet full, and bath kits (soap and shampoo) keep it clean.',
-    park: 'Great day for a game of fetch!', gate: 'Big jobs done? Then adventure awaits!', square: 'Hi there! How is your pet doing today?' };
+    park: 'Great day for a game of fetch!', prizes: 'Welcome to the Prize Shop! Spend your deck tickets here.', gate: 'Big jobs done? Then adventure awaits!', square: 'Hi there! How is your pet doing today?' };
   function adultAv(av) { if (!av || av.height === 'tall') return av; var o = assign({}, av); o.height = 'tall'; return o; }
   function hosts(kind) {
     return (S().settings.parents || []).filter(function (p) { var d = doc(p.id); return d.avatar && d.spot === kind; })
@@ -158,6 +158,7 @@
     var d = doc(pid);
     if (!d.avatar || G.creator) { if (window.World) window.World.unmount(); view.innerHTML = creatorHtml(pid); return; }
     if (!d.pet) { if (window.World) window.World.unmount(); view.innerHTML = professorHtml(pid, d); return; }
+    if (window.Defense && window.Defense.active()) { window.Defense.render(view); return; }
     if (!window.World) { view.innerHTML = '<p class="note">The town did not load.</p>'; return; }
     window.World.show(view, pid);
   }
@@ -185,6 +186,16 @@
   }
 
   /* ----- character creator ----- */
+  function patSwatch(v, col) {
+    var ink = window.CHAR.patInk ? window.CHAR.patInk(col, v) : '#fff', g = '';
+    if (v === 'dots') g = '<circle cx="5" cy="5" r="1.6"/><circle cx="11" cy="9" r="1.6"/><circle cx="5" cy="13" r="1.6"/><circle cx="12" cy="2" r="1.4"/>';
+    else if (v === 'stripes') g = '<rect x="0" y="3" width="16" height="2.5"/><rect x="0" y="9" width="16" height="2.5"/>';
+    else if (v === 'plaid') g = '<rect x="0" y="4" width="16" height="2.4" opacity=".6"/><rect x="0" y="11" width="16" height="2.4" opacity=".6"/><rect x="4" y="0" width="2.4" height="16" opacity=".6"/><rect x="11" y="0" width="2.4" height="16" opacity=".6"/>';
+    else if (v === 'stars') g = '<path d="M8 2.5 L9.5 6.3 L13.5 6.4 L10.3 8.8 L11.4 12.8 L8 10.4 L4.6 12.8 L5.7 8.8 L2.5 6.4 L6.5 6.3 Z"/>';
+    else if (v === 'hearts') g = '<path d="M8 13 C2.5 9.3 2.2 5.3 4.8 4.1 C6.3 3.5 7.5 4.3 8 5.2 C8.5 4.3 9.7 3.5 11.2 4.1 C13.8 5.3 13.5 9.3 8 13 Z"/>';
+    else if (v === 'camo') g = '<path d="M1 4 Q5 0 8 4 Q9 8 4 7 Z M9 10 Q13 8 15 12 Q12 16 9 13 Z" opacity=".6"/><path d="M10 2 Q14 1 14 5 Q11 6 10 4 Z M2 11 Q5 10 6 13 Q3 15 2 13 Z"/>';
+    return '<svg viewBox="0 0 16 16" width="16" height="16"><circle cx="8" cy="8" r="7.5" fill="' + col + '"/><g fill="' + ink + '" style="clip-path:circle(7.5px at 8px 8px)">' + g + '</g><circle cx="8" cy="8" r="7.5" fill="none" stroke="rgba(0,0,0,.25)"/></svg>';
+  }
   function creatorHtml(pid, adult) {
     var AV = window.CHAR.AV, L = window.CHAR.AV_LABEL, d = doc(pid);
     var fresh = !G.dirtyAvatar;
@@ -194,16 +205,33 @@
     G.dirtyAvatar = a;
     function sw(key, i, color) { return '<button type="button" class="sw" style="background:' + color + '" data-pact="av" data-k="' + key + '" data-v="' + i + '" aria-pressed="' + (a[key] === i) + '" aria-label="' + key + ' ' + (i + 1) + '"></button>'; }
     function word(key) { return AV[key].map(function (v) { return '<button type="button" class="cat" data-pact="av" data-k="' + key + '" data-v="' + v + '" aria-pressed="' + (a[key] === v) + '">' + L[key][v] + '</button>'; }).join(''); }
+    var ORD = window.CHAR.ORDER || {};
+    function swatches(key, from) { var lk = from || key, list = AV[lk], ord = ORD[lk] || list.map(function (c, i) { return i; }); return ord.map(function (i) { return sw(key, i, list[i]); }).join(''); }
+    function word2(key, cur) { return AV[key].map(function (v) { return '<button type="button" class="cat" data-pact="av" data-k="' + key + '" data-v="' + v + '" aria-pressed="' + (cur === v) + '">' + L[key][v] + '</button>'; }).join(''); }
+    if (a.hairFx && a.hairFx !== 'none' && a.hair2 == null) a.hair2 = AV.hairColor.indexOf(window.CHAR.hair2Default(a.hairFx));
+    function pats(key, colorKey) {
+      var col = AV[colorKey][a[colorKey]] || AV[colorKey][0], cur = a[key] || 'solid';
+      return AV.pattern.map(function (v) {
+        return '<button type="button" class="cat pat-btn" data-pact="av" data-k="' + key + '" data-v="' + v + '" aria-pressed="' + (cur === v) + '">' +
+          '<span class="pat-sw" aria-hidden="true">' + patSwatch(v, col) + '</span>' + L.pattern[v] + '</button>';
+      }).join('');
+    }
+    var dress = a.top === 'dress';
     return '<section class="stack creator"><div><h2>' + (d.avatar ? 'Change your look' : adult ? 'Design your character' : 'Make your character') + '</h2><p class="note">' + (adult ? 'The kids see you in town at the spot you pick.' : 'This is you in the town. Everyone sees it when they visit.') + '</p></div>' +
       '<div class="av-preview">' + avatarSvg(a, adult) + '</div>' +
       (adult ? '' : '<div class="av-row"><span class="av-l">Height</span><div class="wrap">' + [['small', 'Small'], ['medium', 'Tall']].map(function (h) { return '<button type="button" class="cat" data-pact="av" data-k="height" data-v="' + h[0] + '" aria-pressed="' + (a.height === h[0]) + '">' + h[1] + '</button>'; }).join('') + '</div></div>') +
       '<div class="av-row"><span class="av-l">Build</span><div class="wrap">' + ['slim', 'medium', 'large'].map(function (v) { return '<button type="button" class="cat" data-pact="av" data-k="build" data-v="' + v + '" aria-pressed="' + ((a.build || 'medium') === v) + '">' + window.CHAR.AV_LABEL.build[v] + '</button>'; }).join('') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Skin</span><div class="wrap">' + AV.skin.map(function (c, i) { return sw('skin', i, c); }).join('') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Hair</span><div class="wrap">' + word('hair') + '</div></div>' +
-      '<div class="av-row"><span class="av-l">Hair color</span><div class="wrap">' + AV.hairColor.map(function (c, i) { return sw('hairColor', i, c); }).join('') + '</div></div>' +
+      '<div class="av-row"><span class="av-l">Hair color</span><div class="wrap">' + swatches('hairColor') + '</div></div>' +
+      (a.hair === 'bald' ? '' : '<div class="av-row"><span class="av-l">Hair 2nd color</span><div class="wrap">' + word2('hairFx', a.hairFx || 'none') + '</div>' +
+        (a.hairFx && a.hairFx !== 'none' ? '<div class="wrap" style="margin-top:6px">' + swatches('hair2', 'hairColor') + '</div>' : '') + '</div>') +
       '<div class="av-row"><span class="av-l">Eyes</span><div class="wrap">' + word('eyes') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Outfit</span><div class="wrap">' + word('top') + '</div></div>' +
-      '<div class="av-row"><span class="av-l">Outfit color</span><div class="wrap">' + AV.topColor.map(function (c, i) { return sw('topColor', i, c); }).join('') + '</div></div>' +
+      '<div class="av-row"><span class="av-l">Outfit color</span><div class="wrap">' + swatches('topColor') + '</div></div>' +
+      '<div class="av-row"><span class="av-l">Outfit pattern</span><div class="wrap">' + pats('topPat', 'topColor') + '</div></div>' +
+      (dress ? '' : '<div class="av-row"><span class="av-l">Pants color</span><div class="wrap">' + swatches('pantsColor') + '</div></div>' +
+        '<div class="av-row"><span class="av-l">Pants pattern</span><div class="wrap">' + pats('pantsPat', 'pantsColor') + '</div></div>') +
       (adult ? '<div class="av-row"><span class="av-l">Face</span><div class="wrap">' + word('face') + '</div></div>' : '') +
       '<div class="av-row"><span class="av-l">Extra</span><div class="wrap">' + word('acc') + '</div></div>' +
       '<div class="wrap"><button class="btn primary" type="button" data-pact="avSave">That’s me!</button><button class="btn" type="button" data-pact="avRandom">Surprise me</button>' +
@@ -238,7 +266,7 @@
         '<div class="wrap"><button class="btn primary" type="submit">Choose ' + esc(sp.names[0]) + '</button><button class="btn" type="button" data-pact="unpick">Look again</button></div></form></section>';
     }
     var eggBtn = d.egg ? '<button type="button" class="starter legendary" data-pact="pick" data-sp="@egg"><span class="starter-art egg-bob">' + CRE.egg() + '</span><strong>Rare egg</strong><small>Legendary</small><small class="note">The egg you found on an adventure. Nobody knows what is inside!</small></button>' : '';
-    return h + '<div class="starters">' + eggBtn + CRE.starters().map(function (sp) {
+    return h + '<div class="starters">' + eggBtn + CRE.starters(pid + ':' + (d.house || []).length + ':' + (d.rerolls || 0)).map(function (sp) {
       return '<button type="button" class="starter" data-pact="pick" data-sp="' + sp.id + '"><span class="starter-art">' + CRE.draw(sp.id, 0, 0, 'ok') + '</span>' +
         '<strong>' + esc(sp.names[0]) + '</strong><small>' + esc(sp.type) + ' type</small><small class="note">' + esc(sp.blurb) + '</small></button>';
     }).join('') + '</div></section>';
@@ -252,6 +280,8 @@
     if (room.kind === 'park') return head + (G.game ? '' : hostScene('park')) + parkHtml(pid);
     if (room.kind === 'house') return head + houseHtml(owner, owner === pid, room);
     if (room.kind === 'gate') return head + hostScene('gate') + (window.ADV ? ADV.gateHtml(pid) : '');
+    if (room.kind === 'prizes') return head + (hostScene('prizes') || '<div class="shop-scene host-scene"><div class="shopkeeper">' + window.CHAR.drawAvatar({ skin: 3, hair: 'bun', hairColor: 0, eyes: 'happy', top: 'suit', topColor: 5, acc: 'glasses', height: 'medium' }) + '</div><div class="speech">Welcome to the Prize Shop! Deck tickets from the Cruise Ship and Mess Defense are good here.</div></div>') +
+      '<div class="prize-room">' + (window.ADV ? ADV.prizesHtml(pid) : '') + '</div>';
     return head;
   }
   function coin(kind) {
@@ -369,7 +399,9 @@
     if (!b) return false;
     var a = b.getAttribute('data-pact'), pid = me(), g = G.game;
     switch (a) {
-      case 'av': var k = b.getAttribute('data-k'), v = b.getAttribute('data-v'); G.dirtyAvatar[k] = /^\d+$/.test(v) ? Number(v) : v; C().schedule(); break;
+      case 'av': var k = b.getAttribute('data-k'), v = b.getAttribute('data-v'); G.dirtyAvatar[k] = /^\d+$/.test(v) ? Number(v) : v;
+        if (k === 'hairFx' && v !== 'none') G.dirtyAvatar.hair2 = window.CHAR.AV.hairColor.indexOf(window.CHAR.hair2Default(v));
+        C().schedule(); break;
       case 'avRandom': var keepH = G.dirtyAvatar && G.dirtyAvatar.height; G.dirtyAvatar = window.CHAR.randAvatar(); if (keepH) G.dirtyAvatar.height = keepH; C().schedule(); break;
       case 'avEdit': G.creator = true; G.dirtyAvatar = null; G.room = null; if (window.World) window.World.unmount(); C().go(); break;
       case 'avCancel': G.creator = false; G.dirtyAvatar = null; if (G.adultId) { G.adultId = null; S().avEditFor = null; } C().go(); break;
@@ -389,7 +421,7 @@
         var np = assign({}, doc(pid).pet); np[a] = up[a];
         DB.commit([{ t: 'update', c: 'pets', id: pid, d: { pet: np } }]).then(function () { C().schedule(); }, C().fail);
         break;
-      case 'goRegion': G.room = null; if (window.World) window.World.enterRegion(b.getAttribute('data-r')); break;
+      case 'goRegion': G.room = null; if (b.getAttribute('data-r') === 'defense' && window.Defense) window.Defense.open(pid); else if (window.World) window.World.enterRegion(b.getAttribute('data-r')); break;
       case 'buy': buy(pid, b.getAttribute('data-item')).then(function (r) { if (r !== null || true) C().schedule(); }); break;
       case 'feed': feed(pid).then(function () { if (window.World) window.World.petEats(); C().schedule(); }); break;
       case 'startBath': G.game = { kind: 'bath', mood: 'ok', id: Date.now() }; C().schedule(); break;

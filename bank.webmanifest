@@ -11,12 +11,38 @@
   {
    "src": "bank-192.png",
    "sizes": "192x192",
-   "type": "image/png"
+   "type": "image/png",
+   "purpose": "any"
   },
   {
    "src": "bank-512.png",
    "sizes": "512x512",
-   "type": "image/png"
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "bank-mask-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "maskable"
+  },
+  {
+   "src": "bank-mask-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  },
+  {
+   "src": "bank-mono-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "monochrome"
+  },
+  {
+   "src": "bank-mono-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "monochrome"
   }
  ]
 }

@@ -1,4 +1,4 @@
-# Chore Ledger
+# Chore Quest
 
 A family chore tracker with a pet game and a family bank.
 
