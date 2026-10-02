@@ -89,6 +89,8 @@
     pebble: { n: 'Rock Wall', t: 'wall', hp: 4 },
     /* ---- rare ---- */
     starling: { n: 'Star Shower', t: 'ranged', f: 'star', k: 'rain', dmg: 9, every: 3.0, shots: 4 },
+    chai: { n: 'Razor Leaf', t: 'ranged', f: 'leaf', k: 'boomer', dmg: 15, every: 1.6 },
+    cupcat: { n: 'Sweet Tooth', t: 'lure', chew: 7, dmg: 160, hp: 1.4 },
     drake: { n: 'Dragon Breath', t: 'ranged', f: 'fire', k: 'beam', dmg: 12, every: 1.6, r: 3, burn: 2, sweep: true },
     unicorn: { n: 'Rainbow Beam', t: 'ranged', f: 'rainbow', k: 'pierce', dmg: 18, every: 1.8 },
     sphinx: { n: 'Riddle Trap', t: 'ambush', a: 'trap', dmg: 12, rearm: 12, knock: 2.5, splash: 1 },
@@ -100,7 +102,7 @@
   };
   var ELEM = { Fire: 'fire', Water: 'water', Leaf: 'leaf', Mythic: 'rainbow', Cosmic: 'rainbow' };
   var ECOL = { fire: '#ff7a2a', water: '#3a9ae8', leaf: '#6fae4f', rainbow: '#b58cff' };
-  var TYPE_LABEL = { ranged: 'Ranged', rush: 'Rush', wall: 'Wall', ambush: 'Ambush' };
+  var TYPE_LABEL = { ranged: 'Ranged', rush: 'Rush', wall: 'Wall', ambush: 'Ambush', lure: 'Lure' };
   var FLAVOUR = { fire: 'Fire', ice: 'Ice', rock: 'Rocks', water: 'Water', leaf: 'Leaf', zap: 'Zap', star: 'Stars', rainbow: 'Rainbow', moon: 'Moon', wind: 'Wind', bubble: 'Bubbles', light: 'Light' };
   var FCOL = { fire: '#ff7a2a', ice: '#9fe3ff', rock: '#8f8a80', water: '#3a9ae8', leaf: '#6fae4f', zap: '#ffd84a', star: '#ffe27a', rainbow: '#b58cff', moon: '#c9b8ff', wind: '#e8f4f0', bubble: '#bfe8ff', light: '#fff2a8' };
   var SHAPE = { pierce: 'goes through', lob: 'lobbed', boomer: 'boomerang', multi: '3 lanes', chain: 'jumps lanes', snipe: 'hits the farthest', seek: 'homing', rain: 'falls anywhere', beam: 'short range' };
@@ -113,6 +115,7 @@
     if (a.t === 'rush') bits.push(a.pierce ? 'charges down the whole lane' : 'runs up, hits, runs back');
     if (a.t === 'wall') bits.push('soaks up bites');
     if (a.t === 'ambush') bits.push(SPRING[a.a]);
+    if (a.t === 'lure') bits.push('so sweet every mess in its lane walks to it (even backwards) and gets gobbled up, one at a time');
     if (a.slow) bits.push('slows'); if (a.stun) bits.push('freezes'); if (a.burn) bits.push('burns'); if (a.knock) bits.push('pushes back');
     if (a.thorns) bits.push('bites back'); if (a.gen) bits.push('makes bubbles'); if (a.heal) bits.push('heals'); if (a.tile) bits.push('mud'); if (a.crit) bits.push('lucky hits'); if (a.revive) bits.push('comes back once');
     return bits.join(', ');
@@ -516,6 +519,17 @@
         if (on.length) spring(d, on);
         return;
       }
+      if (d.a.t === 'lure') {
+        if (d.chew > 0) { d.chew -= dt; if (d.chew <= 0) fx('Hungry!', d.cell, d.lane, '#e3528f'); return; }
+        var at = D.foes.filter(function (f) { return f.lane === d.lane && f.hp > 0 && Math.abs(f.p - d.cell) < 0.4; })[0];
+        if (at) {
+          d.chew = d.a.chew || 7; d.kick = 1;
+          if (at.type === 'boss') { hit(at, d.x.elem, (d.a.dmg || 160) * d.x.power, null, d.x.power); at.p -= 0.6; fx('Big bite!', d.cell, d.lane, '#e3528f'); }
+          else { hit(at, d.x.elem, 0, null, d.x.power); at.hp = 0; fx('Yum!', d.cell, d.lane, '#e3528f'); }
+          D.booms.push({ x: sx(d.cell), y: sy(d.lane), t0: D.t, col: '#ff9cc0', r: c * 0.55 });
+        }
+        return;
+      }
       if (d.a.gen) { d.gen -= dt; if (d.gen <= 0) { d.gen = d.a.gen; D.drops.push({ x: sx(d.cell), y: sy(d.lane) - c * 0.4, v: 25, life: 8, still: true }); } }
       if (d.a.heal) { d.heal -= dt; if (d.heal <= 0) { d.heal = 3; D.defs.forEach(function (o) { if (o !== d && Math.abs(o.lane - d.lane) + Math.abs(o.cell - d.cell) <= 1 && o.hp < o.max) { o.hp = Math.min(o.max, o.hp + d.a.heal * d.x.power); fx('+', o.cell, o.lane, '#2f9e5b'); } }); } }
       d.next -= dt; if (d.next > 0) return;
@@ -566,6 +580,20 @@
       if (f.stun > 0) { f.stun -= dt; return; }
       if (f.slow > 0) f.slow -= dt;
       var spd = F.speed * (f.slow > 0 ? 0.6 : 1) * (tl && tl.mud > 0 ? 0.3 : 1);
+      var lure = null;
+      D.defs.forEach(function (d) { if (d.a.t === 'lure' && d.lane === f.lane && !(d.chew > 0) && (!lure || Math.abs(d.cell - f.p) < Math.abs(lure.cell - f.p))) lure = d; });
+      f.back = false;
+      if (lure && f.p > -0.6) {
+        var dir = lure.cell > f.p ? 1 : -1, gap = Math.abs(lure.cell - f.p);
+        if (gap > 0.05) {
+          var block = null;   /* something else in the way gets chewed through first */
+          D.defs.forEach(function (d) { if (d !== lure && d.a.t !== 'ambush' && !d.rush && d.lane === f.lane && (dir > 0 ? d.cell > f.p && d.cell < lure.cell && f.p + F.size * 0.45 >= d.cell : d.cell < f.p && d.cell > lure.cell && f.p - F.size * 0.45 <= d.cell)) block = d; });
+          if (block) { block.hp -= F.bite * dt; f.f += dt * 6; }
+          else { f.p += dir * Math.min(gap, spd * 1.25 * dt); f.f += dt * 4; f.back = dir < 0; }
+          if (Math.random() < dt * 1.2) fxAt('\u2665', sx(f.p), sy(f.lane) - c * 0.45, '#ff6fa8');
+        }
+        if (f.p >= CELLS - 0.2) { /* fall through to the house check below */ } else return;
+      }
       var eat = null;
       D.defs.forEach(function (d) { if (d.a.t !== 'ambush' && !d.rush && d.lane === f.lane && f.p + F.size * 0.45 >= d.cell && f.p < d.cell + 0.6) eat = d; });
       if (eat) {
@@ -645,6 +673,10 @@
         mound(g, cx, by - c * 0.1, c, d.armed ? 0 : d.rearmT / (d.a.rearm || 12));
       } else if (im) g.drawImage(im, cx - w / 2, by - h * 0.92, w, h);
       if (d.x.mine) { g.fillStyle = '#ffd84a'; star(g, cx - c * 0.36, d.lane * c + c * 0.14, c * 0.08); }
+      if (d.a.t === 'lure') {
+        if (d.chew > 0) { g.fillStyle = '#c8874a'; for (var cr = 0; cr < 3; cr++) { g.beginPath(); g.arc(cx - c * 0.22 + cr * c * 0.2, by - h * 0.35 - Math.abs(Math.sin(t * 9 + cr)) * c * 0.12, c * 0.035, 0, 7); g.fill(); } }
+        else { g.strokeStyle = 'rgba(255,111,168,' + (0.35 + 0.25 * Math.sin(t * 4)) + ')'; g.lineWidth = 2; for (var wv = 0; wv < 2; wv++) { var wx = cx + (wv ? -1 : 1) * c * 0.48; g.beginPath(); g.moveTo(wx, by - h * 0.2); g.quadraticCurveTo(wx + 5, by - h * 0.35, wx, by - h * 0.5); g.quadraticCurveTo(wx - 5, by - h * 0.65, wx, by - h * 0.8); g.stroke(); } }
+      }
       if (d.hp < d.max) bar(g, cx, d.lane * c + c * 0.04, c * 0.6, d.hp / d.max, '#6fcf8f');
     } }); });
     D.foes.forEach(function (f) { items.push({ y: f.lane + 0.02, f: function () {
@@ -652,7 +684,8 @@
       if (f.stun > 0) g.globalAlpha = 0.75;
       if (s3 && s3.canvas) {
         var kk = c * (f.type === 'boss' ? 0.6 : 0.52) * s3.m.span / s3.T, gx = s3.a.ground[0], gy = s3.a.ground[1];
-        g.drawImage(s3.canvas, cx - gx * kk, f.lane * c + c * 0.92 - gy * kk, s3.T * kk, s3.T * kk);
+        if (f.back) { g.save(); g.translate(cx, 0); g.scale(-1, 1); g.drawImage(s3.canvas, -gx * kk, f.lane * c + c * 0.92 - gy * kk, s3.T * kk, s3.T * kk); g.restore(); }
+        else g.drawImage(s3.canvas, cx - gx * kk, f.lane * c + c * 0.92 - gy * kk, s3.T * kk, s3.T * kk);
         if (f.type === 'sock') { g.strokeStyle = '#7fc241'; g.lineWidth = 2.5; g.lineCap = 'round'; for (var sl = 0; sl < 2; sl++) { var lx = cx + c * (0.18 + sl * 0.14), ly = cy - s * 0.55 - ((t * 12 + sl * 5) % 6); g.beginPath(); g.moveTo(lx, ly); g.quadraticCurveTo(lx + 4, ly - 5, lx, ly - 10); g.quadraticCurveTo(lx - 4, ly - 15, lx, ly - 20); g.stroke(); } }
       } else if (window.C3D && C3D.has('foe_' + f.type) && !C3D.ready('foe_' + f.type)) { /* sheet still loading */ }
       else { var im = img('f|' + f.type + fr, foeSvg(f.type, fr)); if (im) g.drawImage(im, cx - s / 2, cy - s / 2, s, s); }
@@ -774,5 +807,8 @@
   });
   window.addEventListener('resize', function () { if (D && D.phase === 'play' && D.cv && document.body.contains(D.cv)) size(); });
 
-  window.Defense = { open: open, active: active, render: render, quit: quit, _state: function () { return D; }, FOES: FOES, ATK: ATK };
+  /* shared with Bedtime Defense (bed.js) */
+  var kit = { atk: atk, atkTitle: atkTitle, atkLine: atkLine, raised: raised, helpers: helpers, ELEM: ELEM, ECOL: ECOL, FCOL: FCOL, pair: pair, art: art, cardAtk: cardAtk,
+    creImg: creImg, img: img, foeSvg: foeSvg, FOE_PAL: FOE_PAL, projectile: projectile, flame: flame, mound: mound, bar: bar, star: star };
+  window.Defense = { open: open, active: active, render: render, quit: quit, _state: function () { return D; }, FOES: FOES, ATK: ATK, kit: kit };
 })();

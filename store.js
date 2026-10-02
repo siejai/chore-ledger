@@ -194,6 +194,11 @@
   DB.newId = function (c) { return backend.newId(c); };
   DB.query = function (spec) { return backend.query(spec); };
   DB.watch = function (spec, cb) { return backend.watch(spec, cb); };
+  /* push token for this device (Firebase Cloud Messaging, loaded only when a device turns reminders on) */
+  DB.pushToken = function (vapidKey, reg) {
+    if (DB.mode !== 'firebase') return Promise.resolve(null);
+    return loadScript('firebase-messaging.js').then(function () { return firebase.messaging().getToken({ vapidKey: vapidKey, serviceWorkerRegistration: reg }); });
+  };
   DB.commit = function (ops) { return backend.commit(ops); };
   DB.resetDemo = function () { try { localStorage.removeItem('cl.demo.v1'); } catch (e) {} };
   window.DB = DB;

@@ -1,5 +1,5 @@
 /*
- * Firebase web config for this household's Chore Ledger.
+ * Firebase web config for this household's Chore Quest.
  * This is not a secret: the Firestore rules (set in the Firebase console) decide who can read or write data.
  * Set this back to null to run in demo mode.
  */
@@ -11,5 +11,8 @@ window.CL_CONFIG = {
     storageBucket: "chore-tracker-8d14e.firebasestorage.app",
     messagingSenderId: "930480898979",
     appId: "1:930480898979:web:3a5c62da239aff64e45016"
-  }
+  },
+  /* Web Push key for chore reminders (Firebase console > Project settings > Cloud Messaging > Web Push certificates).
+     It is a public key. Leave empty to keep reminders in-app only. */
+  vapidKey: ""
 };

@@ -93,13 +93,15 @@
     for (var k = 16; k >= 0; k -= 8) { var v = Math.round(((x >> k) & 255) * (1 - t) + ((y >> k) & 255) * t); o += (v < 16 ? '0' : '') + v.toString(16); }
     return o;
   }
-  function pload(layer) {
-    if (PSTATE[layer]) return;
-    PSTATE[layer] = 'loading';
+  /* the creator's spin angles live in their own sheets (people-<layer>-spin.webp) so town and cards never load them */
+  function sheetOf(layer, view) { return PM && PM.spin && PM.spin.indexOf(view) >= 0 ? layer + '-spin' : layer; }
+  function pload(sheet) {
+    if (PSTATE[sheet]) return;
+    PSTATE[sheet] = 'loading';
     var im = new Image();
-    im.onload = function () { PIMG[layer] = im; PSTATE[layer] = 'ready'; notify(); };
-    im.onerror = function () { PSTATE[layer] = 'failed'; };
-    im.src = 'people-' + layer + '.webp' + (PM.ver && PM.ver[layer] ? '?v=' + PM.ver[layer] : '');
+    im.onload = function () { PIMG[sheet] = im; PSTATE[sheet] = 'ready'; notify(); };
+    im.onerror = function () { PSTATE[sheet] = 'failed'; };
+    im.src = 'people-' + sheet + '.webp' + (PM.ver && PM.ver[sheet] ? '?v=' + PM.ver[sheet] : '');
   }
   function shade(hex, amt) {
     var n = parseInt(String(hex).slice(1), 16), r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
@@ -107,30 +109,34 @@
     return '#' + c(r) + c(g) + c(b);
   }
   function person(spec, view) {
-    /* spec: { h: small|medium|tall, b: slim|medium|large, top, hair, face, acc, skin, hairColor, topColor, pants (bool), pantsColor,
+    /* spec: { h: small|medium|tall, b: slim|medium|large, top, hair, face, acc, skin, hairColor, topColor, pants (bool), bottom (pants|shorts|skirt), pantsColor,
        topPat, topInk, pantsPat, pantsInk } (colours as hex, patterns by name, 'solid' = none) */
     if (!PM || C3D.off) return null;
     var hasPants = !!(PM.layers && PM.layers.pants), hasFr = !!(PM.layers && PM.layers.fringe) && !!(spec.bangs || spec.tendrils);
+    view = view || 'three';
+    if (PM.spin && PM.spin.indexOf(view) >= 0 && !(PM.T && PM.T.spin)) view = 'three';
     var need = ['body', 'top', 'hair', 'face', 'acc'].concat(hasPants ? ['pants'] : []).concat(hasFr ? ['fringe'] : []), i;
+    for (i = 0; i < need.length; i++) need[i] = sheetOf(need[i], view);
     for (i = 0; i < need.length; i++) { if (PSTATE[need[i]] === 'failed') return null; }
     var ready = true;
     for (i = 0; i < need.length; i++) if (PSTATE[need[i]] !== 'ready') { pload(need[i]); ready = false; }
     if (!ready) return false;
-    view = view || 'three';
     var key = [spec.h, spec.b, spec.top, spec.hair, spec.face, spec.acc, spec.skin, spec.hairColor, spec.topColor, view,
-      spec.pants, spec.pantsColor, spec.topPat, spec.topInk, spec.pantsPat, spec.pantsInk, spec.hairFx, spec.hair2, spec.bangs, spec.tendrils].join('|');
+      spec.pants, spec.bottom, spec.pantsColor, spec.topPat, spec.topInk, spec.pantsPat, spec.pantsInk, spec.hairFx, spec.hair2, spec.bangs, spec.tendrils].join('|');
     if (PCACHE[key]) return PCACHE[key];
-    var T = view === 'three' ? PM.T.clay : PM.T.toon, out = canvas(T, T);
+    var T = view === 'three' ? PM.T.clay : PM.spin && PM.spin.indexOf(view) >= 0 ? PM.T.spin : PM.T.toon, out = canvas(T, T);
     var skin = { main: spec.skin, dark: shade(spec.skin, -38), light: shade(spec.skin, 28), accent: '#ff9aa8' };
     var top = { main: spec.topColor, dark: shade(spec.topColor, -48), light: '#f6f3ec', accent: '#ffffff' };
     var hair = { main: spec.hairColor, dark: shade(spec.hairColor, -34), light: shade(spec.hairColor, 40), accent: spec.hairColor };
     var pc = spec.pantsColor || '#3b4a6b', pants = { main: pc, dark: shade(pc, -40), light: shade(pc, 30), accent: '#ffffff' };
     function po(name, ink) { return { n: 5, pat: PATS.indexOf(name || 'solid'), ink: ink || '#ffffff' }; }
     var hb = spec.h + '.' + spec.b, parts = [['body', hb, skin]];
-    if (hasPants && spec.pants !== false) parts.push(['pants', hb, pants, po(spec.pantsPat, spec.pantsInk)]);
+    var pk = hb + (spec.bottom && spec.bottom !== 'pants' ? '.' + spec.bottom : '');   // shorts / skirt sit under their own keys
+    if (hasPants && !PM.layers.pants[pk]) pk = hb;
+    if (hasPants && spec.pants !== false) parts.push(['pants', pk, pants, po(spec.pantsPat, spec.pantsInk)]);
     /* hair 2nd colour: masks in the hair sheet; a beard with grey sides goes salt-and-pepper */
     /* strength: grey at the sides and highlights are blended in softly rather than painted solid */
-    var hfx = spec.hairFx ? { n: 4, pat: HPATS.indexOf(spec.hairFx), ink: spec.hair2 || '#8f8e93', k: { sides: 0.5, streaks: 0.6, tips: 0.9 }[spec.hairFx] || 1 } : null;
+    var hfx = spec.hairFx ? { n: 4, pat: HPATS.indexOf(spec.hairFx), ink: spec.hair2 || '#8f8e93', k: { sides: 0.35, streaks: 0.6, tips: 0.9 }[spec.hairFx] || 1 } : null;
     var bm = hfx && spec.hairFx === 'sides' ? mix(spec.hairColor, spec.hair2, 0.18) : null;
     var beard = bm ? { main: bm, dark: shade(bm, -34), light: shade(bm, 40), accent: spec.hairColor } : hair;
     parts.push(['top', hb + '.' + spec.top, top, po(spec.topPat, spec.topInk)], ['face', spec.h + '.' + spec.face, beard], ['hair', spec.h + '.' + spec.hair, hair, hfx]);
@@ -142,18 +148,25 @@
       var L = PM.layers[parts[i][0]], e = L && L[parts[i][1]], r = e && e[view], op = parts[i][3] || null, ns = SUB[parts[i][0]] || 3;
       if (!r) continue;
       if (op) op.n = ns; else if (ns !== 3) op = { n: ns, pat: -1 };
-      recolour(PIMG[parts[i][0]], r[0], r[1], r[2], r[3], parts[i][2], out, r[4], r[5], op);
+      recolour(PIMG[sheetOf(parts[i][0], view)], r[0], r[1], r[2], r[3], parts[i][2], out, r[4], r[5], op);
     }
     var url = ''; try { url = out.toDataURL('image/png'); } catch (e2) { url = ''; }
     if (!url) return null;
     if (npc > 120) { PCACHE = {}; npc = 0; }
     npc++;
     var H = PM.h[spec.h];
-    return (PCACHE[key] = { url: url, T: T, a: H.anchors[spec.b][view], er: H.er, span: H.span });
+    var anc = H.anchors[spec.b][view] || H.anchors[spec.b].three;
+    return (PCACHE[key] = { url: url, T: T, a: anc, er: H.er, span: H.span });
   }
   window.C3D = {
     person: person,
     hasPeople: function () { return !!PM && !C3D.off && PSTATE.body !== 'failed'; },
+    hasHeight: function (h) { return !!(PM && PM.h && PM.h[h]); },
+    /* turning a character round: front, 3/4, side, back 3/4, back, then the same mirrored */
+    spinFrames: function () {
+      return PM && PM.spin && PM.T && PM.T.spin ? [['c0', 0], ['three', 0], ['c90', 0], ['c150', 0], ['c180', 0], ['c150', 1], ['c90', 1], ['three', 1]] : [['three', 0]];
+    },
+    preloadSpin: function () { if (PM && PM.spin) for (var L in PM.layers) if (PM.layers.hasOwnProperty(L)) pload(L + '-spin'); },
     has: function (id) { return !!META[id] && STATE[id] !== 'failed'; },
     ready: function (id) { return STATE[id] === 'ready'; },
     preload: function (id) { if (META[id]) load(id); },

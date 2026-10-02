@@ -500,6 +500,17 @@ svg.cre .cre-wings{transform-box:fill-box;transform-origin:50% 50%;animation:cre
 /* Mess Defense */
 .region.defense{background:linear-gradient(#fff4e0,#f1e3c8);color:#17211e;border-color:#b3262a}
 .region.defense small{color:#3a4a46}
+.region.bed{background:linear-gradient(#eef3ff,#dfe7fb);color:#17211e;border-color:#5f84bd}
+.region.bed small{color:#3a4a46}
+.bed-bar{display:flex;align-items:center;gap:8px;min-height:36px;margin:4px 2px 0;font-size:13px;font-weight:600;color:#3a4a46}
+.bed-bar .btn{white-space:nowrap}
+.bed-hearts{color:#d23a5a;font-weight:700;font-size:15px;margin-right:8px}
+.bed-spd{margin-left:auto;min-width:40px}
+.bed-play .def-hud .bed-spd+.btn{margin-left:6px}
+.bed-tip{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:2.6em}
+.bed-tip .grow{flex:1 1 140px;min-width:0}
+.bed-tip small{color:var(--muted)}
+.bed-stars{color:#c9a44c;margin-left:2px}
 .def-team{display:flex;flex-wrap:wrap;margin:-3px}
 .def-card{flex:0 0 calc(33.33% - 6px);margin:3px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);padding:6px;text-align:center;font:inherit}
 .def-card.mine{border-color:#c9a44c}
@@ -602,3 +613,84 @@ svg.cre .cre-wings{transform-box:fill-box;transform-origin:50% 50%;animation:cre
 .pat-btn{display:inline-flex;align-items:center;gap:6px}
 .pat-sw{display:inline-flex;width:16px;height:16px;flex:none}
 .pat-sw svg{display:block}
+/* character creator: turn the character round with the arrows or by dragging it */
+.creator .av-stage{display:flex;align-items:center;justify-content:center;gap:10px}
+.creator .av-stage .av-preview{margin:0;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
+.creator .av-stage .av-preview:active{cursor:grabbing}
+.av-turn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:22px;line-height:1;padding:0;flex:none}
+.av-turn:active{background:var(--surface2)}
+/* chore reminders */
+.btn.bell{flex:none;padding:4px 8px;margin-left:4px;font-size:15px}
+.row .btn.bell{margin-right:6px}
+.nudged{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.nudge-bar{display:flex;align-items:center;gap:8px;margin:8px 0 0;padding:8px 10px;border-radius:var(--r);background:#fff6d8;border:1px solid #c9a44c;color:#5a4410;font-size:14px}
+.nudge-bar .nb-bell{font-size:20px;animation:nbRing 1.2s ease-in-out 2}
+.nudge-bar .btn{flex:none}
+@keyframes nbRing{0%,100%{transform:rotate(0)}20%{transform:rotate(-16deg)}40%{transform:rotate(14deg)}60%{transform:rotate(-8deg)}80%{transform:rotate(5deg)}}
+@media (prefers-reduced-motion: reduce){.nudge-bar .nb-bell{animation:none}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .nudge-bar{background:rgba(201,164,76,.16);color:#f0d48a}}
+:root[data-theme="dark"] .nudge-bar{background:rgba(201,164,76,.16);color:#f0d48a}
+.push-ask{border-color:#c9a44c}
+/* character creator: height slider */
+.hslider{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.hslider input[type=range]{flex:1 1 auto;min-width:0;accent-color:var(--accent,#1f6f5c);height:28px}
+/* lists: shopping list and family meeting topics */
+.li-add{display:flex;gap:8px;align-items:stretch}
+.li-add input{flex:1 1 auto;font-size:16px}
+.li-add .btn{flex:none}
+.li-list{list-style:none;margin:0;padding:0}
+.li-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.li-row:first-child{border-top:0}
+.li-tick{flex:none;width:32px;height:32px;border-radius:9px;border:2px solid var(--line);background:var(--surface);color:var(--accent-ink);font-weight:700;font-size:17px;line-height:1;padding:0}
+.li-tick.on{background:var(--accent);border-color:var(--accent)}
+.li-dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--accent);margin:0 11px}
+.li-text{min-width:0;overflow-wrap:anywhere;font-size:16px}
+.li-text small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+.li-name{display:block}
+.li-row.got .li-name{text-decoration:line-through;color:var(--muted)}
+.li-del{flex:none;min-width:40px}
+.li-cart{margin-top:8px;padding-top:8px;border-top:2px dashed var(--line)}
+.li-again{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.li-again .cat{margin-right:0;color:var(--ink)}
+.mtg-teaser{margin:6px 0 0}
+.mtg-agenda h3{margin:0}
+.mtg-talked{margin:0 0 8px;padding-left:20px}
+.btn.wait{opacity:.55}
+.store .why{color:#b3262a;font-weight:600}
+/* bath and bedtime scenes in the walk-around house */
+.scene-room{position:relative;width:100%;height:0;padding-bottom:65%;border-radius:10px;border:1px solid var(--line);overflow:hidden;-webkit-user-select:none;user-select:none}
+.scene-room .sc-layer{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.scene-room .scene-pet{position:absolute;margin:0;bottom:auto;cursor:default}
+.scene-room .sc-bath-pet{left:44%;width:36%;top:14%}
+.scene-room .sc-bed-pet{left:52%;width:33%;top:31%}
+.scene-room .sc-av{position:absolute;left:3%;bottom:5%;width:17%}
+.scene-room .sc-av-bed{left:30%;bottom:3%;width:15%}
+.scene-room .g-layer{z-index:3}
+/* pet card (tap a pet) */
+.pcard-wrap{position:absolute;left:0;top:0;right:0;bottom:0;z-index:5;background:rgba(10,20,18,.35);display:flex;align-items:center;justify-content:center;padding:12px}
+.pcard-wrap[hidden]{display:none}
+.pcard{position:relative;width:100%;max-width:360px;max-height:100%;overflow-y:auto;background:var(--surface);color:var(--ink);border-radius:16px;padding:14px;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.pcard-x{position:absolute;right:8px;top:8px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:20px;line-height:1;color:var(--ink)}
+.pcard-top{display:flex;gap:10px;align-items:center;padding-right:30px}
+.pcard-art{flex:none;width:96px}
+.pcard-art svg{display:block;width:100%;height:auto}
+.pcard-id h3{margin:0;font-size:20px}
+.pcard-lv{font-weight:600;margin-top:2px}
+.pcard-needs{margin:10px 0 4px}
+.pn{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:14px}
+.pn span:first-child{width:52px}
+.pn .bar{flex:1;height:10px;border-radius:5px;background:var(--surface2);overflow:hidden}
+.pn .bar i{display:block;height:100%;background:#e8a92b;border-radius:5px}
+.pn.full .bar i{background:#2f9e5b}.pn.low .bar i{background:#d23a3a}
+.pn b{width:28px;text-align:right;font-size:13px}
+.pcard-mood{margin:6px 0;font-size:14px}
+.pcard-grow{margin:4px 0 8px}
+.pcard-row{display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
+.pcard-k{flex:none;width:96px;color:var(--muted);font-size:13px}
+.pcard-row small{display:block}
+.alert-bar{display:flex;align-items:center;gap:8px;margin:6px 0 2px;padding:8px 10px;border-radius:10px;background:#fde8e8;color:#7a1f1f;border:1px solid #f2b8b8;font-size:14px}
+/* Pet Café */
+.scene-room .sc-cafe-pet{left:50%;width:30%;top:30%}
+.scene-room .sc-cafe-av{left:6%;bottom:4%;width:17%}
+.cafe-yum{position:absolute;left:52%;top:10%;background:#fff;border-radius:14px;padding:4px 12px;font-weight:700;color:#e3528f;box-shadow:0 2px 8px rgba(0,0,0,.15);animation:yum 1.2s ease-in-out infinite alternate}
+@keyframes yum{from{transform:translateY(0)}to{transform:translateY(-6px)}}

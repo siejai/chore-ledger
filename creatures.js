@@ -199,6 +199,13 @@
     sp('match', 'Fire', ['Match', 'Torch', 'Bonfire'], 'A brave little match. It grows into a torch, then a roaring bonfire that is great for marshmallows.',
       { family: 'object', shape: 'fire', muzzle: 'wide', smooth: true },
       [pal('#ff8a2a', '#b8420e', '#fff4d8', '#ffd23f', 'Campfire'), pal('#4a9ae8', '#1e4a9a', '#e8f4ff', '#b8ecff', 'Blue flame'), pal('#5ad86a', '#1e7a2e', '#eaffe8', '#e8ff8a', 'Witchfire'), pal('#b58cff', '#5e3aa8', '#f4ecff', '#ffb8f0', 'Spirit flame', 1)]),
+    /* ---------------- family requests ---------------- */
+    sp('chai', 'Leaf', ['Chaimander', 'Chaidrake', 'Chaidragon'], 'A little leaf lizard that smells like spiced tea. It sprouts tiny leaf wings, then grows into a mighty leaf dragon.',
+      { family: 'critter', low: true, long: true, headScale: [1.16, 1.14, 0.84], ears: 'none', crest: ['leafridge', 'leafridge', 'hornleaf'], tail: 'lizard', wings: 'leafwing', wingsFrom: 1, wingSize: [0, 0.65, 1.3], pattern: 'spots', muzzle: 'wide' },
+      [pal('#8cc65a', '#3f7a26', '#eef8dc', '#2f8f3a', 'Matcha'), pal('#c9a27a', '#7a5232', '#f8eee0', '#7cc65a', 'Chai latte'), pal('#e0884a', '#93461c', '#fff0dc', '#f2c14e', 'Autumn'), pal('#2fa38a', '#145a4c', '#d8f6ee', '#f2d46a', 'Jade', 1)]),
+    sp('cupcat', 'Fire', ['Cupcat', 'Cakecat', 'Partycake'], 'A cupcake kitten with a cherry on top. It grows into a layer cake, then a party cake with candles. Everything wants to come close to it.',
+      { family: 'object', shape: 'cake', ears: 'cat', tail: 'curl', face: ['whiskers'], muzzle: false, smooth: true },
+      [pal('#ff9cc0', '#c4507c', '#fff3e2', '#7ad0ff', 'Strawberry'), pal('#8a5634', '#4a2a16', '#f8e8d0', '#ffd23f', 'Chocolate'), pal('#fff3d6', '#c8a872', '#fffaf0', '#ff8fb8', 'Vanilla'), pal('#a8f0d0', '#3a9a78', '#fff8ee', '#8a5a3a', 'Mint chip'), pal('#f4e4ff', '#9a7ac8', '#ffffff', '#ffd23f', 'Rainbow sprinkle', 1)]),
     /* ---------------- rare mythological creatures (found as rare eggs) ---------------- */
     sp('drake', 'Mythic', ['Drakelet', 'Scalewing', 'Dracoryn'], 'A baby dragon. It sneezes little sparks and guards its treasure (mostly socks).',
       { family: 'myth', ears: 'fin', crest: 'horns', wings: 'bat', tail: 'dragon', pattern: 'scales', muzzle: true, fangs: true },
@@ -864,7 +871,7 @@
     s += '</g>';
     var out = '<defs><filter id="' + id + 'd"><feColorMatrix type="saturate" values="0.3"/></filter><radialGradient id="' + id + 'g"><stop offset="0" stop-color="#000" stop-opacity=".22"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>' +
       ellipse(100, 186, 58 * wide, 9, 'url(#' + id + 'g)') + '<g' + (fl.thin ? ' filter="url(#' + id + 'd)"' : '') + '>' + s + '</g>';
-    if (fl.dirty) out += stink();
+    if (fl.dirty && !opts.noStink) out += stink();
     return '<svg viewBox="-6 -34 212 234" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + sp.names[st] + '" class="cre">' + out + '</svg>';
   }
   /* Object creatures (rock, ice, fire) change what they are at each stage. */
@@ -930,6 +937,26 @@
         [[140, 90], [60, 150]].forEach(function (q) { s += path(starPath(q[0], q[1], 5, 2), '#fff'); });
         g = { hy: 124, hr: 44, er: [9.5, 11.5], ed: 20, ey: 0 }; top = 40; ground = 0;
       }
+    } else if (sp.shape === 'cake') {   /* flat fallback for the cupcake cat: cupcake, layer cake, party cake, with a frosting cat head */
+      var hy0 = [118, 92, 72][st], hr0 = [34, 32, 30][st], cs = { stroke: c.dark, 'stroke-width': 2.5, 'stroke-linejoin': 'round' };
+      if (st === 0) {
+        s += poly(Wp([[hx - 30, 186], [hx + 30, 186], [hx + 40, 140], [hx - 40, 140]]), c.accent, cs);
+        for (var pl = -3; pl <= 3; pl++) s += path(P('M', hx + pl * 10, 142, 'L', hx + pl * 8, 184), 'none', { stroke: c.dark, 'stroke-width': 1.5, opacity: 0.35 });
+        s += ellipse(hx, 140, 44 * wide, 12, c.main, cs);
+      } else {
+        var tiers = st === 1 ? [[186, 58, 60]] : [[186, 72, 44], [142, 52, 40]];
+        tiers.forEach(function (tr) {
+          s += el('rect', { x: hx - tr[1] * wide, y: tr[0] - tr[2], width: tr[1] * 2 * wide, height: tr[2], rx: 6, fill: c.light, stroke: c.dark, 'stroke-width': 2.5 });
+          s += el('rect', { x: hx - tr[1] * wide, y: tr[0] - tr[2] * 0.55, width: tr[1] * 2 * wide, height: 7, fill: c.main });
+          s += path(P('M', hx - tr[1] * wide, tr[0] - tr[2] + 4, 'q 8 12 14 0 q 8 14 16 0 q 8 10 14 0 q 8 14 16 0 q 8 12 14 0 q 8 14 16 0 q 6 10 12 0'), c.main, { stroke: c.dark, 'stroke-width': 1.5 });
+        });
+        if (st === 2) [-50, -24, 24, 50].forEach(function (dx) { s += el('rect', { x: hx + dx - 3, y: 120, width: 6, height: 18, fill: '#f6f3ec', stroke: c.dark, 'stroke-width': 1.2 }) + path(flamePath(hx + dx, 118, 9, 14), '#ffcf3f'); });
+      }
+      [-1, 1].forEach(function (d) { s += poly([[hx + d * hr0 * 0.75, hy0 - hr0 * 0.55], [hx + d * hr0 * 0.95, hy0 - hr0 * 1.25], [hx + d * hr0 * 0.25, hy0 - hr0 * 0.85]], c.main, cs); });
+      s += ellipse(hx, hy0, hr0 * 1.12 * wide, hr0, c.main, cs) + volume(id, hx, hy0, hr0 * 1.12, hr0);
+      [[-14, -18, '#ff5a6e'], [10, -22, '#5ac8f2'], [20, -6, '#ffd23f'], [-22, -4, '#8fe36a']].forEach(function (q) { s += el('rect', { x: hx + q[0], y: hy0 + q[1], width: 6, height: 2.5, rx: 1.2, fill: q[2], transform: 'rotate(' + (q[0] * 2) + ' ' + f(hx + q[0]) + ' ' + f(hy0 + q[1]) + ')' }); });
+      s += circle(hx + 2, hy0 - hr0 - 6, 7, '#e2283c', { stroke: '#8a1420', 'stroke-width': 1.5 }) + path(P('M', hx + 3, hy0 - hr0 - 12, 'q 2 -6 7 -9'), 'none', { stroke: '#5a8a2a', 'stroke-width': 2 });
+      g = { hy: hy0 + 4, hr: hr0, er: [7, 8.5], ed: 13, ey: 0 }; top = hy0 - hr0 - 14; ground = 14;
     } else {
       var head = mix(c.main, c.dark, 0.25);
       function fire(cx, by, w, h) {
@@ -972,7 +999,7 @@
       '<radialGradient id="' + id + 'g"><stop offset="0" stop-color="#000" stop-opacity=".22"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>' +
       (ground ? ellipse(100, 187, ground * wide, 8, 'url(#' + id + 'g)') : '') +
       '<g' + (fl.thin ? ' filter="url(#' + id + 'd)"' : '') + '><g class="cre-breathe">' + s + face + '</g></g>';
-    if (fl.dirty) out += stink();
+    if (fl.dirty && !opts.noStink) out += stink();
     return '<svg viewBox="-6 -34 212 234" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + sp.names[st] + '" class="cre">' + out + '</svg>';
   }
   /* ---------- 3D bodies (c3d.js): the body is a pre-rendered sprite, the face is drawn live at its anchors ---------- */
@@ -995,6 +1022,14 @@
     s += ellipse(100, 186, 50 * bw * Math.min(1.3, m.span / 2.6), 8.5, 'url(#' + id + 'g)');
     s += '<g' + (opts.flip ? ' transform="translate(200 0) scale(-1 1)"' : '') + '><g class="cre-breathe"><g' + (bw !== 1 ? ' transform="translate(100 0) scale(' + bw + ' 1) translate(-100 0)"' : '') + '>';
     s += '<image x="' + f(X(0)) + '" y="' + f(Y(0)) + '" width="' + f(T * k) + '" height="' + f(T * k) + '" preserveAspectRatio="none" xlink:href="' + s3.url + '"' + (fl.thin ? ' filter="url(#' + id + 'd)"' : '') + '/>';
+    if (fl.belly && !back) {   /* skinnyfat: a soft little pot belly under the head, in the body colour */
+      var hb = a.head[1] + a.head[2] * 0.92, gy0 = a.ground[1], bxp = a.head[0] + (view === 'side' ? -a.head[2] * 0.28 : view === 'three' ? -a.head[2] * 0.08 : 0);
+      var byp = hb + Math.max(8, (gy0 - hb) * 0.5), brx = a.head[2] * 0.5 * k / bw, bry = a.head[2] * 0.44 * k;
+      s += '<defs><radialGradient id="' + id + 'b" cx="40%" cy="30%" r="72%"><stop offset="0" stop-color="' + c.light + '"/><stop offset=".5" stop-color="' + c.main + '"/><stop offset="1" stop-color="' + c.dark + '"/></radialGradient>' +
+        '<radialGradient id="' + id + 'bs"><stop offset="0" stop-color="#000" stop-opacity=".25"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>' +
+        '<g' + (fl.thin ? ' filter="url(#' + id + 'd)"' : '') + '>' + ellipse(X(bxp), Y(byp) + bry * 0.75, brx * 0.9, bry * 0.35, 'url(#' + id + 'bs)') + ellipse(X(bxp), Y(byp), brx, bry, 'url(#' + id + 'b)') +
+        path(P('M', X(bxp) - brx * 0.14, Y(byp) + bry * 0.2, 'Q', X(bxp), Y(byp) + bry * 0.32, X(bxp) + brx * 0.12, Y(byp) + bry * 0.18), 'none', { stroke: c.dark, 'stroke-width': 1.5, 'stroke-linecap': 'round', opacity: 0.45 }) + '</g>';
+    }
     function A(n) {
       var v = a[n]; if (!v || !v[4]) return null;
       var sx = 0.38 + 0.62 * v[2], x = X(v[0]);
@@ -1049,7 +1084,7 @@
     s += moodFx(gA, hx, mood === 'grubby' ? 'ok' : mood);
     if (fl.dirty) s += dirtFx(gA, hx, gA.by);
     s += '</g></g></g>';
-    if (fl.dirty) s += stink();
+    if (fl.dirty && !opts.noStink) s += stink();
     if (sp.rare || opts.glow) s = '<g opacity=".85">' + path(starPath(18, 20, 7, 3), '#ffe27a') + path(starPath(186, 50, 5, 2), '#ffe27a') + path(starPath(170, 150, 4, 1.8), '#ffe27a') + '</g>' + s;
     if (opts.shine) s += path('M30 40 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4 Z', '#ffe27a') + path('M168 70 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3 Z', '#ffe27a');
     return '<svg viewBox="-6 -34 212 234" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="' + sp.names[st] + '" class="cre cre3d">' + s + '</svg>';
@@ -1157,7 +1192,7 @@
     s += moodFx(g, hx, mood === 'grubby' ? 'ok' : mood);
     if (fl.dirty) s += dirtFx(g, hx, by);
     s += '</g></g>';
-    if (fl.dirty) s += stink();
+    if (fl.dirty && !opts.noStink) s += stink();
     if (sp.rare || opts.glow) s = '<g opacity=".85">' + path(starPath(18, 20, 7, 3), '#ffe27a') + path(starPath(186, 50, 5, 2), '#ffe27a') + path(starPath(170, 150, 4, 1.8), '#ffe27a') + '</g>' + s;
     if (opts.shine) s += path('M30 40 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4 Z', '#ffe27a') + path('M168 70 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3 Z', '#ffe27a');
     return '<svg viewBox="-6 -34 212 234" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + sp.names[st] + '" class="cre">' + s + '</svg>';
@@ -1176,11 +1211,16 @@
     [[-12, by + 4, 8], [14, by + 12, 7], [0, by - 10, 5]].forEach(function (m) { s += ellipse(hx + m[0], m[1], m[2] * 1.3, m[2], '#7a5a3a', { opacity: 0.8 }); });
     return s;
   }
+  /* green stink lines that curl, drift up and fade on a loop (SVG animation, so they move wherever the picture is shown);
+     the town draws its own on the canvas (opts.noStink) */
   function stink() {
     var s = '', col = '#7fc241';
-    [[150, 60], [165, 30], [40, 50]].forEach(function (p, i) {
-      s += path(P('M', p[0], p[1], 'q 8 -8 0 -16 q -8 -8 0 -16'), 'none', { stroke: col, 'stroke-width': 4, 'stroke-linecap': 'round', opacity: 0.85 });
-      s += circle(p[0] + (i ? -6 : 8), p[1] - 36, 7, col, { opacity: 0.35 });
+    [[150, 60, 0], [165, 34, 0.6], [40, 52, 1.2]].forEach(function (p, i) {
+      var x = p[0], y = p[1], b = '-' + p[2].toFixed(1) + 's', a = 'M' + x + ' ' + y + ' q 8 -8 0 -16 q -8 -8 0 -16', z = 'M' + x + ' ' + y + ' q -8 -8 0 -16 q 8 -8 0 -16';
+      s += '<g opacity=".85"><path d="' + a + '" fill="none" stroke="' + col + '" stroke-width="4" stroke-linecap="round"><animate attributeName="d" values="' + a + ';' + z + ';' + a + '" dur="0.9s" begin="' + b + '" repeatCount="indefinite"/></path>' +
+        circle(x + (i ? -6 : 8), y - 36, 7, col, { opacity: 0.35 }) +
+        '<animateTransform attributeName="transform" type="translate" values="0 8;' + (i % 2 ? -4 : 4) + ' -2;0 -12" dur="1.8s" begin="' + b + '" repeatCount="indefinite"/>' +
+        '<animate attributeName="opacity" values="0;.9;.9;0" keyTimes="0;.25;.7;1" dur="1.8s" begin="' + b + '" repeatCount="indefinite"/></g>';
     });
     return s;
   }

@@ -125,7 +125,9 @@
     apMode: LS.get('cl.apmode') || 'chore', apClosed: {}, apSkip: {}, logMode: LS.get('cl.logmode') || 'person', chOpen: null, chPick: {}, queue: [],
     bankPid: null, bankForm: null, allTx: null,
     edit: null, cq: '', showArchived: false, armed: null, dirty: false,
-    wiz: { people: [], starter: true, imported: null }
+    wiz: { people: [], starter: true, imported: null },
+    nudges: [], devices: [], nudgeLock: {},
+    shop: [], agenda: [], shopMeta: null
   };
   var root = $('#app'), view = document.createElement('div');
   var raf = 0;
@@ -400,6 +402,19 @@
     return (S.settings.parents || []).some(function (p) { return p.id !== exceptId && sha256(p.salt + ':' + pin) === p.hash; });
   }
   function makeParent(name, pin) { var salt = DB.newId('meta'); return { id: DB.newId('meta'), name: name, salt: salt, hash: sha256(salt + ':' + pin) }; }
+  /* PIN guessing: every 5 wrong tries locks this device, longer each time (1 min, 5 min, 15 min, 1 hour, 4 hours, then a day).
+     The count lives on the device (reloading doesn't reset it) and each lock tells the parents (alerts collection). */
+  var PIN_TRIES = 5, PIN_LOCKS = [60, 300, 900, 3600, 14400, 86400];
+  function pinLock() { try { return JSON.parse(LS.get('cl.pinlock') || '{}') || {}; } catch (e) { return {}; } }
+  function waitText(until) { var s = Math.max(1, Math.ceil((until - Date.now()) / 1000)); return s < 90 ? s + ' seconds' : s < 5400 ? Math.ceil(s / 60) + ' minutes' : Math.ceil(s / 3600) + ' hours'; }
+  function alertBar() {
+    var list = (S.alerts || []).filter(function (a) { return !a.seen; }).sort(function (a, b) { return b.ts - a.ts; });
+    if (!list.length) return '';
+    var a = list[0], who = a.who ? pname(a.who) : '';
+    return '<div class="alert-bar" role="alert"><span class="grow"><b>Wrong parent PIN</b> typed ' + a.n + ' times on ' + (a.app === 'parent' ? 'the parent app' : 'a kids’ device') + (who ? ' while ' + esc(who) + ' was using it' : '') +
+      ', ' + esc(a.date === today() ? 'today' : fmtDate(a.date)) + ' at ' + hm(a.ts) + '. That device is locked for a while.' + (list.length > 1 ? ' <small>(+' + (list.length - 1) + ' more)</small>' : '') + '</span>' +
+      '<button class="btn small" type="button" data-act="alertOk">OK</button></div>';
+  }
   function submitPin(mode, pin, pin2, name, done) {
     if (!/^\d{4,8}$/.test(pin)) { toast('Use 4 to 8 digits.', true); return; }
     var parents = (S.settings.parents || []).slice();
@@ -413,26 +428,31 @@
       saveSettings({ parents: parents }).then(function () { toast(mode === 'add' ? name + ' can now unlock with their PIN' : 'PIN changed'); if (done) done(); }, fail);
       return;
     }
-    if (Date.now() < S.lockUntil) { toast('Too many tries. Wait a moment.', true); return; }
+    var L = pinLock();
+    if (Date.now() < (L.until || 0)) { toast('Too many wrong PINs. Try again in ' + waitText(L.until) + '.', true); return; }
     var hit = find(parents, function (p) { return sha256(p.salt + ':' + pin) === p.hash; });
     if (hit) {
-      S.fails = 0;
+      S.fails = 0; LS.set('cl.pinlock', null);
       var kp = $('#pinKeep');
       if (MODE === 'bank') LS.set('cl.keep', kp && kp.checked ? JSON.stringify({ id: hit.id, until: Date.now() + KEEP_DAYS * 864e5 }) : null);
       setAdmin({ id: hit.id, name: hit.name }); toast('Hi ' + hit.name + '. ' + (MODE === 'bank' ? 'Unlocked.' : 'Parent mode is on.'));
     }
     else {
-      S.fails++;
-      if (S.fails >= 5) { S.lockUntil = Date.now() + 30000; S.fails = 0; toast('Too many wrong PINs. Try again in 30 seconds.', true); }
-      else toast('Wrong PIN.', true);
+      L.n = (L.n || 0) + 1;
+      if (L.n % PIN_TRIES === 0) {
+        L.until = Date.now() + PIN_LOCKS[Math.min(L.k || 0, PIN_LOCKS.length - 1)] * 1000; L.k = (L.k || 0) + 1;
+        toast('Too many wrong PINs. Locked for ' + waitText(L.until) + '. The parents will see this.', true);
+        DB.commit([{ t: 'set', c: 'alerts', id: DB.newId('alerts'), d: { kind: 'pin', ts: Date.now(), date: today(), n: L.n, who: isPerson(S.me) ? S.me : (S.prevKid || ''), app: MODE === 'bank' ? 'parent' : 'kids', ua: String(navigator.userAgent || '').slice(0, 120), seen: false } }]).catch(function () {});
+      } else toast('Wrong PIN. ' + (PIN_TRIES - L.n % PIN_TRIES) + ' more tr' + (PIN_TRIES - L.n % PIN_TRIES === 1 ? 'y' : 'ies') + ' before it locks.', true);
+      LS.set('cl.pinlock', JSON.stringify(L));
       var i = $('#pin'); if (i) { i.value = ''; i.focus(); }
     }
   }
 
   /* ================= render ================= */
   function tabsFor() {
-    if (MODE === 'bank') return [['approvals', 'Approvals'], ['bank', 'Accounts'], ['log', 'Chores'], ['pet', 'Pets'], ['history', 'History'], ['setup', 'Setup']];
-    if (S.admin) return [['log', 'Chores'], ['pet', 'Pets'], ['approvals', 'Approvals'], ['bank', 'Bank'], ['history', 'History'], ['setup', 'Setup']];
+    if (MODE === 'bank') return [['approvals', 'Approvals'], ['bank', 'Accounts'], ['log', 'Chores'], ['lists', 'Lists'], ['pet', 'Pets'], ['history', 'History'], ['setup', 'Setup']];
+    if (S.admin) return [['log', 'Chores'], ['pet', 'Pets'], ['approvals', 'Approvals'], ['bank', 'Bank'], ['lists', 'Lists'], ['history', 'History'], ['setup', 'Setup']];
     if (isAdult(S.me)) return [['log', 'Chores'], ['history', 'History']];
     return [['log', 'Chores'], ['pet', 'My Pet'], ['history', 'History']];
   }
@@ -450,9 +470,9 @@
     var right = S.phase !== 'app' || (MODE === 'family' && !ROLE) ? '' : MODE === 'bank'
       ? (S.admin ? '<span class="modeflag">' + esc(S.parent.name) + '</span><button class="btn small" type="button" data-act="adminToggle">Lock</button>' : '')
       : '<button class="who-btn" type="button" data-act="pick">' + who + '</button>' +
-        '<button class="btn small" type="button" data-act="adminToggle">' + (S.admin ? 'Lock' : 'Parent') + '</button>';
+        (S.admin ? '<button class="btn small" type="button" data-act="adminToggle">Lock</button>' : '');
     return '<header class="top' + (S.admin ? ' admin' : '') + (MODE === 'bank' ? ' bod' : '') + '"><div class="brand">' + title + '<div class="right row-flex">' + right + '</div></div>' +
-      (DB.mode === 'demo' ? '<div class="demo">Demo mode: saved on this device only</div>' : '') +
+      (DB.mode === 'demo' ? '<div class="demo">Demo mode: saved on this device only</div>' : '') + (showTabs ? nudgeBar() : '') + (S.admin ? alertBar() : '') +
       (showTabs ? '<nav class="tabs' + (tabsFor().length > 4 ? ' many' : '') + '" role="tablist" aria-label="Sections">' + tabs + '</nav>' : '') + '</header>';
   }
   var lastShell = '';
@@ -461,7 +481,7 @@
     raf = 0;
     var ae = document.activeElement;
     var typing = ae && view.contains(ae) && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName) && ae.type !== 'search' && ae.type !== 'file';
-    if (typing && (S.phase === 'app' || S.phase === 'wizard')) { S.dirty = true; return; }
+    if (typing && (S.phase === 'app' || S.phase === 'wizard')) { if (S.phase === 'app') paintLists(); S.dirty = true; return; }
     S.dirty = false;
     if (S.phase === 'boot') { root.innerHTML = '<p class="note" style="margin-top:40px;text-align:center">Loading...</p>'; lastShell = ''; return; }
     if (S.phase === 'error') { root.innerHTML = '<div class="banner" style="margin-top:24px"><strong>Could not start.</strong><br>' + esc(S.err) + '</div>'; lastShell = ''; return; }
@@ -481,6 +501,11 @@
       root.innerHTML = shell + '<main id="view"></main><div id="undoBar"></div>';
       lastShell = shell;
       view = $('#view');
+      var nav = root.querySelector('.tabs'), on = nav && nav.querySelector('[aria-selected="true"]');
+      if (on && nav.scrollWidth > nav.clientWidth) {
+        var l = on.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft, r = l + on.offsetWidth;
+        if (r > nav.clientWidth - 16) nav.scrollLeft = r - nav.clientWidth + 32;
+      }
     }
     renderUndoBar();
     if (S.phase === 'wizard') { view.setAttribute('data-view', 'wizard'); renderWizard(); return; }
@@ -499,6 +524,7 @@
     else if (S.tab === 'approvals') renderApprovals(D);
     else if (S.tab === 'bank') renderBank(D);
     else if (S.tab === 'history') { if (S.admin && S.mtg && S.mtg.open) renderMeeting(); else renderHistory(D); }
+    else if (S.tab === 'lists') renderLists();
     else renderSetup(D);
   }
   function allReady() { var r = S.ready; return r.people && r.chores && r.entries && r.txns && r.reqs && r.settings && r.pets && r.adv; }
@@ -636,6 +662,84 @@
       '<p class="note" style="margin-top:10px">Pick your name each time. The app comes back here after 5 minutes without use.</p></div>';
   }
 
+  /* ----- Chore reminders: a parent taps the bell, the kid's devices get a push notification and an in-app reminder bar ----- */
+  function lastNudge(cid, pid) {
+    var best = null;
+    (S.nudges || []).forEach(function (n) { if (n.cid === cid && n.pid === pid && n.date === today() && (!best || n.ts > best.ts)) best = n; });
+    return best;
+  }
+  function hm(ts) { var d = new Date(ts), h = d.getHours(), m = d.getMinutes(); return ((h % 12) || 12) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' am' : ' pm'); }
+  function nudgeNote(n) {
+    var sent = n.push ? (n.push === 'no-devices' ? ', in the app' : ', ' + n.push + ' sent') : '';
+    return '&#128276; reminded ' + hm(n.ts) + (n.seen ? ', seen' : sent);
+  }
+  function bellBtn(cid, pid, name) {
+    return '<button class="btn small bell" type="button" data-act="nudge" data-cid="' + esc(cid) + '" data-pid="' + esc(pid) + '" aria-label="Remind ' + esc(name) + '" title="Send a reminder">&#128276;</button>';
+  }
+  function sendNudge(cid, pids) {
+    var c = find(S.chores, function (x) { return x.id === cid; }); if (!c || !pids.length) return;
+    var now = Date.now(), from = (S.parent && S.parent.name) || 'A parent', ops = [], names = [];
+    pids.forEach(function (pid) {
+      var k = cid + '|' + pid; if (S.nudgeLock[k] && now - S.nudgeLock[k] < 20000) return;
+      S.nudgeLock[k] = now; names.push(pname(pid));
+      ops.push({ t: 'set', c: 'nudges', id: DB.newId('nudges'), d: { pid: pid, cid: cid, chore: c.name, from: from, ts: now, date: today(), seen: false,
+        title: pname(pid) + ', a reminder from ' + from, body: 'Time for: ' + c.name } });
+    });
+    if (!ops.length) { toast('Reminder already sent'); return; }
+    DB.commit(ops).then(function () { toast('Reminder sent to ' + names.join(', ') + ': ' + c.name); }, fail);
+  }
+  function nudgeBar() {
+    if (S.admin || !isPerson(S.me)) return '';
+    var list = (S.nudges || []).filter(function (n) { return n.pid === S.me && n.date === today() && !n.seen; }).sort(function (a, b) { return b.ts - a.ts; });
+    if (!list.length) return '';
+    var n = list[0];
+    return '<div class="nudge-bar" role="status"><span class="nb-bell" aria-hidden="true">&#128276;</span><span class="grow"><b>' + esc(n.from || 'A parent') + '</b> says it’s time for <b>' + esc(n.chore || 'a chore') + '</b>' +
+      (list.length > 1 ? ' <small>(+' + (list.length - 1) + ' more)</small>' : '') + '</span>' +
+      '<button class="btn small" type="button" data-act="nudgeGo" data-id="' + esc(n.id) + '">Show me</button><button class="btn small primary" type="button" data-act="nudgeOk" data-id="' + esc(n.id) + '">On it!</button></div>';
+  }
+  /* push: this device signs up with Firebase Cloud Messaging and records which kids use it; a Cloud Function sends the pushes */
+  function pushCan() {
+    var cfg = window.CL_CONFIG || {};
+    return DB.mode === 'firebase' && !!cfg.vapidKey && location.protocol === 'https:' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  }
+  function pushPrompt() {
+    if (S.admin || !isPerson(S.me) || !pushCan() || Notification.permission !== 'default' || LS.get('cl.pushAsk') === 'no') return '';
+    return '<div class="card push-ask"><p style="margin:0"><b>&#128276; Get chore reminders on this device?</b> A parent can send ' + esc(pname(S.me)) + ' a reminder even when the app is closed.</p>' +
+      '<div class="wrap"><button class="btn primary" type="button" data-act="pushOn">Turn on reminders</button><button class="btn" type="button" data-act="pushNo">Not now</button></div></div>';
+  }
+  function hashStr(t) { var h = 5381; for (var i = 0; i < t.length; i++) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0; return h.toString(36); }
+  function pushRegister() {
+    if (!pushCan() || Notification.permission !== 'granted' || !DB.pushToken) return Promise.resolve(null);
+    return navigator.serviceWorker.ready.then(function (reg) { return DB.pushToken(window.CL_CONFIG.vapidKey, reg); }).then(function (token) {
+      if (!token) return null;
+      var who = (LS.get('cl.pushWho') || '').split(',').filter(Boolean);
+      if (isPerson(S.me) && who.indexOf(S.me) < 0) who.push(S.me);
+      LS.set('cl.pushWho', who.join(','));
+      var id = 'dev_' + hashStr(token);
+      if (LS.get('cl.pushTok') === token && LS.get('cl.pushSaved') === who.join(',')) return token;
+      return DB.commit([{ t: 'set', c: 'devices', id: id, d: { token: token, who: who, role: ROLE || MODE, ts: Date.now(), ua: String(navigator.userAgent).slice(0, 120) } }]).then(function () {
+        LS.set('cl.pushTok', token); LS.set('cl.pushSaved', who.join(',')); return token;
+      });
+    }).catch(function (e) { if (window.console) console.warn('push', e && e.message); return null; });
+  }
+  function pushEnable() {
+    if (!pushCan()) { toast('This device can’t get reminders. On iPhone, add the app to the Home Screen first.', true); return; }
+    Notification.requestPermission().then(function (p) {
+      if (p !== 'granted') { LS.set('cl.pushAsk', 'no'); toast('Reminders are off. You can turn them on in the device settings.', true); schedule(); return; }
+      pushRegister().then(function (t) { toast(t ? 'Reminders are on for this device' : 'Could not turn on reminders', !t); schedule(); });
+    });
+  }
+  function pushRefresh() { if (pushCan() && Notification.permission === 'granted') pushRegister(); }
+  function remindersCard() {
+    var devs = (S.devices || []).slice().sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+    return '<section class="card stack tight"><h2>&#128276; Chore reminders</h2>' +
+      '<p class="note" style="margin:0">Tap the bell next to a chore in the Chores tab to remind a kid. It shows up in their app' + (window.CL_CONFIG && CL_CONFIG.vapidKey ? ', and as a notification on any device below.' : '. Phone notifications switch on once push is set up.') + '</p>' +
+      (devs.length ? '<ul class="list">' + devs.map(function (d) {
+        return '<li class="row"><div class="rname">' + esc((d.who || []).map(pname).join(', ') || 'No one yet') + '<div class="meta note">' + esc(/iPhone|iPad/.test(d.ua || '') ? 'iPhone/iPad' : /Android/.test(d.ua || '') ? 'Android' : 'Device') + ' &middot; signed up ' + esc(fmtDate(new Date(d.ts || 0).toISOString().slice(0, 10))) + '</div></div>' +
+          '<button class="btn small" type="button" data-act="devDel" data-id="' + esc(d.id) + '">Remove</button></li>';
+      }).join('') + '</ul>' : '<p class="note" style="margin:0">No devices yet. On each kid’s device, open the Chores tab and tap <b>Turn on reminders</b>.</p>') + '</section>';
+  }
+
   /* ----- Chores (log) ----- */
   function logModeSeg() {
     return '<div class="seg" role="group" aria-label="Log chores"><button type="button" data-act="logMode" data-m="person" aria-pressed="' + (S.logMode !== 'chore') + '">By person</button>' +
@@ -658,6 +762,7 @@
         '<button class="btn" id="todayBtn" data-act="today" type="button">Today</button></div>' +
         '<div class="head-line" id="logHead"></div>' +
         '<p class="note" id="logNote"></p>' +
+        '<div id="pushBox"></div>' +
         '<div id="passBox"></div>' +
         '<div id="questBox"></div>' +
         '<div class="cats" id="cats"></div>' +
@@ -685,6 +790,7 @@
       (S.date !== D.t ? '<span class="pill">Past date</span>' : '');
     renderQuestBox();
     renderPassBox(pid);
+    var pb = $('#pushBox'); if (pb) pb.innerHTML = pushPrompt();
     updateLogList(pid);
   }
   /* ----- Chores tab, by chore (parent mode): tap a chore to see everyone assigned and mark or approve them together ----- */
@@ -747,11 +853,14 @@
           if (on && st !== 'ok') n++;
           var lab = { wait: 'waiting', ok: 'approved', no: 'sent back', none: 'not yet' }[st];
           var pend = st === 'wait' ? find(S.entries, function (e) { return e.cid === c.id && e.pid === p.id && e.date === S.date && e.status === 'pending' && !e.questId; }) : null;
+          var ln = st === 'none' || st === 'no' ? lastNudge(c.id, p.id) : null;
           return '<div class="cperson ' + pCls(p) + '"><label class="cp-main"><input type="checkbox" data-act="chPick" data-cid="' + esc(c.id) + '" data-pid="' + esc(p.id) + '"' + (on ? ' checked' : '') + (st === 'ok' ? ' disabled' : '') + '>' +
-            '<span class="dot"></span><span class="grow">' + esc(p.name) + '</span><span class="cp-st st-' + st + '">' + lab + '</span></label>' +
+            '<span class="dot"></span><span class="grow">' + esc(p.name) + (ln ? '<small class="nudged">' + nudgeNote(ln) + '</small>' : '') + '</span><span class="cp-st st-' + st + '">' + lab + '</span></label>' +
+            (st === 'none' || st === 'no' ? bellBtn(c.id, p.id, p.name) : '') +
             (pend ? '<button class="btn small danger" type="button" data-act="rjUnit" data-key="e' + esc(pend.id) + '" aria-label="Send back ' + esc(p.name) + '">&#10005;</button>' : '') + '</div>';
         }).join('') +
           '<div class="crow-foot"><button class="btn small" type="button" data-act="chAll" data-cid="' + esc(c.id) + '">Everyone</button><button class="btn small" type="button" data-act="chNone" data-cid="' + esc(c.id) + '">Nobody</button>' +
+          (sts.filter(function (x) { return x === 'none' || x === 'no'; }).length ? '<button class="btn small" type="button" data-act="nudgeAll" data-cid="' + esc(c.id) + '">&#128276; Remind the rest</button>' : '') +
           '<button class="btn primary" type="button" data-act="chGo" data-cid="' + esc(c.id) + '"' + (n ? '' : ' disabled') + '>Approve ' + (n || '') + '</button></div></div>';
       }
       return h + '</li>';
@@ -809,7 +918,7 @@
       '<p class="mono' + (total === 100 ? '' : ' warn-text') + '" style="margin:0">Total ' + total + '%' + (total === 100 ? '' : ' (needs to be 100%)') + '</p>' +
       '<div class="wrap"><button class="btn primary" type="button" data-act="qsave"' + (total === 100 ? '' : ' disabled') + '>Log it</button><button class="btn" type="button" data-act="qcancel">Cancel</button></div></div>';
   }
-  function rowHtml(c, x) {
+  function rowHtml(c, x, pid) {
     var n = x ? x.a + x.p : 0, tags = '';
     if (c.bountyCents > 0) tags += '<span class="tag bounty">' + money(c.bountyCents) + ' bounty</span>';
     if (c.major && window.ADV && ADV.bigJobsToday().indexOf(c) >= 0) tags += '<span class="tag big">Big job</span>';
@@ -818,8 +927,10 @@
       if (x.a) tags += '<span class="tag ok">' + x.a + ' approved</span>';
       if (x.r) tags += '<span class="tag no">' + x.r + ' rejected</span>';
     }
+    var ln = S.admin && pid && !n ? lastNudge(c.id, pid) : null;
+    if (ln) tags += '<span class="tag plain">' + nudgeNote(ln) + '</span>';
     return '<li class="row' + (n ? ' done' : '') + '"><div class="rname">' + esc(c.name) + (tags ? '<div class="meta">' + tags + '</div>' : '') + '</div>' +
-      '<span class="pts mono">+' + c.pts + '</span>' +
+      '<span class="pts mono">+' + c.pts + '</span>' + (S.admin && pid && !n ? bellBtn(c.id, pid, pname(pid)) : '') +
       '<div class="step"><button type="button" data-act="dec" data-cid="' + esc(c.id) + '" aria-label="Remove one: ' + esc(c.name) + '"' + (x && (x.p || (S.admin && x.a)) ? '' : ' disabled') + '>&minus;</button>' +
       '<span class="n' + (n ? '' : ' zero') + '">' + n + '</span>' +
       '<button type="button" class="plus" data-act="inc" data-cid="' + esc(c.id) + '" aria-label="Log: ' + esc(c.name) + '">+</button></div></li>';
@@ -858,13 +969,13 @@
     else if (S.sort === 'name') list.sort(function (a, b) { return a.name.localeCompare(b.name); });
     else if (S.sort === 'used') list.sort(function (a, b) { return (used[b.id] || 0) - (used[a.id] || 0) || ord(a) - ord(b); });
     else list.sort(function (a, b) { return ord(a) - ord(b); });
-    if (!(S.sort === 'cat' && S.cat === 'all')) { ul.innerHTML = list.map(function (c) { return rowHtml(c, cnt[c.id]); }).join(''); return; }
+    if (!(S.sort === 'cat' && S.cat === 'all')) { ul.innerHTML = list.map(function (c) { return rowHtml(c, cnt[c.id], pid); }).join(''); return; }
     var html = '';
     catList(list).forEach(function (n) {
       var items = list.filter(function (c) { return catName(c) === n; });
       var done = items.filter(function (c) { var x = cnt[c.id]; return x && x.a + x.p > 0; }).length;
       html += '<li class="grp"><span>' + esc(n) + '</span><span class="mono">' + done + ' / ' + items.length + '</span></li>' +
-        items.map(function (c) { return rowHtml(c, cnt[c.id]); }).join('');
+        items.map(function (c) { return rowHtml(c, cnt[c.id], pid); }).join('');
     });
     ul.innerHTML = html;
   }
@@ -1263,7 +1374,7 @@
     var last = (S.mtgList || [])[0], days = last ? Math.max(0, Math.round((parseD(today()) - parseD(last.date)) / 864e5)) : 0;
     return '<section class="card mtg-card"><div class="row-flex"><div class="grow"><h2>Family meeting</h2><p class="note">' +
       (last ? 'Everything since your last meeting on ' + esc(fmtDate(last.date)) + ' (' + (days === 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago') + ').'
-        : 'Chores, money, pets and games since the last meeting. Start your first meeting to set the marker.') + '</p></div>' +
+        : 'Chores, money, pets and games since the last meeting. Start your first meeting to set the marker.') + '</p>' + agendaTeaser() + '</div>' +
       '<button class="btn primary" type="button" data-act="mtgOpen">Open report</button></div></section>';
   }
   function mtgSince() {
@@ -1291,7 +1402,7 @@
       if (p.active === false) return;
       var d = (S.pets || {})[p.id] || {}, pet = d.pet || {};
       snap[p.id] = { balance: Number(p.balance) || 0, level: Number(pet.level) || 0, stage: Number(pet.stage) || 0, sp: pet.sp || '', name: pet.name || '',
-        tickets: Number(d.tickets) || 0, def: Number(d.defLevel) || 0, house: (d.house || []).length };
+        tickets: Number(d.tickets) || 0, def: Number(d.defLevel) || 0, bed: Number(d.bedLevel) || 0, house: (d.house || []).length };
     });
     return snap;
   }
@@ -1317,6 +1428,7 @@
       row.newPet = !!(pet && was && was.sp && was.sp !== pet.sp);
       row.tickets = Number(d.tickets) || 0; row.dTickets = was ? row.tickets - was.tickets : null;
       row.def = Number(d.defLevel) || 0; row.dDef = was ? row.def - was.def : null;
+      row.bed = Number(d.bedLevel) || 0; row.dBed = was ? row.bed - (was.bed || 0) : null;
       row.movedIn = (d.house || []).filter(function (h) { return h.retired && h.retired >= dstr(new Date(sn.ts)); });
       out.push(row);
     });
@@ -1340,13 +1452,16 @@
       list.map(function (x, i) { return opt(esc(x.id), (i === 0 ? 'Last meeting, ' : 'Meeting, ') + esc(fmtDate(x.date)), m.since || (list[0] && list[0].id)); }).join('') +
       opt('7', 'Last 7 days', m.since) + opt('30', 'Last 30 days', m.since) + '</select></label>';
     var h = '<section class="mtg"><div class="row-flex"><button class="btn small" type="button" data-act="mtgClose">&larr; History</button></div>' +
-      '<h2 style="margin-top:10px">Family meeting</h2><div class="wrap end">' + sel + '</div>';
+      '<h2 style="margin-top:10px">Family meeting</h2><div class="wrap end">' + sel + '</div>' + mtgAgendaCard();
     if (m.since == null || m.loading || !m.entries) { view.innerHTML = h + '<p class="note" style="margin-top:14px">Gathering everything up&hellip;</p></section>'; return; }
     var D = mtgData(), sn = D.sn, kids = D.kids, tot = { done: 0, pts: 0, inC: 0, lv: 0 };
     kids.concat(D.adults).forEach(function (r) { tot.done += r.done; tot.pts += r.pts; });
     kids.forEach(function (r) { tot.inC += r.money.inC; if (r.lv > 0) tot.lv += r.lv; });
     h += '<p class="note" style="margin-top:8px">' + esc(sn.label) + ' &middot; ' + D.nDays + ' day' + (D.nDays === 1 ? '' : 's') + (sn.none ? ' (no meeting yet)' : '') + '</p>';
-    if (sn.meeting && sn.meeting.notes) h += '<div class="card mtg-notes"><div class="grp" style="margin:-14px -14px 10px;border-radius:var(--r) var(--r) 0 0">Notes from that meeting</div><p style="white-space:pre-wrap;margin:0">' + esc(sn.meeting.notes) + '</p></div>';
+    var lastTalk = sn.meeting && sn.meeting.agenda || [];
+    if (sn.meeting && (sn.meeting.notes || lastTalk.length)) h += '<div class="card mtg-notes"><div class="grp" style="margin:-14px -14px 10px;border-radius:var(--r) var(--r) 0 0">From that meeting</div>' +
+      (lastTalk.length ? '<p class="note" style="margin:0 0 4px">Talked about</p><ul class="mtg-talked">' + lastTalk.map(function (x) { return '<li>' + esc(x.text) + '</li>'; }).join('') + '</ul>' : '') +
+      (sn.meeting.notes ? '<p style="white-space:pre-wrap;margin:0">' + esc(sn.meeting.notes) + '</p>' : '') + '</div>';
     h += '<div class="mtg-tot">' + [[n0(tot.done), 'chores done'], [n0(tot.pts), 'points'], [money(tot.inC), 'earned by kids'], [sn.snap ? n0(tot.lv) : '&ndash;', 'pet levels']].map(function (x) {
       return '<div class="card"><div class="big-num">' + x[0] + '</div><div class="note">' + x[1] + '</div></div>'; }).join('') + '</div>';
     var sh = mtgShout(kids);
@@ -1363,7 +1478,7 @@
       if (pet) {
         petl = '<div class="mtg-line mtg-pet"><span class="mini-pet">' + (window.Pets ? Pets.petSvg(pet, 'happy') : '') + '</span><div class="grow"><b>' + esc(pet.name || 'Pet') + '</b> the ' + esc(window.Pets ? Pets.speciesName(pet) : '') +
           ' &middot; Lv ' + (pet.level || 0) + delta(r.lv) + (r.evolved ? ' <span class="tag">Evolved!</span>' : '') + (r.newPet ? ' <span class="tag">New pet!</span>' : '') +
-          '<br><small class="note">' + n0(r.tickets) + ' tickets' + delta(r.dTickets) + (r.def ? ' &middot; Mess Defense round ' + r.def + delta(r.dDef) : '') +
+          '<br><small class="note">' + n0(r.tickets) + ' tickets' + delta(r.dTickets) + (r.def ? ' &middot; Mess Defense round ' + r.def + delta(r.dDef) : '') + (r.bed ? ' &middot; Bedtime Defense night ' + r.bed + delta(r.dBed) : '') +
           (r.movedIn.length ? ' &middot; moved into the house: ' + r.movedIn.map(function (x) { return esc(x.name); }).join(', ') : '') + '</small></div></div>';
       }
       return '<div class="card mtg-kid ' + pCls(p) + '">' + head + chores + mon + petl + '</div>';
@@ -1376,6 +1491,9 @@
   }
   function mtgText() {
     var D = mtgData(), t = ['Family meeting, ' + fmtDate(today()), D.sn.label + ' (' + D.nDays + ' days)', ''];
+    var ag = agendaSorted(), talked = ag.filter(function (x) { return x.talked; }), left = ag.filter(function (x) { return !x.talked; });
+    if (talked.length) { t.push('Talked about:'); talked.forEach(function (x) { t.push('• ' + x.text); }); t.push(''); }
+    if (left.length) { t.push('Still to talk about:'); left.forEach(function (x) { t.push('• ' + x.text); }); t.push(''); }
     mtgShout(D.kids).forEach(function (x) { t.push('★ ' + x[0] + ': ' + x[1]); });
     D.kids.forEach(function (r) {
       if (!r.done && !r.money.inC && !r.money.outC && !r.pet) return;
@@ -1387,21 +1505,26 @@
   }
   function mtgShare() {
     var el = $('#mtgNotes'); if (el) S.mtg.notes = el.value;
-    var txt = mtgText();
-    if (navigator.share) { navigator.share({ title: 'Family meeting', text: txt }).catch(function () {}); return; }
+    shareText('Family meeting', mtgText(), 'Summary copied. Paste it into your family chat.');
+  }
+  /* the phone's share sheet when there is one, otherwise copy to the clipboard */
+  function shareText(title, txt, copied) {
+    if (navigator.share) { navigator.share({ title: title, text: txt }).catch(function () {}); return; }
     function fallback() {
       var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
       var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
-      document.body.removeChild(ta); toast(ok ? 'Summary copied. Paste it into your family chat.' : 'Could not copy on this device.', !ok);
+      document.body.removeChild(ta); toast(ok ? copied : 'Could not copy on this device.', !ok);
     }
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { toast('Summary copied. Paste it into your family chat.'); }, fallback);
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { toast(copied); }, fallback);
     else fallback();
   }
   function mtgStart() {
     var el = $('#mtgNotes'); if (el) S.mtg.notes = el.value;
-    var id = DB.newId('meetings'), rec = { ts: Date.now(), date: today(), by: S.parent ? S.parent.id : '', notes: trim(S.mtg.notes || ''), snap: mtgSnap() };
-    DB.commit([{ t: 'set', c: 'meetings', id: id, d: rec }]).then(function () {
-      toast('New meeting started. The next report picks up from here.');
+    var ag = agendaSorted(), talked = ag.filter(function (x) { return x.talked; }), left = ag.length - talked.length;
+    var id = DB.newId('meetings'), rec = { ts: Date.now(), date: today(), by: S.parent ? S.parent.id : '', notes: trim(S.mtg.notes || ''), snap: mtgSnap(),
+      agenda: talked.map(function (x) { return { text: x.text, by: x.by || '' }; }) };
+    DB.commit([{ t: 'set', c: 'meetings', id: id, d: rec }].concat(talked.map(function (x) { return { t: 'delete', c: 'agenda', id: x.id }; }))).then(function () {
+      toast('New meeting started.' + (talked.length ? ' ' + talked.length + ' topic' + (talked.length === 1 ? '' : 's') + ' saved with it.' : '') + (left ? ' ' + left + ' topic' + (left === 1 ? '' : 's') + ' left for next time.' : ' The next report picks up from here.'));
       S.mtg = { open: false }; S.mtgList = null; S.mtgListLoading = false; go();
     }, fail);
   }
@@ -1417,6 +1540,111 @@
       a.download = 'chore-history-' + today() + '.csv';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     } catch (e) { toast('This browser cannot download files.', true); }
+  }
+
+  /* ================= lists: shopping and family meeting topics =================
+   * shop/{id}: text, by (parent id), ts, got, gotTs, gotBy. Bought items wait at the bottom until Clear.
+   * meta/shop: recent (things bought lately, newest first) for the "Again?" buttons.
+   * agenda/{id}: text, by, ts, talked. Ticked off in the family meeting report; Start new meeting saves the
+   * talked-about topics with the meeting and keeps the rest for next time. */
+  function lc(s) { return trim(s).toLowerCase(); }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function byLine(x) { var n = parentName(x.by) || (person(x.by) || {}).name || ''; return (n ? esc(n) + ' &middot; ' : '') + esc(fmtShort(x.ts)); }
+  function me4() { return S.parent ? S.parent.id : (S.me || ''); }
+  function shopSorted() {
+    var a = S.shop || [];
+    return { open: a.filter(function (x) { return !x.got; }).sort(function (p, q) { return (p.ts || 0) - (q.ts || 0); }),
+      got: a.filter(function (x) { return x.got; }).sort(function (p, q) { return (q.gotTs || 0) - (p.gotTs || 0); }) };
+  }
+  function agendaSorted() { return (S.agenda || []).slice().sort(function (p, q) { return (p.ts || 0) - (q.ts || 0); }); }
+  function delBtn(act, x) {
+    var armed = S.armed === act + x.id;
+    return '<button type="button" class="btn small li-del' + (armed ? ' danger' : '') + '" data-act="' + act + '" data-id="' + esc(x.id) + '" aria-label="Remove ' + esc(x.text) + '">' + (armed ? 'Remove?' : '&times;') + '</button>';
+  }
+  function shopRow(x) {
+    return '<li class="li-row' + (x.got ? ' got' : '') + '"><button type="button" class="li-tick' + (x.got ? ' on' : '') + '" data-act="shopTick" data-id="' + esc(x.id) + '" aria-pressed="' + !!x.got + '" aria-label="' + (x.got ? 'Put back on the list: ' : 'Got it: ') + esc(x.text) + '">' + (x.got ? '&#10003;' : '') + '</button>' +
+      '<span class="grow li-text"><span class="li-name">' + esc(x.text) + '</span><small>' + byLine(x) + '</small></span>' + delBtn('shopDel', x) + '</li>';
+  }
+  function shopListHtml() {
+    var s = shopSorted(), h = s.open.length ? '<ul class="li-list">' + s.open.map(shopRow).join('') + '</ul>' : '<p class="note">' + (S.ready.shop ? 'Nothing on the list.' : 'Loading&hellip;') + '</p>';
+    if (s.got.length) h += '<div class="row-flex li-cart"><strong class="grow">In the cart (' + s.got.length + ')</strong><button class="btn small" type="button" data-act="shopClear">Clear</button></div><ul class="li-list">' + s.got.map(shopRow).join('') + '</ul>';
+    return h;
+  }
+  function againHtml() {
+    var on = {}; (S.shop || []).forEach(function (x) { on[lc(x.text)] = 1; });
+    var r = ((S.shopMeta && S.shopMeta.recent) || []).filter(function (t) { return !on[lc(t)]; }).slice(0, 12);
+    return r.length ? '<div class="li-again"><span class="note">Again?</span>' + r.map(function (t) { return '<button type="button" class="cat" data-act="shopAgain" data-t="' + esc(t) + '">+ ' + esc(t) + '</button>'; }).join('') + '</div>' : '';
+  }
+  function agendaRow(x, meeting) {
+    return '<li class="li-row' + (meeting && x.talked ? ' got' : '') + '">' +
+      (meeting ? '<button type="button" class="li-tick' + (x.talked ? ' on' : '') + '" data-act="agTick" data-id="' + esc(x.id) + '" aria-pressed="' + !!x.talked + '" aria-label="Talked about: ' + esc(x.text) + '">' + (x.talked ? '&#10003;' : '') + '</button>' : '<span class="li-dot" aria-hidden="true"></span>') +
+      '<span class="grow li-text"><span class="li-name">' + esc(x.text) + '</span><small>' + byLine(x) + (!meeting && x.talked ? ' &middot; talked about' : '') + '</small></span>' + delBtn('agDel', x) + '</li>';
+  }
+  function agendaListHtml(meeting) {
+    var a = agendaSorted();
+    if (!a.length) return '<p class="note">' + (meeting ? 'Nothing on the list. Add a topic below.' : 'Nothing yet.') + '</p>';
+    return '<ul class="li-list">' + a.map(function (x) { return agendaRow(x, meeting); }).join('') + '</ul>';
+  }
+  function agendaTeaser() {
+    var a = agendaSorted(); if (!a.length) return '';
+    return '<p class="note mtg-teaser"><b>' + a.length + ' topic' + (a.length === 1 ? '' : 's') + ' to talk about:</b> ' + a.slice(0, 3).map(function (x) { return esc(x.text); }).join(' &middot; ') + (a.length > 3 ? ' &hellip;' : '') + '</p>';
+  }
+  function addForm(kind, id, ph, label, primary) {
+    return '<form class="li-add" data-form="' + kind + '"><input id="' + id + '" type="text" maxlength="' + (kind === 'shop' ? 80 : 200) + '" placeholder="' + ph + '" aria-label="' + label + '" autocomplete="off" enterkeyhint="done">' +
+      '<button class="btn' + (primary ? ' primary' : '') + '" type="submit">Add</button></form>';
+  }
+  function mtgAgendaCard() {
+    return '<div class="card mtg-agenda stack tight"><h3>To talk about</h3><p class="note" style="margin:0">Tick each topic as you talk it through. Starting the next meeting saves the ticked ones with this meeting; the rest stay for next time.</p>' +
+      '<div id="mtgAgenda">' + agendaListHtml(true) + '</div>' + addForm('agenda', 'agIn2', 'Add a topic', 'Add a topic to talk about', false) + '</div>';
+  }
+  function renderLists() {
+    if (!S.admin) { view.innerHTML = locked('Lists'); return; }
+    if (!$('#shopList')) {
+      view.innerHTML = '<div class="stack lists">' +
+        '<section class="card stack tight"><div class="row-flex"><h2 class="grow" style="margin:0">Shopping list</h2><button class="btn small" type="button" data-act="shopShare">Share</button></div>' +
+        addForm('shop', 'shopIn', 'Add items, like milk, eggs', 'Add to the shopping list', true) + '<div id="shopAgain"></div><div id="shopList"></div></section>' +
+        '<section class="card stack tight"><h2 style="margin:0">Family meeting topics</h2><p class="note" style="margin:0">Anything to bring up at the next family meeting. They show at the top of the meeting report (History &rarr; Open report), where you tick them off as you go.</p>' +
+        addForm('agenda', 'agIn', 'Something to talk about', 'Add a family meeting topic', true) + '<div id="agendaList"></div></section></div>';
+    }
+    paintLists();
+  }
+  /* repaints only the lists, so an add box keeps its focus (and the phone keyboard stays up) while items come in */
+  function paintLists() {
+    [['#shopList', shopListHtml], ['#shopAgain', againHtml], ['#agendaList', function () { return agendaListHtml(false); }], ['#mtgAgenda', function () { return agendaListHtml(true); }]].forEach(function (p) {
+      var el = $(p[0]); if (!el) return;
+      var h = p[1](); if (el._h !== h) { el.innerHTML = h; el._h = h; }
+    });
+  }
+  function addShop(raw) {
+    if (!needAdmin()) return;
+    var parts = String(raw || '').split(/[,\n]/).map(trim).filter(Boolean), ops = [], dup = [], seen = {}, now = Date.now();
+    parts.forEach(function (t, i) {
+      t = cap(t.slice(0, 80)); var k = lc(t); if (seen[k]) return; seen[k] = 1;
+      var ex = find(S.shop || [], function (x) { return lc(x.text) === k; });
+      if (ex && !ex.got) { dup.push(t); return; }
+      if (ex) ops.push({ t: 'update', c: 'shop', id: ex.id, d: { got: false, gotTs: 0, gotBy: '', ts: now + i, by: me4() } });
+      else ops.push({ t: 'set', c: 'shop', id: DB.newId('shop'), d: { text: t, by: me4(), ts: now + i, got: false } });
+    });
+    if (dup.length) toast(dup.join(', ') + (dup.length === 1 ? ' is' : ' are') + ' already on the list.');
+    if (ops.length) DB.commit(ops).then(paintLists, fail);
+  }
+  function shopTick(id) {
+    if (!needAdmin()) return;
+    var x = find(S.shop, function (y) { return y.id === id; }); if (!x) return;
+    DB.commit([{ t: 'update', c: 'shop', id: id, d: x.got ? { got: false, gotTs: 0, gotBy: '' } : { got: true, gotTs: Date.now(), gotBy: me4() } }]).catch(fail);
+  }
+  function shopClear() {
+    if (!needAdmin()) return;
+    var got = shopSorted().got; if (!got.length) return;
+    var seen = {}, recent = got.map(function (x) { return x.text; }).concat((S.shopMeta && S.shopMeta.recent) || []).filter(function (t) { var k = lc(t); if (seen[k]) return false; seen[k] = 1; return true; }).slice(0, 20);
+    DB.commit(got.map(function (x) { return { t: 'delete', c: 'shop', id: x.id }; }).concat([{ t: 'merge', c: 'meta', id: 'shop', d: { recent: recent } }]))
+      .then(function () { toast('Cleared ' + got.length + ' item' + (got.length === 1 ? '' : 's') + '.'); }, fail);
+  }
+  function addAgenda(raw) {
+    if (!needAdmin()) return;
+    var t = cap(trim(raw).slice(0, 200)); if (!t) return;
+    if (find(S.agenda || [], function (x) { return lc(x.text) === lc(t); })) { toast('That topic is already on the list.'); return; }
+    DB.commit([{ t: 'set', c: 'agenda', id: DB.newId('agenda'), d: { text: t, by: me4(), ts: Date.now(), talked: false } }]).then(paintLists, fail);
   }
 
   /* ----- Setup ----- */
@@ -1435,7 +1663,7 @@
         '<p class="note">' + (MODE === 'bank' ? 'This device opens the parent app.' + (keepInfo() ? ' It stays unlocked until you tap Lock.' : ' It locks after 10 minutes without use.') : 'This device opens the kids’ app. Parents can still tap Parent at the top to approve things here.') + '</p>' : '') + '</section>';
     if (!S.admin) { view.innerHTML = '<div class="stack">' + locked('Setup') + dev + '</div>'; return; }
     if (S.avEditFor && window.Pets) { view.innerHTML = window.Pets.adultCreatorHtml(S.avEditFor); return; }
-    var st = S.settings, act = activePeople(), h = '<div class="stack" style="margin-bottom:10px">';
+    var st = S.settings, act = activePeople(), h = '<div class="stack" style="margin-bottom:10px">' + remindersCard();
     if (S.parent && window.Pets) {
       var md = window.Pets.doc(S.parent.id), spot = md.spot || '';
       h += '<section class="card stack tight you-card"><h2>You in town</h2><div class="you-row"><div class="you-av">' + (md.avatar ? window.CHAR.drawAvatar(window.Pets.adultAv(md.avatar)) : '<span class="note">No character yet</span>') + '</div>' +
@@ -1606,14 +1834,30 @@
       case 'adultSpot': if (!needAdmin()) break; DB.commit([{ t: 'merge', c: 'pets', id: S.parent.id, d: { spot: d('spot'), adult: true } }]).then(function () { toast(d('spot') ? 'The kids will find you there.' : 'You are off the map.'); }, fail); break;
       case 'toggleAdult': if (!needAdmin()) break; var tp = person(d('pid')); if (tp) DB.commit([{ t: 'update', c: 'people', id: tp.id, d: { adult: !tp.adult } }]).then(function () { toast(tp.name + (tp.adult ? ' is a kid again.' : ' is now a grown-up (no pet).')); }, fail); break;
       case 'roleParent': if (S.phase === 'app' && S.settingsDoc && ROLE && !S.admin) { needAdmin(); break; } setRole('parent'); break;
+      case 'nudge': if (needAdmin()) sendNudge(d('cid'), [d('pid')]); break;
+      case 'nudgeAll': if (needAdmin()) (function (cid) {
+          var c = find(S.chores, function (x) { return x.id === cid; }); if (!c) return;
+          sendNudge(cid, (c.who || []).filter(function (pid) { var p = person(pid), st = choreStatus(cid, pid); return p && p.active !== false && (st === 'none' || st === 'no'); }));
+        })(d('cid')); break;
+      case 'nudgeOk': case 'nudgeGo': (function (id, go2) {
+          var n = find(S.nudges, function (x) { return x.id === id; }); if (!n) return;
+          DB.commit([{ t: 'update', c: 'nudges', id: id, d: { seen: true, seenTs: Date.now() } }]).catch(function () {});
+          n.seen = true;
+          if (go2) { S.tab = 'log'; S.q = n.chore || ''; S.cat = 'all'; view.innerHTML = ''; go(); var q = $('#q'); if (q) q.value = S.q; } else schedule();
+        })(d('id'), a === 'nudgeGo'); break;
+      case 'pushOn': pushEnable(); break;
+      case 'alertOk': if (needAdmin()) DB.commit((S.alerts || []).filter(function (x) { return !x.seen; }).map(function (x) { return { t: 'update', c: 'alerts', id: x.id, d: { seen: true } }; })).catch(fail); break;
+      case 'pushNo': LS.set('cl.pushAsk', 'no'); schedule(); break;
+      case 'devDel': if (needAdmin()) DB.commit([{ t: 'delete', c: 'devices', id: d('id') }]).then(function () { toast('Removed'); }, fail); break;
       case 'unkeep': LS.set('cl.keep', null); toast('The app will ask for your PIN again.'); touchAdmin(); go(); break;
       case 'adminClose': S.adminOpen = false; schedule(); break;
       case 'pick': S.picking = true; S.adminOpen = false; if (S.admin) setAdmin(null); schedule(); break;
       case 'choose':
+        if (isPerson(S.me)) S.prevKid = S.me;
         S.me = d('pid'); S.lastMe = S.me; LS.set('cl.me', S.me); S.picking = false; S.bankPid = null; S.quest = null;
         if (window.Pets) window.Pets.reset();
         if (S.me === '@parent') { if (!S.admin) openAdmin(); } else if (S.admin) setAdmin(null);
-        S.tab = S.me === '@parent' ? S.tab : 'log'; go(); break;
+        S.tab = S.me === '@parent' ? S.tab : 'log'; go(); pushRefresh(); break;
       case 'sel': S.sel = d('pid'); S.quest = null; schedule(); break;
       case 'cat': S.cat = d('cat'); updateLogList(); break;
       case 'logMode': S.logMode = d('m'); LS.set('cl.logmode', S.logMode); S.cat = 'all'; view.innerHTML = ''; go(); break;
@@ -1691,6 +1935,14 @@
         mtgLoadList().then(function (l) { if (S.mtg && S.mtg.since == null) { S.mtg.since = l[0] ? l[0].id : '30'; schedule(); } }, fail); go(); break;
       case 'mtgClose': S.mtg = null; go(); break;
       case 'mtgShare': mtgShare(); break;
+      /* lists */
+      case 'shopTick': shopTick(d('id')); break;
+      case 'shopDel': if (needAdmin()) (function (id) { confirmTap('shopDel' + id, function () { DB.commit([{ t: 'delete', c: 'shop', id: id }]).catch(fail); }); })(d('id')); break;
+      case 'shopClear': shopClear(); break;
+      case 'shopAgain': addShop(d('t')); break;
+      case 'shopShare': shareText('Shopping list', 'Shopping list\n' + shopSorted().open.map(function (x) { return '• ' + x.text; }).join('\n'), 'List copied. Paste it into a text.'); break;
+      case 'agTick': if (needAdmin()) (function (x) { if (x) DB.commit([{ t: 'update', c: 'agenda', id: x.id, d: { talked: !x.talked } }]).catch(fail); })(find(S.agenda, function (y) { return y.id === d('id'); })); break;
+      case 'agDel': if (needAdmin()) (function (id) { confirmTap('agDel' + id, function () { DB.commit([{ t: 'delete', c: 'agenda', id: id }]).catch(fail); }); })(d('id')); break;
       case 'mtgStart': if (needAdmin()) confirmTap('mtgStart', mtgStart); break;
       /* bank */
       case 'acct': S.bankPid = d('pid'); S.bankForm = null; S.allTx = null; go(); break;
@@ -1805,6 +2057,7 @@
     }
     if (kind === 'wizard') { var wp = $('#wzPerson'); if (wp && trim(wp.value)) wizAddPerson(); wizCreate(); return; }
     if (kind === 'pin') { submitPin('unlock', val('pin')); return; }
+    if (kind === 'shop' || kind === 'agenda') { var li = f.querySelector('input'); if (!li) return; if (kind === 'shop') addShop(li.value); else addAgenda(li.value); li.value = ''; return; }
     if (kind === 'request') {
       var pid = S.bankPid, item = trim(val('rqItem')), cents = parseMoney(val('rqAmt'));
       if (!item) { toast('Say what you want to buy.', true); return; }
@@ -1907,6 +2160,13 @@
     if (window.C3D) C3D.onReady(function () { schedule(); });
     watch('settings', { c: 'meta', id: 'settings' }, function (d) { S.settingsDoc = d; S.settings = assign({}, DEFAULTS, d || {}); });
     watch('adv', { c: 'adv', id: today() }, function (d) { S.adv = d || {}; });
+    watch('nudges', { c: 'nudges', where: [['date', '>=', addDays(today(), -1)]] }, function (a) { S.nudges = a; });
+    watch('devices', { c: 'devices' }, function (a) { S.devices = a; });
+    watch('alerts', { c: 'alerts', where: [['date', '>=', addDays(today(), -7)]] }, function (a) { S.alerts = a; });
+    watch('shop', { c: 'shop' }, function (a) { S.shop = a; });
+    watch('agenda', { c: 'agenda' }, function (a) { S.agenda = a; });
+    watch('shopMeta', { c: 'meta', id: 'shop' }, function (d) { S.shopMeta = d || {}; });
+    setTimeout(function () { pushRefresh(); }, 2500);
     setInterval(function () {
       if (S.dateAuto && S.date !== today()) { S.date = today(); schedule(); }
       maybeRepick();

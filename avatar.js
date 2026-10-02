@@ -12,6 +12,7 @@
     hair: ['short', 'spiky', 'long', 'ponytail', 'curly', 'buns', 'bun', 'wavy', 'longcurly', 'bob', 'pigtails', 'bald'],
     eyes: ['round', 'happy', 'wink'],
     top: ['tee', 'hoodie', 'dress', 'suit', 'apron'],
+    bottom: ['pants', 'shorts', 'skirt'],   // hidden with a dress
     face: ['none', 'shortbeard', 'beard', 'mustache', 'stubble'],
     height: ['small', 'medium', 'tall'],
     build: ['slim', 'medium', 'large'],
@@ -31,8 +32,9 @@
     if (pat === 'plaid' || pat === 'camo') return shade(hex, lum > 120 ? -80 : -60);
     return lum > 170 ? shade(hex, -110) : '#ffffff';
   }
-  var AV_LABEL = { hair: { short: 'Short', spiky: 'Messy', bob: 'Bob', pigtails: 'Pigtails & rat-tail', long: 'Long', ponytail: 'Ponytail', curly: 'Curly', buns: 'Two buns', bun: 'Top bun', wavy: 'Long & wavy', longcurly: 'Long & curly', bald: 'Bald' },
+  var AV_LABEL = { hair: { short: 'Short', spiky: 'Messy', bob: 'Bob', pigtails: 'Triple tail', long: 'Long', ponytail: 'Ponytail', curly: 'Curly', buns: 'Two buns', bun: 'Top bun', wavy: 'Long & wavy', longcurly: 'Long & curly', bald: 'Bald' },
     eyes: { round: 'Round', happy: 'Happy', wink: 'Wink' }, top: { tee: 'T-shirt', hoodie: 'Hoodie', dress: 'Dress', suit: 'Suit', apron: 'Apron' },
+    bottom: { pants: 'Pants', shorts: 'Shorts', skirt: 'Skirt' },
     height: { small: 'Small', medium: 'Medium', tall: 'Tall' },
     build: { slim: 'Slim', medium: 'Medium', large: 'Large' },
     face: { none: 'None', shortbeard: 'Short beard', beard: 'Full beard', mustache: 'Mustache', stubble: 'Stubble' },
@@ -43,7 +45,7 @@
   function randAvatar() {
     function r(n) { return Math.floor(Math.random() * n); }
     return { skin: r(AV.skin.length), hair: AV.hair[r(6)], hairColor: r(AV.hairColor.length), eyes: 'round', top: AV.top[r(3)], topColor: r(AV.topColor.length), acc: 'none', face: 'none', height: 'small',
-      pantsColor: r(AV.pantsColor.length), topPat: Math.random() < 0.3 ? AV.pattern[1 + r(AV.pattern.length - 1)] : 'solid', pantsPat: 'solid' };
+      bottom: AV.bottom[r(AV.bottom.length)], pantsColor: r(AV.pantsColor.length), topPat: Math.random() < 0.3 ? AV.pattern[1 + r(AV.pattern.length - 1)] : 'solid', pantsPat: 'solid' };
   }
   function shade(hex, amt) {
     var n = parseInt(hex.slice(1), 16), r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
@@ -55,14 +57,24 @@
   var STYLES = ['chibi', 'sticker', 'soft', 'pixel'];
   var STYLE_LABEL = { chibi: 'Chibi', sticker: 'Sticker', soft: 'Soft', pixel: 'Pixel' };
   /* Height (handheld-RPG "trainer" proportions): small for kids, tall for grown-ups. Town sprites also scale with it. */
-  var HEIGHT_T = { small: { body: 1.1, head: 0.86, cy: 44.5 }, medium: { body: 1.16, head: 0.8, cy: 41 }, tall: { body: 1.22, head: 0.74, cy: 38 } };
+  var HEIGHT_T = { tiny: { body: 0.92, head: 0.9, cy: 58 }, small: { body: 1.1, head: 0.86, cy: 44.5 }, medium: { body: 1.16, head: 0.8, cy: 41 }, tall: { body: 1.22, head: 0.74, cy: 38 } };
   var BUILD_X = { slim: 0.86, medium: 1, large: 1.15 };
-  var HEIGHT_PX = { small: 0.8, medium: 0.95, tall: 1.14 };
+  var HEIGHT_PX = { tiny: 0.66, small: 0.8, medium: 0.95, tall: 1.14 };
+  /* kids' height slider (hv 0..100): toddler model, then small kid, then big kid, each scaled a little so the slider grows smoothly */
+  function heightOf(a) {
+    if (!a) return { h: 'small', s: 1 };
+    if (a.height === 'tall' || typeof a.hv !== 'number') return { h: a.height || 'small', s: a.height === 'tall' ? 1 : (a.hscale || 1) };
+    var v = Math.max(0, Math.min(100, a.hv));
+    if (v <= 30) return { h: 'tiny', s: 0.9 + 0.1 * (v / 30) };
+    if (v <= 65) return { h: 'small', s: 0.93 + 0.07 * ((v - 30) / 35) };
+    return { h: 'medium', s: 0.94 + 0.06 * ((v - 65) / 35) };
+  }
   /* ---------- 3D characters (c3d.js people layers) with the face drawn live at the anchors ---------- */
-  var TOT3 = { small: 1.86, medium: 2.04, tall: 2.28 }, U3UID = 0;
+  var TOT3 = { tiny: 1.54, small: 1.86, medium: 2.04, tall: 2.28 }, U3UID = 0;
   function draw3d(a, opts) {
     if (!window.C3D || !C3D.hasPeople || !C3D.hasPeople() || (opts && opts.flat)) return null;
-    var h = a.height || 'small', view = (opts && opts.view) || 'three';
+    var hh = heightOf(a), h = hh.h, view = (opts && opts.view) || 'three';
+    if (h === 'tiny' && C3D.hasHeight && !C3D.hasHeight('tiny')) h = 'small';
     var hairK = a.hair === 'bald' ? 'none' : (a.hair || 'short');
     var faceK = a.face === 'shortbeard' || a.face === 'beard' || a.face === 'mustache' ? a.face : 'none';
     var accK = a.acc === 'cap' || a.acc === 'bow' || a.acc === 'headband' || a.acc === 'visor' ? a.acc : 'none';
@@ -70,11 +82,12 @@
     var pc = AV.pantsColor[a.pantsColor] || AV.pantsColor[0], tp = a.topPat || 'solid', pp = a.pantsPat || 'solid';
     var fx = a.hairFx && a.hairFx !== 'none' ? a.hairFx : '', hc2 = fx ? AV.hairColor[a.hair2] || hair2Default(fx) : '';
     var p = C3D.person({ h: h, b: a.build || 'medium', top: a.top || 'tee', hair: hairK, face: faceK, acc: accK, skin: skin, hairColor: hc, topColor: tc,
-      pants: a.top !== 'dress', pantsColor: pc, topPat: tp, topInk: patInk(tc, tp), pantsPat: pp, pantsInk: patInk(pc, pp), hairFx: fx, hair2: hc2,
+      pants: a.top !== 'dress', bottom: a.bottom || 'pants', pantsColor: pc, topPat: tp, topInk: patInk(tc, tp), pantsPat: pp, pantsInk: patInk(pc, pp), hairFx: fx, hair2: hc2,
       bangs: a.hair === 'bald' || !a.bangs || a.bangs === 'none' ? '' : a.bangs, tendrils: a.hair === 'bald' || !a.tendrils || a.tendrils === 'none' ? '' : a.tendrils }, view);
     if (p === null) return null;
     if (p === false) return '<svg viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Character"><ellipse cx="60" cy="154" rx="26" ry="5" fill="rgba(0,0,0,.12)"/></svg>';
-    var A = p.a, T = p.T, gx = A.ground[0], gy = A.ground[1], k = (148 / TOT3[h]) * p.span / T;
+    /* abs: true sizes (the kids' creator shows the height slider); otherwise every height fills the frame */
+    var A = p.a, T = p.T, gx = A.ground[0], gy = A.ground[1], k = (opts && opts.abs ? (148 / TOT3.medium) * hh.s : 148 / TOT3[h]) * p.span / T;
     function X(px) { return 60 + (px - gx) * k; }
     function Y(py) { return 154 + (py - gy) * k; }
     function f1(n) { return Math.round(n * 10) / 10; }
@@ -109,6 +122,7 @@
     });
     if (a.acc === 'glasses' && e0 && e1) face += '<path d="M' + f1(e0.x + rx * 1.65 * e0.sx) + ' ' + f1(e0.y) + ' L' + f1(e1.x - rx * 1.65 * e1.sx) + ' ' + f1(e1.y) + '" stroke="' + ink + '" stroke-width="2"/>';
     s += '<g class="av-face">' + face + '</g>';
+    if (opts && opts.flip) s = '<g transform="matrix(-1 0 0 1 120 0)">' + s + '</g>';   // the other side of a spin is the mirror image
     return '<svg viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="Character" class="av3d">' + s + '</svg>';
   }
   function drawAvatar(a, style, opts) {
@@ -127,7 +141,7 @@
     if (a.hair === 'long') s += '<path d="M26 50 L26 104 L94 104 L94 50 Z" fill="' + hc + '" stroke="' + hd + '" stroke-width="2" stroke-linejoin="round"/>';
     if (a.hair === 'wavy') s += '<path d="M27 48 Q21 62 26 74 Q21 82 27 90 Q33 97 40 92 L80 92 Q87 97 93 90 Q99 82 94 74 Q99 62 93 48 Z" fill="' + hc + '" stroke="' + hd + '" stroke-width="2" stroke-linejoin="round"/>';
     if (a.hair === 'bob') s += '<path d="M26 54 L26 88 L94 88 L94 54 Z" fill="' + hc + '" stroke="' + hd + '" stroke-width="2" stroke-linejoin="round"/>';
-    if (a.hair === 'pigtails') s += '<path d="M28 44 Q12 50 14 74 Q16 82 20 84 Q22 68 30 56 Z M92 44 Q108 50 106 74 Q104 82 100 84 Q98 68 90 56 Z" fill="' + hc + '" stroke="' + hd + '" stroke-width="2" stroke-linejoin="round"/>';
+    if (a.hair === 'pigtails') s += '<path d="M28 42 Q6 46 8 70 Q10 86 20 88 Q26 72 31 56 Z M92 42 Q114 46 112 70 Q110 86 100 88 Q94 72 89 56 Z" fill="' + hc + '" stroke="' + hd + '" stroke-width="2" stroke-linejoin="round"/>';
     if (a.hair === 'longcurly') [[30, 60, 10], [28, 74, 10], [30, 88, 10], [34, 100, 9], [90, 60, 10], [92, 74, 10], [90, 88, 10], [86, 100, 9], [42, 102, 9], [78, 102, 9], [60, 100, 10]].forEach(function (c) {
       s += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + c[2] + '" fill="' + hc + '" stroke="' + hd + '" stroke-width="1.5"/>';
     });
@@ -135,9 +149,12 @@
     var iBack = s.length;
     // legs and shoes
     var pants = pc0, pantsD = shade(pc0, -30), shoe = '#2b2233';
-    if (a.top === 'dress') s += '<path d="M47 126 h9 v20 h-9 Z M64 126 h9 v20 h-9 Z" fill="' + skin + '" stroke="' + sd + '" stroke-width="2" stroke-linejoin="round"/>';
-    else s += '<path d="M43 118 h16 l-1 29 h-13 Z M61 118 h16 l-2 29 h-13 Z" fill="' + pants + '" stroke="' + pantsD + '" stroke-width="2" stroke-linejoin="round"/>' +
-      (pPat.fill ? '<path d="M43 118 h16 l-1 29 h-13 Z M61 118 h16 l-2 29 h-13 Z" fill="' + pPat.fill + '"/>' : '') + '<path d="M60 120 v8" stroke="' + pantsD + '" stroke-width="2"/>';
+    var bot = a.top === 'dress' ? 'dress' : a.bottom || 'pants', legs = '<path d="M47 126 h9 v20 h-9 Z M64 126 h9 v20 h-9 Z" fill="' + skin + '" stroke="' + sd + '" stroke-width="2" stroke-linejoin="round"/>';
+    function cloth(d) { return '<path d="' + d + '" fill="' + pants + '" stroke="' + pantsD + '" stroke-width="2" stroke-linejoin="round"/>' + (pPat.fill ? '<path d="' + d + '" fill="' + pPat.fill + '"/>' : ''); }
+    if (bot === 'dress') s += legs;
+    else if (bot === 'shorts') s += legs + cloth('M43 118 h16 l-1 16 h-14 Z M61 118 h16 l1 16 h-14 Z') + '<path d="M60 120 v8" stroke="' + pantsD + '" stroke-width="2"/>';
+    else if (bot === 'skirt') s += legs + cloth('M42 117 Q60 113 78 117 L84 135 Q60 140 36 135 Z') + '<path d="M50 120 L47 136 M60 119 v18 M70 120 L73 136" stroke="' + pantsD + '" stroke-width="1.5" opacity=".6"/>';
+    else s += cloth('M43 118 h16 l-1 29 h-13 Z M61 118 h16 l-2 29 h-13 Z') + '<path d="M60 120 v8" stroke="' + pantsD + '" stroke-width="2"/>';
     [[51, -1], [69, 1]].forEach(function (f) {
       var x = f[0];
       s += '<path d="M' + (x - 9) + ' 151 Q' + (x - 10) + ' 142 ' + (x - 2) + ' 142 L' + (x + 3) + ' 142 Q' + (x + 10) + ' 143 ' + (x + 10) + ' 150 Z" fill="' + shoe + '" transform="translate(' + (f[1] * 1) + ' 0)"/>';
@@ -244,7 +261,7 @@
     }
     var shadowPart = s.slice(0, iShadow), back = restyle(s.slice(iShadow, iBack)), body = restyle(s.slice(iBack, iBody)), head = restyle(s.slice(iBody));
     var headT = '', bodyT = '';
-    var ht = HEIGHT_T[a.height] || HEIGHT_T.small;
+    var ht = HEIGHT_T[heightOf(a).h] || HEIGHT_T.small;
     var bx = BUILD_X[a.build] || 1;
     if (ht) { bodyT = ' transform="translate(60 152) scale(' + bx + ' ' + ht.body + ') translate(-60 -152)"'; headT = ' transform="translate(60 ' + ht.cy + ') scale(' + ht.head + ') translate(-60 -54)"'; }
     var inner = (defs ? '<defs>' + defs + '</defs>' : '') + shadowPart + '<g' + headT + '>' + back + '</g><g' + bodyT + '>' + body + '</g><g' + headT + '>' + head + '</g>';
@@ -275,5 +292,5 @@
       '<path d="M44 72 Q52 66 60 70 Q68 66 76 72 Q68 78 60 74 Q52 78 44 72 Z" fill="#e9e9ee" stroke="#b8b8c4" stroke-width="1.5"/>' +
       '<ellipse cx="38" cy="66" rx="5" ry="3" fill="#ff8fa3" opacity=".45"/><ellipse cx="82" cy="66" rx="5" ry="3" fill="#ff8fa3" opacity=".45"/></svg>';
   }
-  window.CHAR = { hair2Default: hair2Default, HEIGHT_PX: HEIGHT_PX, STYLES: STYLES, STYLE_LABEL: STYLE_LABEL, style: 'chibi', AV: AV, AV_LABEL: AV_LABEL, ORDER: ORDER, patInk: patInk, randAvatar: randAvatar, drawAvatar: drawAvatar, professorSvg: professorSvg, PROF: PROF };
+  window.CHAR = { heightOf: heightOf, hair2Default: hair2Default, HEIGHT_PX: HEIGHT_PX, STYLES: STYLES, STYLE_LABEL: STYLE_LABEL, style: 'chibi', AV: AV, AV_LABEL: AV_LABEL, ORDER: ORDER, patInk: patInk, randAvatar: randAvatar, drawAvatar: drawAvatar, professorSvg: professorSvg, PROF: PROF };
 })();
