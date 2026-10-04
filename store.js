@@ -113,6 +113,11 @@
       .then(function () {
         firebase.initializeApp(self.cfg);
         self.fs = firebase.firestore();
+        /* Some tablets (and some networks) can't keep Firestore's streaming connection open; long polling gets through.
+           Auto-detect by default; a device can be switched to always long-poll from the "can't reach" screen (cl.lp). */
+        var lp = false; try { lp = localStorage.getItem('cl.lp') === '1'; } catch (e) {}
+        try { self.fs.settings(lp ? { experimentalForceLongPolling: true, merge: true } : { experimentalAutoDetectLongPolling: true, merge: true }); } catch (e) {}
+        DB.longPoll = lp;
         try { self.fs.enablePersistence().catch(function () {}); } catch (e) {}
         self.auth = firebase.auth();
         return new Promise(function (res) {
@@ -148,7 +153,7 @@
     return this.ref(spec).get(spec.server ? { source: 'server' } : undefined).then(function (s) { return snapOut(spec, s); });
   };
   Fire.prototype.watch = function (spec, cb) {
-    return this.ref(spec).onSnapshot(function (s) { cb(snapOut(spec, s)); }, function (err) {
+    return this.ref(spec).onSnapshot(function (s) { cb(snapOut(spec, s), { cache: !!(s.metadata && s.metadata.fromCache) }); }, function (err) {
       if (DB.onError) DB.onError(err);
     });
   };

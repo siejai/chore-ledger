@@ -1100,7 +1100,7 @@
     st = Math.max(0, Math.min(2, st || 0));
     var c = opts.pal || sp.palettes[pi] || sp.palettes[0];
     if (window.C3D && !C3D.off && !opts.flat && C3D.has(sp.id)) {
-      var s3 = C3D.sprite(sp.id, st, c, opts.view || 'three');
+      var s3 = (opts.frame != null && opts.view ? C3D.sprite(sp.id, st, c, opts.view, opts.frame) : null) || C3D.sprite(sp.id, st, c, opts.view || 'three');
       if (s3) return draw3d(sp, st, c, mood || 'ok', opts, s3, opts.view || 'three');
       if (!C3D.ready(sp.id)) return waiting3d(sp, st);
     }
@@ -1250,5 +1250,17 @@
     return ['Fire', 'Water', 'Leaf'].map(function (t) { var pool = all.filter(function (s) { return s.type === t; }); return pool[Math.floor(rnd() * pool.length)]; });
   }
   function rares() { return SPECIES.filter(function (s) { return s.rare; }); }
-  window.CRE = { SPECIES: SPECIES, draw: draw, byId: byId, randomPalette: randomPalette, egg: egg, starters: starters, rares: rares, accessory: accessory };
+  /* where the head sits in a drawn pet picture (viewBox -6 -34 212 234), so games can aim at the face */
+  function headSpot(spId, st, view) {
+    var sp = byId(spId) || SPECIES[0], M = window.C3D_META && window.C3D_META[sp.id], v = view || 'three';
+    st = Math.max(0, Math.min(2, st || 0));
+    if (M && window.C3D && !C3D.off && M.stages[st] && M.stages[st].v[v]) {
+      var m = M.stages[st], a = m.v[v], T = v === 'three' ? M.clay : M.toon, gx = a.ground[0], gy = a.ground[1], bb = a.bb || [0, 0, T, T];
+      var k = Math.min(U3 * m.span / T, 104 / Math.max(gx - bb[0], 1), 104 / Math.max(bb[2] - gx, 1), 218 / Math.max(gy - bb[1], 1));
+      return { x: 100 + (a.head[0] - gx) * k, y: 186 + (a.head[1] - gy) * k, r: a.head[2] * k };
+    }
+    var g = sp.blob ? BLOB[st] : GEO[st];
+    return { x: 100, y: 186 - (186 - g.hy) * g.scale, r: g.hr * g.scale };
+  }
+  window.CRE = { SPECIES: SPECIES, draw: draw, byId: byId, randomPalette: randomPalette, egg: egg, starters: starters, rares: rares, accessory: accessory, headSpot: headSpot };
 })();

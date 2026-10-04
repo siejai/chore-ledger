@@ -112,7 +112,8 @@
   var LIVE_DAYS = 45, IDLE_PICK_MS = 5 * 60 * 1000, UNDO_MS = 4500;
   var DEFAULTS = {
     bankName: 'Family Bank', requireApproval: true, catOrder: [], centsPerPoint: 1, petEvolve1Cents: 500, petEvolve2Cents: 1500,
-    dadPid: '', allowanceCents: 0, allowanceDay: 5, allowanceLast: '', parents: [], foodCoins: 10, mealPrice: 10, careCoins: 10, kitPrice: 10
+    dadPid: '', allowanceCents: 0, allowanceDay: 5, allowanceLast: '', parents: [], foodCoins: 10, mealPrice: 10, careCoins: 10, kitPrice: 10,
+    coinsPerDollar: 100, swapPrice: 20, toothPrice: 20, ballPrice: 20      /* chore coins: earned 1 per chore point, traded at the bank, spent on clothes and store items */
   };
   var S = {
     phase: 'boot', err: '', ready: {},
@@ -204,8 +205,13 @@
     if (present.indexOf('Other') >= 0) out.push('Other');
     return out;
   }
-  /* What a chore gives the pet: 'food' (food coins), 'clean' (care coins), 'rest' (tuck-ins), 'energy' (play time) or '' (nothing). */
+  /* What a chore gives the pet: 'food' (food coins), 'clean' (clean coins), 'rest' (tuck-ins), 'energy' (play time), 'any' (whatever
+     the pet needs most when it is approved) or '' (nothing). Every approved chore also earns its points as chore coins. Grown-up favors
+     give whatever the pet needs most unless a parent picked something else. */
+  function isFavor(c) { return /favou?r/i.test(catName(c)) || /favou?r/i.test(c.name || ''); }
   function needOf(c) {
+    if (c.need === 'off') return '';
+    if (isFavor(c) && (!c.need || c.need === 'none')) return 'any';
     if (c.need === 'none') return '';
     if (c.need) return c.need;
     var n = (c.name || '').toLowerCase();
@@ -217,7 +223,15 @@
     if (catName(c) === 'Meals & Kitchen' || /dish|sweep|dining|counter|kitchen|cook|dinner|breakfast|lunch|grocer|compost|wipe.*table/.test(n)) return 'food';
     return '';
   }
-  var NEED_LABEL = { '': 'Nothing', none: 'Nothing', food: 'Food coins', clean: 'Care coins', rest: 'Tuck-in', energy: 'Play time' };
+  var NEED_LABEL = { '': 'Nothing', none: 'Nothing', off: 'Nothing', food: 'Food coins', clean: 'Clean coins', rest: 'Tuck-in', energy: 'Play time', any: 'What the pet needs most' };
+  /* the pet's biggest need right now, counting what is already in the bag and the coin purse */
+  function needMost(pid) {
+    if (!window.Pets) return 'food';
+    var st = Pets.state(pid), n = st.needs, w = st.wallet, pr = Pets.prices();
+    var have = { food: n.food + (w.meals + Math.floor(w.food / pr.meal)) * 50, clean: n.clean + (w.kits + Math.floor(w.care / pr.kit)) * 60, rest: n.rest + w.rest * 60, energy: n.energy + (w.energy + (w.balls || 0)) * 60 };
+    var best = 'food'; ['clean', 'rest', 'energy'].forEach(function (k) { if (have[k] < have[best]) best = k; });
+    return best;
+  }
   function queuedIds() {
     var m = {};
     S.queue.forEach(function (q) { q.entries.forEach(function (e) { m[e.id] = q.status; }); });
@@ -246,12 +260,35 @@
   /* ================= writes ================= */
   function petGrantOps(e, sign) {
     var st = S.settings, d = {}, need = e.need || '';
-    if (need === 'food') d.coinsFood = DB.inc(sign * (Number(st.foodCoins) || 10));
-    else if (need === 'clean') d.coinsCare = DB.inc(sign * (Number(st.careCoins) || 10));
+    if (need === 'any') need = sign > 0 ? (e.needGot = needMost(e.pid)) : (e.needGot || '');
+    if (need === 'food') d.coinsFood = DB.inc(sign * (Number(e.amt) || Number(st.foodCoins) || 10));
+    else if (need === 'clean') d.coinsCare = DB.inc(sign * (Number(e.amt) || Number(st.careCoins) || 10));
     else if (need === 'rest') d.tokRest = DB.inc(sign);
     else if (need === 'energy') d.tokEnergy = DB.inc(sign);
-    else return [];
+    if (e.pts) d.chorePts = DB.inc(sign * e.pts);
+    e.coins = sign > 0;
+    if (!Object.keys(d).length) return [];
     return [{ t: 'merge', c: 'pets', id: e.pid, d: d }];
+  }
+  /* chore coins for points approved before they existed (and not paid out on a payday): once, from a parent's device */
+  function coinBackfill() {
+    if (S.settings.coinsStart || S.backfilling || !S.admin || !S.settingsDoc) return;
+    S.backfilling = true;
+    DB.query({ c: 'entries', where: [['status', '==', 'approved'], ['paid', '==', false]] }).then(function (list) {
+      if (S.settings.coinsStart) return;
+      var by = {}, ops = [];
+      list.forEach(function (e) { if (e.coins || !e.pts) return; by[e.pid] = (by[e.pid] || 0) + e.pts; ops.push({ t: 'update', c: 'entries', id: e.id, d: { coins: true, paid: true, paidAs: 'coins' } }); });
+      Object.keys(by).forEach(function (pid) { ops.push({ t: 'merge', c: 'pets', id: pid, d: { chorePts: DB.inc(by[pid]) } }); });
+      ops.push({ t: 'update', c: 'meta', id: 'settings', d: { coinsStart: today() } });
+      return DB.commit(ops);
+    }).then(function () { S.backfilling = false; }, function () { S.backfilling = false; });
+  }
+  function chorePts(pid) { var d = S.pets[pid] || {}; return Math.max(0, Number(d.chorePts) || 0); }
+  function cashIn(pid) {
+    var per = Number(S.settings.coinsPerDollar) || 100, have = chorePts(pid);
+    if (have < per) { toast('You need ' + per + ' chore coins to trade for $1. You have ' + have + '.', true); return; }
+    DB.commit(txOps(pid, 100, 'coins', 'Traded ' + per + ' chore coins').concat([{ t: 'merge', c: 'pets', id: pid, d: { chorePts: DB.inc(-per) } }]))
+      .then(function () { toast('$1.00 added to ' + bankName() + '!'); schedule(); }, fail);
   }
   function txOps(pid, cents, kind, memo, extra) {
     return [
@@ -266,7 +303,7 @@
   function bankTx(pid, cents, kind, memo, extraOps) { return DB.commit(txOps(pid, cents, kind, memo).concat(extraOps || [])); }
   function autoApprove() { return S.admin || S.settings.requireApproval === false; }
   function newEntry(pid, date, chore, extra) {
-    return assign({ pid: pid, cid: chore.id, name: chore.name, pts: chore.pts, cat: chore.cat || '', need: needOf(chore), date: date, ts: Date.now(), status: 'pending', paid: false, by: S.me || '' }, extra || {});
+    return assign({ pid: pid, cid: chore.id, name: chore.name, pts: chore.pts, cat: chore.cat || '', need: needOf(chore), amt: Number(chore.coins) || 0, date: date, ts: Date.now(), status: 'pending', paid: false, by: S.me || '' }, extra || {});
   }
   function saveEntries(list) {
     var ops = [], auto = autoApprove();
@@ -295,7 +332,7 @@
     return saveEntries(list);
   }
   function removeEntry(e) {
-    if (e.paid) { toast('Already paid on a payday. Use a withdrawal in the bank to take it back.', true); return; }
+    if (e.paid && e.paidAs !== 'coins') { toast('Already paid on a payday. Use a withdrawal in the bank to take it back.', true); return; }
     if (e.bountyPaid) { toast('The bounty was already paid. Use a withdrawal in the bank to take it back.', true); return; }
     var ops = [{ t: 'delete', c: 'entries', id: e.id }];
     if (e.status === 'approved') ops = ops.concat(petGrantOps(e, -1));
@@ -309,7 +346,8 @@
       if (status === 'approved') {
         ops = ops.concat(petGrantOps(e, 1), bountyOps(e));
         if (e.bountyCents > 0 && !e.bountyPaid) d.bountyPaid = true;
-      } else if (e.status === 'approved') ops = ops.concat(petGrantOps(e, -1));
+        d.coins = true; if (e.needGot) d.needGot = e.needGot;
+      } else if (e.status === 'approved') { ops = ops.concat(petGrantOps(e, -1)); d.coins = false; }
       ops.unshift({ t: 'update', c: 'entries', id: e.id, d: d });
     });
     return ops.length ? DB.commit(ops) : Promise.resolve();
@@ -380,7 +418,7 @@
       touchAdmin();
       if (!S.sel || !isPerson(S.sel)) S.sel = isPerson(S.me) ? S.me : (kids()[0] || activePeople()[0] || {}).id;
       runAllowance();
-    } else { S.edit = null; S.bankForm = null; S.quest = null; S.avEditFor = null; S.txEdit = null; }
+    } else { S.edit = null; S.ctable = false; S.bankForm = null; S.quest = null; S.avEditFor = null; S.txEdit = null; }
     go();
   }
   function needAdmin() {
@@ -483,9 +521,11 @@
     var typing = ae && view.contains(ae) && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName) && ae.type !== 'search' && ae.type !== 'file';
     if (typing && (S.phase === 'app' || S.phase === 'wizard')) { if (S.phase === 'app') paintLists(); S.dirty = true; return; }
     S.dirty = false;
+    if (S.phase === 'app' && S.admin && S.ready.settings && S.ready.pets) coinBackfill();
     if (S.phase === 'boot') { root.innerHTML = '<p class="note" style="margin-top:40px;text-align:center">Loading...</p>'; lastShell = ''; return; }
     if (S.phase === 'error') { root.innerHTML = '<div class="banner" style="margin-top:24px"><strong>Could not start.</strong><br>' + esc(S.err) + '</div>'; lastShell = ''; return; }
     if (S.phase === 'login') { renderLogin(); lastShell = ''; return; }
+    if (!allReady() && DB.mode === 'firebase' && (S.noReach || Date.now() - (S.startedAt || Date.now()) > 12000)) { renderNoReach(); lastShell = ''; return; }
     if (!allReady()) { root.innerHTML = '<p class="note" style="margin-top:40px;text-align:center">Loading household data...</p>'; lastShell = ''; return; }
     if (!S.settingsDoc) S.phase = 'wizard'; else if (S.phase === 'wizard') S.phase = 'app';
     if (S.phase === 'app' && MODE === 'bank' && !S.admin && !S.keepTried) {
@@ -496,18 +536,15 @@
     var D = S.phase === 'app' ? derive() : null;
     var tabs = tabsFor().map(function (t) { return t[0]; });
     if (tabs.indexOf(S.tab) < 0) S.tab = tabs[0];
-    var shell = header(D) + pinPanel();
-    if (shell !== lastShell || !document.getElementById('view')) {
-      root.innerHTML = shell + '<main id="view"></main><div id="undoBar"></div>';
-      lastShell = shell;
-      view = $('#view');
-      var nav = root.querySelector('.tabs'), on = nav && nav.querySelector('[aria-selected="true"]');
-      if (on && nav.scrollWidth > nav.clientWidth) {
-        var l = on.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft, r = l + on.offsetWidth;
-        if (r > nav.clientWidth - 16) nav.scrollLeft = r - nav.clientWidth + 32;
-      }
-    }
+    var shell = header(D) + pinPanel(), fromData = S.fromData; S.fromData = false;
+    /* the header (tab badges) updates on its own, so new approvals arriving never wipe or jump the page you are on */
+    if (!document.getElementById('view') || !document.getElementById('shell')) {
+      root.innerHTML = '<div id="shell" class="shell">' + shell + '</div><main id="view"></main><div id="undoBar"></div>';
+      lastShell = shell; view = $('#view'); scrollNav();
+    } else if (shell !== lastShell) { $('#shell').innerHTML = shell; lastShell = shell; scrollNav(); }
     renderUndoBar();
+    /* a chore being edited in Setup stays as it is (with your unsaved ticks) until you save or cancel */
+    if (fromData && S.phase === 'app' && S.tab === 'setup' && (S.edit || S.ctable)) { S.dirty = true; return; }
     if (S.phase === 'wizard') { view.setAttribute('data-view', 'wizard'); renderWizard(); return; }
     if (MODE === 'bank' && !S.admin) {
       view.setAttribute('data-view', 'locked');
@@ -526,6 +563,13 @@
     else if (S.tab === 'history') { if (S.admin && S.mtg && S.mtg.open) renderMeeting(); else renderHistory(D); }
     else if (S.tab === 'lists') renderLists();
     else renderSetup(D);
+  }
+  function scrollNav() {
+    var nav = root.querySelector('.tabs'), on = nav && nav.querySelector('[aria-selected="true"]');
+    if (on && nav.scrollWidth > nav.clientWidth) {
+      var l = on.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft, r = l + on.offsetWidth;
+      if (r > nav.clientWidth - 16) nav.scrollLeft = r - nav.clientWidth + 32;
+    }
   }
   function allReady() { var r = S.ready; return r.people && r.chores && r.entries && r.txns && r.reqs && r.settings && r.pets && r.adv; }
   function renderUndoBar() {
@@ -546,9 +590,22 @@
   }
 
   /* ----- first-run setup ----- */
+  function renderNoReach() {
+    var lp = !!DB.longPoll;
+    root.innerHTML = '<div class="picker stack"><div><h2>Can’t reach your household data yet</h2>' +
+      '<p class="note">This device is signed in' + (DB.user && DB.user.email ? ' as <strong>' + esc(DB.user.email) + '</strong>' : '') + ' but hasn’t been able to load the family’s chores and pets. ' +
+      'Check that it’s on Wi-Fi, then try again. If this keeps happening on this tablet, try the other connection mode.</p></div>' +
+      '<div class="stack tight"><button class="btn primary block" type="button" data-act="nrRetry">Try again</button>' +
+      '<button class="btn block" type="button" data-act="nrMode">' + (lp ? 'Switch back to the normal connection' : 'Try the other connection mode') + '</button>' +
+      '<button class="btn block' + (S.armed === 'nrSignout' ? ' danger' : '') + '" type="button" data-act="nrSignout">' + (S.armed === 'nrSignout' ? 'Tap again to sign out' : 'Sign out (back to the sign-in screen)') + '</button></div>' +
+      '<p class="note">Connection mode: ' + (lp ? 'compatibility (long polling)' : 'normal') + '. On a tablet with a kids profile, the profile’s web filter can block the database; try from the grown-up profile.</p></div>';
+  }
   function renderWizard() {
     var w = S.wiz, imp = w.imported;
     var h = '<div class="picker wide stack"><div><h2>Set up your household</h2><p class="note">This runs once. Everything can be changed later in Setup.</p></div>' +
+      (DB.mode === 'firebase' ? '<div class="banner warn"><strong>Already using Chore Quest on another device?</strong> Don’t fill this in. This device is signed in' + (DB.user && DB.user.email ? ' as ' + esc(DB.user.email) : '') +
+        '; tap Try again to load your family, or sign out.<div class="wrap" style="margin-top:8px"><button class="btn small" type="button" data-act="nrRetry">Try again</button>' +
+        '<button class="btn small' + (S.armed === 'nrSignout' ? ' danger' : '') + '" type="button" data-act="nrSignout">' + (S.armed === 'nrSignout' ? 'Tap again to sign out' : 'Sign out') + '</button></div></div>' : '') +
       '<form class="card stack tight" data-form="wizard">' +
       '<label class="field" for="wzBank"><span>Name of the family bank</span><input type="text" id="wzBank" maxlength="30" placeholder="Family Bank" value="' + esc(imp && imp.bankName || '') + '"></label>' +
       '<div class="wrap end"><label class="field w-md" for="wzName"><span>Your name (parent)</span><input type="text" id="wzName" maxlength="24" placeholder="Dad"></label>' +
@@ -607,6 +664,14 @@
     if (st.dadPid) st.allowanceLast = lastAllowanceDay(Number(st.allowanceDay));
     ops.push({ t: 'set', c: 'meta', id: 'settings', d: st });
     var roleEl = $$('input[name=wzRole]').filter(function (x) { return x.checked; })[0], role = roleEl ? roleEl.value : 'kids';
+    /* ask the server (not this device's cache) whether a household already exists before writing anything */
+    var check = DB.mode === 'firebase' ? DB.query({ c: 'meta', id: 'settings', server: true }) : Promise.resolve(null);
+    check.then(function (existing) {
+      if (existing) { toast('This household is already set up. Loading it now.'); setTimeout(function () { location.reload(); }, 1200); return; }
+      wizCommit(ops, role, parent);
+    }, function () { toast('Can’t reach the household data right now, so nothing was saved. Check the Wi-Fi and try again.', true); });
+  }
+  function wizCommit(ops, role, parent) {
     DB.commit(ops).then(function () {
       LS.set('cl.role', role); ROLE = role;
       if (role === 'parent') LS.set('cl.keep', JSON.stringify({ id: parent.id, until: Date.now() + KEEP_DAYS * 864e5 }));
@@ -765,7 +830,7 @@
         '<div id="pushBox"></div>' +
         '<div id="passBox"></div>' +
         '<div id="questBox"></div>' +
-        '<div class="cats" id="cats"></div>' +
+        '<div class="cats" id="cats"></div><div class="cats gives" id="gives"></div>' +
         '<div class="wrap"><div class="field w-lg"><input type="search" id="q" placeholder="Search chores" aria-label="Search chores"></div>' +
         '<div class="field w-md"><select id="sort" aria-label="Sort chores"><option value="cat">By category</option><option value="routine">Routine order</option><option value="used">Most used</option><option value="points">Most points</option><option value="name">A to Z</option></select></div></div>' +
         '<ul class="list" id="logList"></ul></section>';
@@ -812,7 +877,7 @@
         '<div class="wrap end"><label class="field w-md" for="date"><span>Date</span><input type="date" id="date"></label>' +
         '<button class="btn" id="todayBtn" data-act="today" type="button">Today</button></div>' +
         '<p class="note">Tap a chore to see everyone it is assigned to. Tick who did it, then approve them all at once. Anyone not logged yet gets logged and approved.</p>' +
-        '<div class="cats" id="cats"></div>' +
+        '<div class="cats" id="cats"></div><div class="cats gives" id="gives"></div>' +
         '<div class="wrap"><div class="field w-lg"><input type="search" id="q" placeholder="Search chores" aria-label="Search chores"></div></div>' +
         '<ul class="list board" id="choreList"></ul></section>';
       $('#q').value = S.q;
@@ -832,7 +897,7 @@
     $('#cats').innerHTML = cats.length > 1 || nwait ? '<button type="button" class="cat" data-act="cat" data-cat="all" aria-pressed="' + (S.cat === 'all') + '">All<small>' + all.length + '</small></button>' +
       (nwait ? '<button type="button" class="cat" data-act="cat" data-cat="$w" aria-pressed="' + (S.cat === '$w') + '">Waiting<small>' + nwait + '</small></button>' : '') +
       (cats.length > 1 ? cats.map(function (n) { return '<button type="button" class="cat" data-act="cat" data-cat="' + esc(n) + '" aria-pressed="' + (S.cat === n) + '">' + esc(n) + '<small>' + per[n] + '</small></button>'; }).join('') : '') : '';
-    var list = all.filter(function (c) { return S.cat === 'all' ? true : S.cat === '$w' ? !!waits[c.id] : S.cat === '$' ? c.bountyCents > 0 : catName(c) === S.cat; });
+    var list = givesChips(all).filter(function (c) { return S.cat === 'all' ? true : S.cat === '$w' ? !!waits[c.id] : S.cat === '$' ? c.bountyCents > 0 : catName(c) === S.cat; });
     var q = trim(S.q).toLowerCase();
     if (q) list = list.filter(function (c) { return c.name.toLowerCase().indexOf(q) >= 0 || catName(c).toLowerCase().indexOf(q) >= 0; });
     var order = catList(S.chores);
@@ -842,7 +907,7 @@
       var ppl = (c.who || []).map(person).filter(function (p) { return p && p.active !== false; });
       var sts = ppl.map(function (p) { return choreStatus(c.id, p.id); });
       var nw = sts.filter(function (x) { return x === 'wait'; }).length, nok = sts.filter(function (x) { return x === 'ok'; }).length, open = S.chOpen === c.id;
-      var tags = (nw ? '<span class="tag pend">' + nw + ' waiting</span>' : '') + (nok ? '<span class="tag ok">' + nok + ' of ' + ppl.length + ' done</span>' : '') +
+      var tags = giveTag(c) + (nw ? '<span class="tag pend">' + nw + ' waiting</span>' : '') + (nok ? '<span class="tag ok">' + nok + ' of ' + ppl.length + ' done</span>' : '') +
         (!nw && !nok ? '<span class="tag">' + ppl.length + ' assigned</span>' : '') + (c.bountyCents > 0 ? '<span class="tag bounty">' + money(c.bountyCents) + ' bounty</span>' : '');
       var h = '<li class="crow' + (open ? ' open' : '') + (nw ? ' has-wait' : '') + '"><button type="button" class="crow-head" data-act="chOpen" data-cid="' + esc(c.id) + '" aria-expanded="' + open + '">' +
         '<span class="rname">' + esc(c.name) + '<span class="meta">' + tags + '</span></span><span class="pts mono">+' + c.pts + '</span><span class="chev" aria-hidden="true">' + (open ? '&#9652;' : '&#9662;') + '</span></button>';
@@ -918,8 +983,25 @@
       '<p class="mono' + (total === 100 ? '' : ' warn-text') + '" style="margin:0">Total ' + total + '%' + (total === 100 ? '' : ' (needs to be 100%)') + '</p>' +
       '<div class="wrap"><button class="btn primary" type="button" data-act="qsave"' + (total === 100 ? '' : ' disabled') + '>Log it</button><button class="btn" type="button" data-act="qcancel">Cancel</button></div></div>';
   }
+  /* "Gives": filter chores by what they earn in the pet game */
+  var GIVE_ORDER = ['food', 'clean', 'rest', 'energy', 'any'], GIVE_CHIP = { food: 'Food coins', clean: 'Clean coins', rest: 'Tuck-ins', energy: 'Play time', any: 'Needs most' };
+  function givesChips(list) {
+    var el = $('#gives'); if (!el) return list;
+    var per = {}; list.forEach(function (c) { var n = needOf(c); if (n) per[n] = (per[n] || 0) + 1; });
+    if (S.give && !per[S.give]) S.give = '';
+    var ks = GIVE_ORDER.filter(function (k) { return per[k]; });
+    el.innerHTML = ks.length ? '<span class="gives-l">Gives</span>' + ks.map(function (k) {
+      return '<button type="button" class="cat gv-' + k + '" data-act="give" data-k="' + k + '" aria-pressed="' + (S.give === k) + '"><i class="gv-dot"></i>' + GIVE_CHIP[k] + '<small>' + per[k] + '</small></button>';
+    }).join('') : '';
+    return S.give ? list.filter(function (c) { return needOf(c) === S.give; }) : list;
+  }
+  function giveTag(c) {
+    var n = needOf(c), st = S.settings; if (!n) return '';
+    var t = n === 'food' ? '+' + (Number(c.coins) || Number(st.foodCoins) || 10) + ' food' : n === 'clean' ? '+' + (Number(c.coins) || Number(st.careCoins) || 10) + ' clean' : n === 'rest' ? 'Tuck-in' : n === 'energy' ? 'Play time' : 'Needs most';
+    return '<span class="tag gv gv-' + n + '"><i class="gv-dot"></i>' + t + '</span>';
+  }
   function rowHtml(c, x, pid) {
-    var n = x ? x.a + x.p : 0, tags = '';
+    var n = x ? x.a + x.p : 0, tags = giveTag(c);
     if (c.bountyCents > 0) tags += '<span class="tag bounty">' + money(c.bountyCents) + ' bounty</span>';
     if (c.major && window.ADV && ADV.bigJobsToday().indexOf(c) >= 0) tags += '<span class="tag big">Big job</span>';
     if (x) {
@@ -957,7 +1039,7 @@
     $('#cats').innerHTML = cats.length > 1 || bounties ? ('<button type="button" class="cat" data-act="cat" data-cat="all" aria-pressed="' + (S.cat === 'all') + '">All<small>' + mine.length + '</small></button>' +
       (bounties ? '<button type="button" class="cat" data-act="cat" data-cat="$" aria-pressed="' + (S.cat === '$') + '">Bounties<small>' + bounties + '</small></button>' : '') +
       cats.map(function (n) { return '<button type="button" class="cat" data-act="cat" data-cat="' + esc(n) + '" aria-pressed="' + (S.cat === n) + '">' + esc(n) + '<small>' + per[n] + '</small></button>'; }).join('')) : '';
-    var list = mine.slice();
+    var list = givesChips(mine.slice());
     if (S.cat === '$') list = list.filter(function (c) { return c.bountyCents > 0; });
     else if (S.cat !== 'all') list = list.filter(function (c) { return catName(c) === S.cat; });
     var q = trim(S.q).toLowerCase();
@@ -1138,11 +1220,11 @@
   document.addEventListener('mouseup', swipeEnd, false);
 
   /* ----- Bank ----- */
-  var KIND = { chores: 'Chore earnings', deposit: 'Deposit', withdraw: 'Spent', purchase: 'Purchase', pet: 'Pet reward', bounty: 'Bounty', allowance: 'Allowance', transfer: 'Transfer', adjust: 'Adjustment' };
+  var KIND = { coins: 'Chore coins traded', chores: 'Chore earnings', deposit: 'Deposit', withdraw: 'Spent', purchase: 'Purchase', pet: 'Pet reward', bounty: 'Bounty', allowance: 'Allowance', transfer: 'Transfer', adjust: 'Adjustment' };
   function acctMeta(p, D) {
     var x = D.T(p.id), bits = [], rate = Number(S.settings.centsPerPoint) || 0;
     if (isDad(p.id)) bits.push('Allowance account');
-    if (rate && x.unpaid) bits.push(signed(Math.round(x.unpaid * rate)) + ' next payday');
+    if (!isAdult(p.id) || chorePts(p.id)) bits.push(n0(chorePts(p.id)) + ' chore coins');
     var rq = D.reqPend.filter(function (r) { return r.pid === p.id; }).length;
     if (rq) bits.push(rq + ' request' + (rq > 1 ? 's' : '') + ' waiting');
     return bits.join(' &middot; ');
@@ -1164,14 +1246,10 @@
       var next = addDays(lastAllowanceDay(Number(S.settings.allowanceDay)), 7);
       h += '<p class="note">Next weekly deposit: ' + money(S.settings.allowanceCents) + ' on ' + esc(fmtDate(next)) + '.</p>';
     }
-    var unpaidPts = 0, unpaidPeople = 0;
-    ps.forEach(function (p) { var u = D.T(p.id).unpaid; if (u) { unpaidPts += u; unpaidPeople++; } });
-    var cents = Math.round(unpaidPts * rate);
-    h += '<div class="card' + (cents ? ' attn' : '') + '"><h2>Payday</h2>' +
-      (rate ? '<p class="note">Approved chore points not paid yet, at ' + esc(rateLabel(rate)) + '.</p>' +
-        '<div class="row-flex"><span class="big-num grow">' + money(cents) + '</span><span class="note">' + n0(unpaidPts) + ' pts, ' + unpaidPeople + (unpaidPeople === 1 ? ' person' : ' people') + '</span></div>' +
-        '<button class="btn ' + (S.armed === 'payday' ? 'danger' : 'primary') + '" type="button" data-act="payday"' + (unpaidPts ? '' : ' disabled') + '>' + (S.armed === 'payday' ? 'Tap again to pay ' + money(cents) : 'Pay chore earnings') + '</button>'
-        : '<p class="note">Set how much a point is worth in settings to pay chore earnings.</p>') + '</div>';
+    h += '<div class="card"><h2>Chore coins</h2><p class="note">Every approved chore point is a chore coin. Kids spend them on clothes, toothpaste and balls, buy 10 food or clean coins for ' + (Number(S.settings.swapPrice) || 20) + ', or trade ' +
+      n0(Number(S.settings.coinsPerDollar) || 100) + ' of them for $1 at the bank.</p><div class="coin-list">' + kids().map(function (p) {
+        return '<span class="coin-chip ' + pCls(p) + '"><span class="dot"></span>' + esc(p.name) + ' <b class="mono">' + n0(chorePts(p.id)) + '</b></span>';
+      }).join('') + '</div></div>';
     if (D.reqPend.length) h += '<div><h2>Purchase requests</h2>' + reqList(D.reqPend, true) + '</div>';
     h += '<div><h2>Accounts</h2><ul class="accts">' + ps.map(function (p) {
       var b = Number(p.balance) || 0, meta = acctMeta(p, D);
@@ -1252,11 +1330,13 @@
   /* One account. Kids see it inside the pet game's bank (manage=false); parents reach it from Accounts. */
   function accountHtml(D, pid, manage) {
     var p = person(pid), b = Number(p.balance) || 0, own = pid === S.me;
-    var rate = Number(S.settings.centsPerPoint) || 0, unpaid = D.T(pid).unpaid;
-    var h = '<section class="stack">' + (manage ? '<div><button class="btn small" type="button" data-act="bankHome">&lsaquo; All accounts</button></div>' : '') +
+    var per = Number(S.settings.coinsPerDollar) || 100, cp = chorePts(pid);
+    var h = '<section class="stack">' + (manage ? '<div class="wrap"><button class="btn small" type="button" data-act="bankHome">&lsaquo; All accounts</button>' +
+      '<button class="btn small" type="button" data-act="logFor" data-pid="' + esc(pid) + '">Log chores for ' + esc(p.name) + '</button></div>' : '') +
       '<div class="bank-head"><div class="bank-name">' + esc(bankName()) + '</div><div class="bank-sub">' + esc(p.name) + '’s account</div>' +
-      '<div class="bank-big">' + money(b) + '<small>available</small></div>' +
-      (rate && unpaid ? '<div class="bank-sub">' + signed(Math.round(unpaid * rate)) + ' coming on the next payday</div>' : '') + '</div>';
+      '<div class="bank-big">' + money(b) + '<small>available</small></div></div>';
+    h += '<div class="card coin-card"><div class="row-flex"><span class="grow"><strong>' + n0(cp) + ' chore coins</strong><br><small class="note">Trade ' + per + ' chore coins for $1.00</small></span>' +
+      '<button class="btn primary" type="button" data-act="cashIn" data-pid="' + esc(pid) + '"' + (cp >= per ? '' : ' disabled') + '>Trade ' + per + ' for $1</button></div></div>';
     var btns = '', f = S.bankForm;
     if (own && !manage) btns += '<button class="btn' + (f === 'request' ? ' primary' : '') + '" type="button" data-act="bform" data-f="request">Ask to buy something</button>';
     if (manage) {
@@ -1653,6 +1733,8 @@
       '<div style="margin-top:10px"><button class="btn primary" type="button" data-act="adminOpen">Parent unlock</button></div></div>';
   }
   function renderSetup() {
+    if (S.ctable && S.admin) { renderChoreTable(); return; }
+    S.ctable = false;
     var dev = '<section class="stack tight"><h2>This device</h2><p class="note">' + (DB.mode === 'firebase' && DB.user ? 'Signed in as ' + esc(DB.user.email) : 'Demo mode: data stays in this browser.') + '</p>' +
       '<div class="wrap">' + (DB.mode === 'firebase' ? '<button class="btn' + (S.armed === 'signout' ? ' danger' : '') + '" type="button" data-act="signout">' + (S.armed === 'signout' ? 'Tap again to sign out' : 'Sign out of this device') + '</button>' : '') +
       (S.admin ? '<button class="btn" type="button" data-act="exportFamily">Download family file</button>' : '') +
@@ -1677,7 +1759,11 @@
     h += '<form class="stack tight" data-form="money2"><h2>Money</h2>' +
       '<label class="field" for="bname"><span>Bank name</span><input type="text" id="bname" maxlength="30" value="' + esc(bankName()) + '"></label>' +
       '<div class="checks"><label><input type="checkbox" id="reqAppr"' + (st.requireApproval !== false ? ' checked' : '') + '>Chores need parent approval before they count</label></div>' +
-      '<div class="wrap end"><label class="field w-md" for="rate"><span>Cents per chore point</span><input type="text" id="rate" inputmode="decimal" value="' + esc(st.centsPerPoint || 0) + '"></label>' +
+      '<div class="wrap end"><label class="field w-sm" for="cpd"><span>Chore coins for $1</span><input type="number" id="cpd" min="1" step="1" value="' + (st.coinsPerDollar || 100) + '"></label>' +
+      '<label class="field w-sm" for="ppc"><span>Chore coins for 10 food or clean coins</span><input type="number" id="ppc" min="1" step="1" value="' + (st.swapPrice || 20) + '"></label>' +
+      '<label class="field w-sm" for="tprice"><span>Toothpaste (chore coins)</span><input type="number" id="tprice" min="1" step="1" value="' + (st.toothPrice || 20) + '"></label>' +
+      '<label class="field w-sm" for="bprice"><span>Ball (chore coins)</span><input type="number" id="bprice" min="1" step="1" value="' + (st.ballPrice || 20) + '"></label></div>' +
+      '<div class="wrap end">' +
       '<label class="field w-md" for="evo1"><span>First evolution pays ($)</span><input type="text" id="evo1" inputmode="decimal" value="' + dollars(st.petEvolve1Cents) + '"></label>' +
       '<label class="field w-md" for="evo2"><span>Final evolution pays ($)</span><input type="text" id="evo2" inputmode="decimal" value="' + dollars(st.petEvolve2Cents) + '"></label></div>' +
       '<div class="wrap end"><label class="field w-md" for="dad"><span>Weekly allowance goes to</span><select id="dad"><option value="">Nobody</option>' + act.map(function (p) { return opt(esc(p.id), esc(p.name), st.dadPid); }).join('') + '</select></label>' +
@@ -1686,11 +1772,11 @@
       '<div class="checks"><label><input type="checkbox" id="aVacPause"' + (st.allowanceVacPause !== false ? ' checked' : '') + '>Pause the weekly allowance during vacation (uses the vacation dates below)</label></div>' +
       '<div class="wrap end"><label class="field w-sm" for="fcoins"><span>Food coins per kitchen chore</span><input type="number" id="fcoins" min="1" step="1" value="' + (st.foodCoins || 10) + '"></label>' +
       '<label class="field w-sm" for="mprice"><span>Meal price</span><input type="number" id="mprice" min="1" step="1" value="' + (st.mealPrice || 10) + '"></label>' +
-      '<label class="field w-sm" for="ccoins"><span>Care coins per self-care chore</span><input type="number" id="ccoins" min="1" step="1" value="' + (st.careCoins || 10) + '"></label>' +
+      '<label class="field w-sm" for="ccoins"><span>Clean coins per self-care chore</span><input type="number" id="ccoins" min="1" step="1" value="' + (st.careCoins || 10) + '"></label>' +
       '<label class="field w-sm" for="kprice"><span>Bath kit price</span><input type="number" id="kprice" min="1" step="1" value="' + (st.kitPrice || 10) + '"></label></div>' +
       '<p class="note">A pet eats about two meals a day, so with equal numbers it takes about two kitchen chores a day to keep it fed. Coin purses hold two purchases and the bag holds one, so coins cannot be saved up for long.</p>' +
       '<button class="btn primary" type="submit">Save</button>' +
-      '<p class="note">At 1 cent per point, a 10-point chore pays $0.10 on payday. The weekly allowance lands the first time a parent unlocks on or after that day. The allowance account is hidden from the kids.</p></form>';
+      '<p class="note">Chore points are paid as chore coins, not on paydays: a 10-point chore earns 10 chore coins, and kids trade them for dollars at the bank when they want. The weekly allowance lands the first time a parent unlocks on or after that day. The allowance account is hidden from the kids.</p></form>';
     var ac = window.ADV ? ADV.cfg() : {}, vac = ac.vacation || {};
     h += '<form class="stack tight" data-form="advset"><h2>Adventures and vacation</h2>' +
       '<div class="wrap end"><label class="field w-sm" for="aJobs"><span>Big jobs for a pass</span><input type="number" id="aJobs" min="1" step="1" value="' + ac.passBigJobs + '"></label>' +
@@ -1732,8 +1818,8 @@
       '<label class="field w-md" for="copyFrom"><span>Give them the chores of</span><select id="copyFrom"><option value="">Nobody yet</option>' + act.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>'; }).join('') + '</select></label>' +
       '<button class="btn primary" type="submit">Add</button></form><p class="note">Tap Kid or Grown-up to switch. Grown-ups keep their bank account and chores but have no pet or house in the game.</p></section>';
     h += '<section class="stack tight"><h2>Chores</h2><div class="wrap"><div class="field w-lg"><input type="search" id="cq" placeholder="Search chores" aria-label="Search chores" value="' + esc(S.cq) + '"></div>' +
-      '<button class="btn primary" type="button" data-act="newChore">Add chore</button><span class="checks"><label><input type="checkbox" id="showArch" data-act="showArch"' + (S.showArchived ? ' checked' : '') + '>Show archived</label></span></div>' +
-      '<p class="note">In the pet game, kitchen chores earn food coins, self-care earns care coins for soap and shampoo, bedtime chores earn tuck-ins and exercise earns play time.</p>' +
+      '<button class="btn primary" type="button" data-act="newChore">Add chore</button><button class="btn" type="button" data-act="ctOpen">Edit all in a table</button><span class="checks"><label><input type="checkbox" id="showArch" data-act="showArch"' + (S.showArchived ? ' checked' : '') + '>Show archived</label></span></div>' +
+      '<p class="note">In the pet game, kitchen chores earn food coins, self-care earns clean coins for soap and shampoo, bedtime chores earn tuck-ins and exercise earns play time. Grown-up favors give whatever the pet needs most. Every chore also earns its points as chore coins.</p>' +
       '<ul class="list" id="choreList"></ul></section>';
     var cats = catList(S.chores).filter(function (n) { return n !== 'Other'; });
     h += '<section class="stack tight"><h2>Categories</h2><div class="list">' + (cats.length ? cats.map(function (n, i) {
@@ -1765,6 +1851,271 @@
     });
     el.innerHTML = html || '<li class="empty">No chores match.</li>';
   }
+  /* ----- the chore table: every chore in one grid, plus a spreadsheet (CSV) round trip.
+     Edits wait in S.ct (d: changes per chore id, n: new rows) until Save; data arriving meanwhile never redraws it. ----- */
+  var CT_GIVES = ['food', 'clean', 'rest', 'energy', 'any', 'off'];
+  var GIVES_WORD = { food: 'Food coins', clean: 'Clean coins', rest: 'Tuck-in', energy: 'Play time', any: 'Needs most', off: 'Nothing' };
+  function ctState() { if (!S.ct) S.ct = { d: {}, n: [], q: '', cat: '', give: '', arch: false, msg: '' }; return S.ct; }
+  function isAuto(c) { return !c.need; }
+  function whoKey(ids) { return (ids || []).slice().sort().join(','); }
+  function ctBase(c) {
+    return { name: c.name || '', cat: c.cat || '', pts: Number(c.pts) || 0, need: needOf(c) || 'off', coins: Number(c.coins) || 0, bounty: Number(c.bountyCents) || 0, active: c.active !== false, who: whoKey(c.who) };
+  }
+  function ctRow(c) { var d = ctState().d[c.id]; return d ? assign(ctBase(c), d) : ctBase(c); }
+  function ctChanged(c) {
+    var b = ctBase(c), d = ctState().d[c.id] || {}, out = {};
+    Object.keys(d).forEach(function (k) {
+      var v = typeof d[k] === 'string' && k !== 'who' ? trim(d[k]) : d[k];
+      if (v !== b[k] || (k === 'need' && isAuto(c))) out[k] = v;   /* picking a value on a guessed row sets it for good */
+    });
+    return out;
+  }
+  function ctNew() { return ctState().n.filter(function (r) { return trim(r.name || ''); }); }
+  function ctCount() { var n = ctNew().length; S.chores.forEach(function (c) { if (Object.keys(ctChanged(c)).length) n++; }); return n; }
+  function ctOrder() {
+    var cats = catList(S.chores);
+    return S.chores.slice().sort(function (a, b) { return (cats.indexOf(catName(a)) - cats.indexOf(catName(b))) || ((a.order || 0) - (b.order || 0)); });
+  }
+  function ctList() {
+    var ct = ctState(), q = lc(ct.q);
+    return ctOrder().filter(function (c) {
+      var r = ctRow(c);
+      if (!ct.arch && c.active === false && !ct.d[c.id]) return false;
+      if (ct.cat && catName(c) !== ct.cat) return false;
+      if (ct.give === 'auto' ? !isAuto(c) : (ct.give && r.need !== ct.give)) return false;
+      return !q || lc(r.name).indexOf(q) >= 0 || lc(r.cat).indexOf(q) >= 0;
+    });
+  }
+  function coinDefault(need) { var st = S.settings; return need === 'clean' ? (Number(st.careCoins) || 10) : (Number(st.foodCoins) || 10); }
+  function coinable(need) { return need === 'food' || need === 'clean' || need === 'any'; }
+  function ctCells(key, r, ch, auto) {
+    function td(k, inner) { return '<td' + (ch[k] !== undefined ? ' class="chg"' : '') + '>' + inner + '</td>'; }
+    var at = ' data-ct="' + esc(key) + '"';
+    return td('name', '<input type="text"' + at + ' data-f="name" maxlength="120" aria-label="Chore" value="' + esc(r.name) + '">' + (ch.who !== undefined ? '<small class="ct-who">Who: ' + esc(r.who ? r.who.split(',').map(pname).join(', ') : 'nobody') + '</small>' : '')) +
+      td('cat', '<input type="text"' + at + ' data-f="cat" maxlength="40" list="ctcats" aria-label="Category" value="' + esc(r.cat) + '">') +
+      td('pts', '<input type="number"' + at + ' data-f="pts" min="1" step="1" inputmode="numeric" aria-label="Points" value="' + (r.pts || '') + '">') +
+      td('need', '<select' + at + ' data-f="need" aria-label="Gives">' + CT_GIVES.map(function (k) { return '<option value="' + k + '"' + (r.need === k ? ' selected' : '') + '>' + GIVES_WORD[k] + '</option>'; }).join('') + '</select>' + (auto && ch.need === undefined ? '<small class="ct-auto">auto</small>' : '')) +
+      td('coins', '<input type="number"' + at + ' data-f="coins" min="0" step="1" inputmode="numeric" aria-label="Coins" placeholder="' + (coinable(r.need) ? coinDefault(r.need) : '-') + '" value="' + (r.coins && coinable(r.need) ? r.coins : '') + '"' + (coinable(r.need) ? '' : ' disabled') + '>') +
+      td('bounty', '<input type="text"' + at + ' data-f="bounty" inputmode="decimal" placeholder="0.00" aria-label="Bounty" value="' + (r.bounty ? dollars(r.bounty) : '') + '">') +
+      td('active', '<input type="checkbox"' + at + ' data-f="active" aria-label="Active"' + (r.active ? ' checked' : '') + '>');
+  }
+  function ctBarHtml() {
+    var n = ctCount();
+    return '<span class="grow">' + (n ? n + ' chore' + (n === 1 ? '' : 's') + ' changed, not saved yet' : 'No changes yet') + '</span>' +
+      '<button class="btn' + (S.armed === 'ctDiscard' ? ' danger' : '') + '" type="button" data-act="ctDiscard"' + (n ? '' : ' disabled') + '>' + (S.armed === 'ctDiscard' ? 'Tap again to undo' : 'Undo all') + '</button>' +
+      '<button class="btn primary" type="button" data-act="ctSave"' + (n ? '' : ' disabled') + '>Save</button>';
+  }
+  function ctBar() { var el = $('#ctBar'); if (el) el.innerHTML = ctBarHtml(); }
+  function renderChoreTable() {
+    var ct = ctState(), list = ctList(), cats = catList(S.chores), st = S.settings, cur = '', anyAuto = S.chores.some(isAuto);
+    var rows = list.map(function (c) {
+      var head = '';
+      if (catName(c) !== cur) { cur = catName(c); head = '<tr class="grp"><td colspan="7"><span>' + esc(cur) + '</span></td></tr>'; }
+      return head + '<tr' + (c.active === false ? ' class="off"' : '') + '>' + ctCells(c.id, ctRow(c), ctChanged(c), isAuto(c)) + '</tr>';
+    }).join('');
+    var news = ct.n.map(function (r, i) { return '<tr class="new">' + ctCells('+' + i, r, { name: 1, cat: 1, pts: 1, need: 1, coins: 1, bounty: 1, active: 1 }, false) + '</tr>'; }).join('');
+    view.innerHTML = '<section class="stack tight ct">' +
+      '<div class="wrap"><button class="btn" type="button" data-act="ctClose">&lsaquo; Setup</button><h2 class="grow">All chores</h2></div>' +
+      '<p class="note"><b>Points</b> = chore coins (100 = $1 at the bank; they also buy clothes, toothpaste and balls). <b>Gives</b> = what the chore adds in the pet game. <b>Coins</b> = how many food or clean coins it gives; blank means ' +
+      (Number(st.foodCoins) || 10) + ' food or ' + (Number(st.careCoins) || 10) + ' clean. Tuck-in and Play time give one each.' + (anyAuto ? ' <b>auto</b> means the app is guessing from the name; pick a value to set it.' : '') + ' Nothing changes until you tap Save.</p>' +
+      (ct.msg ? '<div class="banner info">' + ct.msg + '</div>' : '') +
+      '<div class="wrap"><button class="btn" type="button" data-act="ctDown">Download spreadsheet</button><button class="btn" type="button" data-act="ctUp">Upload spreadsheet</button>' +
+      '<input type="file" id="ctFile" accept=".csv,.txt,text/csv,text/plain" class="hide-file"></div>' +
+      '<div class="wrap end"><div class="field w-md"><input type="search" id="ctq" placeholder="Search chores" aria-label="Search chores" value="' + esc(ct.q) + '"></div>' +
+      '<div class="field w-md"><select id="ctCat" aria-label="Category"><option value="">Every category</option>' + cats.map(function (n) { return '<option value="' + esc(n) + '"' + (ct.cat === n ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '</select></div>' +
+      '<span class="checks"><label><input type="checkbox" id="ctArch"' + (ct.arch ? ' checked' : '') + '>Show archived</label></span></div>' +
+      '<div class="cats gives"><span class="gives-l">Gives</span>' + [''].concat(CT_GIVES, anyAuto || ct.give === 'auto' ? ['auto'] : []).map(function (k) {
+        return '<button type="button" class="cat' + (k && k !== 'auto' && k !== 'off' ? ' gv-' + (k === 'clean' ? 'clean' : k) : '') + '" data-act="ctGive" data-k="' + k + '" aria-pressed="' + (ct.give === k) + '">' + (k && k !== 'auto' && k !== 'off' ? '<i class="gv-dot"></i>' : '') + (k === '' ? 'All' : k === 'auto' ? 'auto (guessed)' : GIVES_WORD[k]) + '</button>';
+      }).join('') + '</div>' +
+      '<div class="wrap end ct-bulk"><span class="note">Set all ' + list.length + ' shown:</span>' +
+      '<div class="field w-sm"><select id="ctBGive" aria-label="Gives for all shown"><option value="">Gives...</option>' + CT_GIVES.map(function (k) { return '<option value="' + k + '">' + GIVES_WORD[k] + '</option>'; }).join('') + '</select></div>' +
+      '<div class="field w-xs"><input type="number" id="ctBCoins" min="0" step="1" inputmode="numeric" placeholder="Coins" aria-label="Coins for all shown"></div>' +
+      '<div class="field w-xs"><input type="number" id="ctBPts" min="1" step="1" inputmode="numeric" placeholder="Points" aria-label="Points for all shown"></div>' +
+      '<button class="btn" type="button" data-act="ctBulk"' + (list.length ? '' : ' disabled') + '>Apply</button></div>' +
+      '<div class="ct-wrap"><table class="ct-t"><thead><tr><th>Chore</th><th>Category</th><th>Points</th><th>Gives</th><th>Coins</th><th>Bounty $</th><th>On</th></tr></thead><tbody>' +
+      (rows || '<tr><td colspan="7" class="empty">No chores match.</td></tr>') + (news ? '<tr class="grp"><td colspan="7"><span>New chores</span></td></tr>' + news : '') + '</tbody></table></div>' +
+      '<div class="wrap"><button class="btn" type="button" data-act="ctAdd">Add a chore row</button></div>' +
+      '<p class="note">Who does each chore, big jobs and travel settings are in each chore’s editor (Setup → Chores → Edit). The spreadsheet has a Who column too. Rows you delete from the spreadsheet are left alone; to retire a chore, set Active to no.</p>' +
+      '<datalist id="ctcats">' + cats.filter(function (n) { return n !== 'Other'; }).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
+      '<div class="ct-bar" id="ctBar">' + ctBarHtml() + '</div></section>';
+  }
+  function upTo(el, tag) { while (el && el.tagName !== tag) el = el.parentNode; return el; }
+  function ctEdit(t) {
+    var key = t.getAttribute('data-ct'), f = t.getAttribute('data-f'), ct = ctState(), v;
+    if (f === 'active') v = t.checked;
+    else if (f === 'pts' || f === 'coins') v = t.value === '' ? 0 : Math.max(0, Math.round(Number(t.value) || 0));
+    else if (f === 'bounty') { v = parseMoney(t.value); if (isNaN(v)) { t.classList.add('bad'); return; } t.classList.remove('bad'); }
+    else v = t.value;
+    var c = null;
+    if (key.charAt(0) === '+') { var r = ct.n[Number(key.slice(1))]; if (!r) return; r[f] = v; }
+    else {
+      c = find(S.chores, function (x) { return x.id === key; }); if (!c) return;
+      (ct.d[key] = ct.d[key] || {})[f] = v;
+      var cell = upTo(t, 'TD'); if (cell) cell.className = ctChanged(c)[f] !== undefined ? 'chg' : '';
+      if (f === 'need' && cell) { var au = cell.querySelector('.ct-auto'); if (au) au.parentNode.removeChild(au); }
+    }
+    if (f === 'need') {   /* coins only mean something for food, clean and "needs most" */
+      var tr = upTo(t, 'TR'), co = tr && tr.querySelector('[data-f=coins]');
+      if (co) { co.disabled = !coinable(v); co.placeholder = coinable(v) ? coinDefault(v) : '-'; if (!coinable(v)) co.value = ''; }
+    }
+    ctBar();
+  }
+  function ctBulk() {
+    var ct = ctState(), g = val('ctBGive'), co = val('ctBCoins'), pp = val('ctBPts'), n = 0;
+    if (!g && co === '' && pp === '') { toast('Pick what to set: Gives, Coins or Points.', true); return; }
+    if (pp !== '' && !(Math.round(Number(pp)) > 0)) { toast('Points must be 1 or more.', true); return; }
+    ctList().forEach(function (c) {
+      var d = ct.d[c.id] = ct.d[c.id] || {};
+      if (g) d.need = g;
+      if (co !== '') d.coins = Math.max(0, Math.round(Number(co) || 0));
+      if (pp !== '') d.pts = Math.round(Number(pp));
+      n++;
+    });
+    ct.msg = ''; toast('Set ' + n + ' chore' + (n === 1 ? '' : 's') + '. Tap Save to keep it.'); renderChoreTable();
+  }
+  function ctSave() {
+    var ct = ctState(), ops = [], bad = [], known = catList(S.chores).filter(function (x) { return x !== 'Other'; }), newCats = [];
+    var order = S.chores.reduce(function (m, c) { return Math.max(m, c.order || 0); }, 0);
+    function noteCat(n) { if (n && known.indexOf(n) < 0 && newCats.indexOf(n) < 0) newCats.push(n); }
+    S.chores.forEach(function (c) {
+      var ch = ctChanged(c), d = {};
+      if (!Object.keys(ch).length) return;
+      if (ch.name !== undefined) { if (!ch.name) { bad.push('Every chore needs a name'); return; } d.name = ch.name; }
+      if (ch.cat !== undefined) { d.cat = ch.cat; noteCat(ch.cat); }
+      if (ch.pts !== undefined) { if (!(ch.pts > 0)) { bad.push((d.name || c.name) + ': points must be 1 or more'); return; } d.pts = ch.pts; }
+      if (ch.need !== undefined) d.need = ch.need;
+      if (ch.coins !== undefined) d.coins = ch.coins;
+      if (ch.bounty !== undefined) d.bountyCents = ch.bounty;
+      if (ch.active !== undefined) d.active = ch.active;
+      if (ch.who !== undefined) d.who = ch.who ? ch.who.split(',') : [];
+      ops.push({ t: 'update', c: 'chores', id: c.id, d: d });
+    });
+    ctNew().forEach(function (r) {
+      var name = trim(r.name), cat = trim(r.cat || '');
+      if (!(r.pts > 0)) { bad.push(name + ': points must be 1 or more'); return; }
+      noteCat(cat);
+      ops.push({ t: 'set', c: 'chores', id: DB.newId('chores'), d: { name: name, pts: r.pts, cat: cat, need: r.need || 'off', coins: r.coins || 0, bountyCents: r.bounty || 0,
+        who: r.who ? r.who.split(',') : activePeople().map(function (p) { return p.id; }), active: r.active !== false, order: ++order, major: false, majorEach: false, majorDays: [], travel: false, homeOnly: false } });
+    });
+    if (bad.length) { toast(bad[0] + (bad.length > 1 ? ' (and ' + (bad.length - 1) + ' more)' : ''), true); return; }
+    if (!ops.length) return;
+    DB.commit(ops).then(function () {
+      ct.d = {}; ct.n = []; ct.msg = ''; S.fromData = false;
+      toast('Saved ' + ops.length + ' chore' + (ops.length === 1 ? '' : 's') + '.'); go();
+      if (newCats.length) return saveSettings({ catOrder: known.concat(newCats) });
+    }).catch(fail);
+  }
+  function csvCell(s) { s = String(s == null ? '' : s); return /[",;\t\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+  function ctDownload() {
+    var ppl = activePeople();
+    var lines = [['ID', 'Chore', 'Category', 'Points', 'Gives', 'Coins', 'Bounty', 'Active'].concat(ppl.map(function (p) { return p.name; })).map(csvCell).join(',')];
+    ctOrder().forEach(function (c) {
+      var r = ctRow(c), auto = isAuto(c) && !(ctState().d[c.id] || {}).need, who = r.who ? r.who.split(',') : [];
+      lines.push([c.id, trim(r.name), trim(r.cat), r.pts, GIVES_WORD[r.need] + (auto ? ' (auto)' : ''), coinable(r.need) && r.coins ? r.coins : '', r.bounty ? dollars(r.bounty) : '', r.active ? 'yes' : 'no']
+        .concat(ppl.map(function (p) { return who.indexOf(p.id) >= 0 ? 1 : ''; })).map(csvCell).join(','));
+    });
+    try {
+      var a = document.createElement('a');
+      a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + lines.join('\r\n') + '\r\n');
+      a.download = 'chores-' + today() + '.csv';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    } catch (e) { toast('This browser cannot download files.', true); }
+  }
+  function parseCsv(text) {
+    text = String(text || '').replace(/^﻿/, '');
+    var first = text.split(/\r?\n/)[0] || '', nC = first.split(',').length, delim = first.split('\t').length > nC ? '\t' : first.split(';').length > nC ? ';' : ',';
+    var rows = [], row = [], cell = '', q = false, i, ch;
+    for (i = 0; i < text.length; i++) {
+      ch = text.charAt(i);
+      if (q) { if (ch === '"') { if (text.charAt(i + 1) === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+      else if (ch === '"' && cell === '') q = true;
+      else if (ch === delim) { row.push(cell); cell = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text.charAt(i + 1) === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += ch;
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (x) { return trim(x); }); });
+  }
+  function giveFrom(s) {
+    s = lc(String(s || '').replace(/\(.*?\)/g, '')).replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ');
+    s = trim(s);
+    if (!s) return null;
+    if (/^(food|meal|kitchen)/.test(s)) return 'food';
+    if (/^(clean|care|bath|soap|hygiene)/.test(s)) return 'clean';
+    if (/^(tuck|rest|bed|sleep|tooth)/.test(s)) return 'rest';
+    if (/^(play|energy|exercise|ball|fetch)/.test(s)) return 'energy';
+    if (/^(needs|need|any|what|most|favou?r)/.test(s)) return 'any';
+    if (/^(nothing|none|no|off|n a|na)$/.test(s)) return 'off';
+    return undefined;
+  }
+  function ctImport(text, fname) {
+    var rows = parseCsv(text);
+    if (rows.length < 2) { toast('That file has no chore rows.', true); return; }
+    var head = rows[0].map(function (h) { return lc(h).replace(/[^a-z]/g, ''); });
+    function col(names) { for (var i = 0; i < head.length; i++) if (names.indexOf(head[i]) >= 0) return i; return -1; }
+    var cI = col(['id']), cN = col(['chore', 'name', 'chorename', 'chores', 'quest', 'quests']), cC = col(['category', 'cat', 'group']), cP = col(['points', 'pts', 'point', 'chorecoins']),
+      cG = col(['gives', 'give', 'cointype', 'reward', 'petgame']), cK = col(['coins', 'coin', 'petcoins', 'amount']), cB = col(['bounty', 'bountyusd', 'bountydollars']),
+      cA = col(['active', 'on', 'enabled']), cW = col(['who', 'assigned', 'assignedto', 'people', 'kids']);
+    if (cN < 0) { toast('The first row needs column names, with at least a Chore column (and Points, Gives, Coins as you like).', true); return; }
+    var ct = ctState(), byId = {}, byName = {}, warn = [], changed = 0, added = 0, seen = {};
+    S.chores.forEach(function (c) { byId[c.id] = c; if (!byName[lc(c.name)]) byName[lc(c.name)] = c; });
+    var ppl = S.people.map(function (p) { return { id: p.id, n: lc(p.name) }; });
+    /* a column per person (1, x or yes = they do it), like the family's own quest sheet */
+    var pcols = []; ppl.forEach(function (p) { var i = head.indexOf(p.n.replace(/[^a-z]/g, '')); if (i >= 0 && [cI, cN, cC, cP, cG, cK, cB, cA, cW].indexOf(i) < 0) pcols.push({ id: p.id, i: i }); });
+    ct.d = {}; ct.n = [];
+    rows.slice(1).forEach(function (r, ri) {
+      var line = ri + 2;
+      function get(i) { return i >= 0 ? trim(r[i] == null ? '' : String(r[i])) : null; }
+      var id = get(cI), name = get(cN);
+      if (!name) { if (id || r.some(function (x) { return trim(x); })) warn.push('Row ' + line + ': no chore name, skipped'); return; }
+      var c = id ? byId[id] : byName[lc(name)];
+      if (id && !c) warn.push('Row ' + line + ' (' + name + '): ID not found, added as a new chore');
+      if (c && seen[c.id]) { warn.push('Row ' + line + ' (' + name + '): ' + (id ? 'that ID' : 'that name') + ' is on more than one row, skipped'); return; }
+      if (c) seen[c.id] = 1;
+      var b = c ? ctBase(c) : { name: '', cat: '', pts: 0, need: 'off', coins: 0, bounty: 0, active: true, who: '' }, v = { name: name };
+      if (cC >= 0) v.cat = get(cC);
+      var ps = get(cP);
+      if (ps !== null && ps !== '') { var pn = Math.round(Number(ps.replace(/[^0-9.\-]/g, ''))); if (pn > 0) v.pts = pn; else warn.push('Row ' + line + ' (' + name + '): points "' + ps + '" is not a number' + (c ? ', kept ' + b.pts : '')); }
+      var gs = get(cG);
+      if (gs !== null && gs !== '') {
+        var g = giveFrom(gs);
+        if (g === undefined) warn.push('Row ' + line + ' (' + name + '): Gives "' + gs + '" is not one of Food coins, Clean coins, Tuck-in, Play time, Needs most, Nothing');
+        else if (g && !(c && isAuto(c) && /\(auto\)/i.test(gs) && g === b.need)) v.need = g;
+      }
+      if (cK >= 0) { var ks = get(cK); v.coins = ks === '' ? 0 : Math.max(0, Math.round(Number(ks.replace(/[^0-9.]/g, '')) || 0)); }
+      if (cB >= 0) { var bc = parseMoney(get(cB)); if (isNaN(bc)) warn.push('Row ' + line + ' (' + name + '): bounty "' + get(cB) + '" should look like 5.00'); else v.bounty = bc; }
+      if (cA >= 0) { var as = lc(get(cA)); v.active = !/^(n|no|false|0|off|archived?|retired?|x)$/.test(as); }
+      if (cW >= 0) {
+        var ws = get(cW);
+        if (ws) {
+          var ids = [], miss = [];
+          if (/^(all|everyone|everybody)$/i.test(ws)) ids = activePeople().map(function (p) { return p.id; });
+          else ws.split(/[,;\/&+]|\band\b/).forEach(function (w) { w = lc(w); if (!w) return; var hit = find(ppl, function (p) { return p.n === w; }) || find(ppl, function (p) { return p.n.indexOf(w) === 0; }); if (hit) { if (ids.indexOf(hit.id) < 0) ids.push(hit.id); } else miss.push(w); });
+          if (miss.length) warn.push('Row ' + line + ' (' + name + '): who "' + miss.join(', ') + '" is not a person here, so Who was left as it was');
+          else v.who = whoKey(ids);
+        }
+      }
+      if (pcols.length) {
+        var on = c ? (b.who ? b.who.split(',') : []) : [];
+        pcols.forEach(function (pc) { var yes = /^(1(\.0+)?|y|yes|x|true|✓|✔)$/i.test(trim(String(r[pc.i] == null ? '' : r[pc.i]))), at = on.indexOf(pc.id); if (yes && at < 0) on.push(pc.id); if (!yes && at >= 0) on.splice(at, 1); });
+        v.who = whoKey(on);
+      }
+      if (c) {
+        var d = {};
+        Object.keys(v).forEach(function (k) { if (v[k] !== b[k] || (k === 'need' && isAuto(c))) d[k] = v[k]; });
+        if (coinable(v.need || b.need) === false) delete d.coins;
+        if (Object.keys(d).length) { ct.d[c.id] = d; if (Object.keys(ctChanged(c)).length) changed++; else delete ct.d[c.id]; }
+      } else {
+        if (!(v.pts > 0)) { warn.push('Row ' + line + ' (' + name + '): a new chore needs points, skipped'); return; }
+        ct.n.push(assign({ cat: '', need: 'off', coins: 0, bounty: 0, active: true, who: '' }, v)); added++;
+      }
+    });
+    ct.give = ''; ct.cat = ''; ct.q = '';
+    ct.msg = '<strong>Loaded ' + esc(fname || 'the spreadsheet') + ':</strong> ' + changed + ' chore' + (changed === 1 ? '' : 's') + ' changed' + (added ? ', ' + added + ' new' : '') +
+      '. Changed cells are highlighted; check them, then tap Save at the bottom.' +
+      (warn.length ? '<br><small>' + warn.slice(0, 8).map(esc).join('<br>') + (warn.length > 8 ? '<br>...and ' + (warn.length - 8) + ' more' : '') + '</small>' : '');
+    renderChoreTable();
+  }
   function choreEditor(c, act) {
     var who = c ? (c.who || []) : act.map(function (p) { return p.id; }), nd = c ? needOf(c) : '';
     var cats = catList(S.chores).filter(function (n) { return n !== 'Other'; });
@@ -1772,7 +2123,8 @@
       '<label class="field" for="ceName"><span>Chore</span><input type="text" id="ceName" maxlength="120" value="' + (c ? esc(c.name) : '') + '"></label>' +
       '<div class="wrap end"><label class="field w-lg" for="ceCat"><span>Category</span><input type="text" id="ceCat" maxlength="40" list="catlist" value="' + (c && c.cat ? esc(c.cat) : '') + '"></label>' +
       '<label class="field w-sm" for="cePts"><span>Points</span><input type="number" id="cePts" min="1" step="1" inputmode="numeric" value="' + (c ? c.pts : 4) + '"></label></div>' +
-      '<div class="wrap end"><label class="field w-md" for="ceNeed"><span>In the pet game it gives</span><select id="ceNeed">' + ['food', 'clean', 'rest', 'energy', 'none'].map(function (k) { return opt(k, NEED_LABEL[k], nd || 'none'); }).join('') + '</select></label>' +
+      '<div class="wrap end"><label class="field w-md" for="ceNeed"><span>In the pet game it gives</span><select id="ceNeed">' + ['food', 'clean', 'rest', 'energy', 'any', 'off'].map(function (k) { return opt(k, NEED_LABEL[k], nd || 'off'); }).join('') + '</select></label>' +
+      '<label class="field w-sm" for="ceCoins"><span>Coins it gives</span><input type="number" id="ceCoins" min="0" step="1" inputmode="numeric" placeholder="' + coinDefault(nd) + '" value="' + (c && c.coins ? c.coins : '') + '"></label>' +
       '<label class="field w-sm" for="ceBounty"><span>Bounty ($)</span><input type="text" id="ceBounty" inputmode="decimal" placeholder="0.00" value="' + (c && c.bountyCents ? dollars(c.bountyCents) : '') + '"></label></div>' +
       '<datalist id="catlist">' + cats.map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
       '<fieldset><legend>Who can do it</legend><div class="checks">' + act.map(function (p) {
@@ -1859,6 +2211,7 @@
         if (S.me === '@parent') { if (!S.admin) openAdmin(); } else if (S.admin) setAdmin(null);
         S.tab = S.me === '@parent' ? S.tab : 'log'; go(); pushRefresh(); break;
       case 'sel': S.sel = d('pid'); S.quest = null; schedule(); break;
+      case 'give': S.give = S.give === d('k') ? '' : d('k'); schedule(); break;
       case 'cat': S.cat = d('cat'); updateLogList(); break;
       case 'logMode': S.logMode = d('m'); LS.set('cl.logmode', S.logMode); S.cat = 'all'; view.innerHTML = ''; go(); break;
       case 'chOpen': S.chOpen = S.chOpen === d('cid') ? null : d('cid'); updateChoreBoard(); break;
@@ -1967,6 +2320,8 @@
         DB.query({ c: 'txns', where: [['pid', '==', ap]] }).then(function (l) { l.sort(function (x, y) { return y.ts - x.ts; }); S.allTx = { pid: ap, list: l }; go(); }, fail);
         break;
       case 'payday': if (needAdmin()) confirmTap('payday', payday); break;
+      case 'cashIn': cashIn(d('pid')); break;
+      case 'logFor': if (!needAdmin()) break; S.tab = 'log'; S.logMode = 'person'; S.sel = d('pid'); S.bankPid = null; S.cat = 'all'; S.q = ''; view.innerHTML = ''; go(); window.scrollTo(0, 0); break;
       case 'reqApprove':
         if (!needAdmin()) break;
         var r = find(S.reqs, function (x) { return x.id === d('id'); });
@@ -1995,6 +2350,18 @@
         confirmTap('rmp' + rid, function () { saveSettings({ parents: (S.settings.parents || []).filter(function (x) { return x.id !== rid; }) }).then(function () { toast('Parent removed'); }, fail); });
         break;
       case 'newChore': S.edit = 'new'; go(); break;
+      case 'ctOpen': S.ctable = true; S.edit = null; ctState().msg = ''; go(); window.scrollTo(0, 0); break;
+      case 'ctClose':
+        if (ctCount() && S.armed !== 'ctClose') { S.armed = 'ctClose'; toast('You have unsaved changes. Tap Setup again to leave them for later.'); setTimeout(function () { if (S.armed === 'ctClose') S.armed = null; }, 4000); break; }
+        S.armed = null; S.ctable = false; S.fromData = false; go(); window.scrollTo(0, 0); break;
+      case 'ctSave': ctSave(); break;
+      case 'ctDiscard': confirmTap('ctDiscard', function () { var ct = ctState(); ct.d = {}; ct.n = []; ct.msg = ''; renderChoreTable(); }); break;
+      case 'ctAdd': ctState().n.push({ name: '', cat: ctState().cat || '', pts: 4, need: 'off', coins: 0, bounty: 0, active: true, who: '' }); renderChoreTable();
+        var nr = $$('.ct-t tr.new input[data-f=name]'); if (nr.length) nr[nr.length - 1].focus(); break;
+      case 'ctGive': ctState().give = d('k'); renderChoreTable(); break;
+      case 'ctBulk': ctBulk(); break;
+      case 'ctDown': ctDownload(); break;
+      case 'ctUp': var cf = $('#ctFile'); if (cf) { cf.value = ''; cf.click(); } break;
       case 'editChore': S.edit = d('cid'); go(); break;
       case 'cancelEdit': S.edit = null; go(); break;
       case 'toggleChore':
@@ -2009,6 +2376,9 @@
         saveSettings({ catOrder: order }).catch(fail);
         break;
       case 'exportFamily': exportFamily(); break;
+      case 'nrRetry': location.reload(); break;
+      case 'nrMode': try { if (DB.longPoll) localStorage.removeItem('cl.lp'); else localStorage.setItem('cl.lp', '1'); } catch (e2) {} location.reload(); break;
+      case 'nrSignout': confirmTap('nrSignout', function () { DB.logout().then(function () { location.reload(); }, function () { location.reload(); }); }); break;
       case 'signout': confirmTap('signout', function () { DB.logout().then(function () { location.reload(); }); }); break;
       case 'resetDemo': confirmTap('resetDemo', function () { DB.resetDemo(); LS.set('cl.me', null); location.reload(); }); break;
       /* wizard */
@@ -2023,6 +2393,15 @@
     if (t.id === 'date') { if (t.value) { S.date = t.value; S.dateAuto = t.value === today(); schedule(); } }
     else if (t.id === 'sort') { S.sort = t.value; updateLogList(); }
     else if (t.id === 'wzFile') wizImport(t.files && t.files[0]);
+    else if (t.getAttribute('data-ct')) ctEdit(t);
+    else if (t.id === 'ctCat') { ctState().cat = t.value; renderChoreTable(); }
+    else if (t.id === 'ctArch') { ctState().arch = t.checked; renderChoreTable(); }
+    else if (t.id === 'ctFile' && t.files && t.files[0]) {
+      var cfile = t.files[0], fr = new FileReader();
+      fr.onload = function () { ctImport(String(fr.result || ''), cfile.name); };
+      fr.onerror = function () { toast('Could not read that file.', true); };
+      fr.readAsText(cfile);
+    }
     else if (t.name === 'wzStarter') S.wiz.starter = t.value === '1';
     else if (t.getAttribute('data-hist')) { S.hist[t.getAttribute('data-hist')] = t.value; go(); }
     else if (t.getAttribute('data-mtg') === 'since' && S.mtg) { S.mtg.since = t.value; S.mtg.entries = null; S.mtg.loading = false; go(); }
@@ -2041,6 +2420,8 @@
     var t = e.target;
     if (t.id === 'q') { S.q = t.value; updateLogList(); }
     else if (t.id === 'cq') { S.cq = t.value; updateChoreList(); }
+    else if (t.id === 'ctq') { ctState().q = t.value; clearTimeout(S.ctqT); S.ctqT = setTimeout(function () { renderChoreTable(); var q = $('#ctq'); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }, 250); }
+    else if (t.getAttribute('data-ct') && t.type !== 'checkbox' && t.tagName !== 'SELECT') ctEdit(t);
   }
   function onKey(e) { if (e.keyCode === 13 && e.target.id === 'wzPerson') { e.preventDefault(); wizAddPerson(); } }
   function onSubmit(e) {
@@ -2097,12 +2478,12 @@
       DB.commit(pops).then(function () { toast(name + ' added'); f.reset(); }, fail);
     } else if (kind === 'chore') {
       var cid = f.getAttribute('data-cid'), cname = trim(val('ceName')), pts = Math.round(Number(val('cePts'))), cat = trim(val('ceCat'));
-      var bounty = parseMoney(val('ceBounty')), need = val('ceNeed');
+      var bounty = parseMoney(val('ceBounty')), need = val('ceNeed'), ccoins = coinable(need) ? Math.max(0, Math.round(Number(val('ceCoins')) || 0)) : 0;
       if (!cname || !(pts > 0)) { toast('Enter a name and a point value.', true); return; }
       if (isNaN(bounty)) { toast('Enter the bounty like 5.00, or leave it empty.', true); return; }
       var who = $$('input[name=who]', f).filter(function (x) { return x.checked; }).map(function (x) { return x.value; });
       var mdays = $$('input[name=mday]', f).filter(function (x) { return x.checked; }).map(function (x) { return Number(x.value); });
-      var data = { name: cname, pts: pts, who: who, cat: cat, need: need, bountyCents: bounty, major: $('#ceMajor').checked, majorEach: $('#ceEach').checked, majorDays: mdays, travel: $('#ceTrip').checked, homeOnly: !$('#ceTravel').checked };
+      var data = { name: cname, pts: pts, who: who, cat: cat, need: need, coins: ccoins, bountyCents: bounty, major: $('#ceMajor').checked, majorEach: $('#ceEach').checked, majorDays: mdays, travel: $('#ceTrip').checked, homeOnly: !$('#ceTravel').checked };
       var op = cid ? { t: 'update', c: 'chores', id: cid, d: data }
         : { t: 'set', c: 'chores', id: DB.newId('chores'), d: assign(data, { active: true, order: S.chores.reduce(function (m, c) { return Math.max(m, c.order || 0); }, 0) + 1 }) };
       var eff = catList(S.chores).filter(function (x) { return x !== 'Other'; });
@@ -2117,9 +2498,10 @@
         earlyBy: val('aEarly') || '10:00', advWeekday: [val('aWd1') || '16:00', val('aWd2') || '19:00'], advWeekend: [val('aWe1') || '09:00', val('aWe2') || '19:00'],
         vacation: { from: from, to: to }, vacMinutes: Math.max(5, Number(val('vMin')) || 60), vacAutoPass: $('#vAuto').checked }).then(function () { toast('Saved'); go(); }, fail);
     } else if (kind === 'money2') {
-      var rate = parseFloat(val('rate')), e1 = parseMoney(val('evo1')), e2 = parseMoney(val('evo2')), al = parseMoney(val('allow'));
-      if (!(rate >= 0) || isNaN(e1) || isNaN(e2) || isNaN(al)) { toast('Check the numbers: use amounts like 5.00', true); return; }
-      var p2 = { foodCoins: Math.max(1, Math.round(Number(val('fcoins')) || 10)), mealPrice: Math.max(1, Math.round(Number(val('mprice')) || 10)), careCoins: Math.max(1, Math.round(Number(val('ccoins')) || 10)), kitPrice: Math.max(1, Math.round(Number(val('kprice')) || 10)), bankName: trim(val('bname')) || 'Family Bank', requireApproval: $('#reqAppr').checked, centsPerPoint: rate, petEvolve1Cents: e1, petEvolve2Cents: e2, dadPid: val('dad'), allowanceCents: al, allowanceDay: Number(val('aday')), allowanceVacPause: $('#aVacPause').checked };
+      var rate = Number(S.settings.centsPerPoint) || 0, e1 = parseMoney(val('evo1')), e2 = parseMoney(val('evo2')), al = parseMoney(val('allow'));
+      if (isNaN(e1) || isNaN(e2) || isNaN(al)) { toast('Check the numbers: use amounts like 5.00', true); return; }
+      var p2 = { foodCoins: Math.max(1, Math.round(Number(val('fcoins')) || 10)), mealPrice: Math.max(1, Math.round(Number(val('mprice')) || 10)), careCoins: Math.max(1, Math.round(Number(val('ccoins')) || 10)), kitPrice: Math.max(1, Math.round(Number(val('kprice')) || 10)),
+        coinsPerDollar: Math.max(1, Math.round(Number(val('cpd')) || 100)), swapPrice: Math.max(1, Math.round(Number(val('ppc')) || 20)), toothPrice: Math.max(1, Math.round(Number(val('tprice')) || 20)), ballPrice: Math.max(1, Math.round(Number(val('bprice')) || 20)), bankName: trim(val('bname')) || 'Family Bank', requireApproval: $('#reqAppr').checked, centsPerPoint: rate, petEvolve1Cents: e1, petEvolve2Cents: e2, dadPid: val('dad'), allowanceCents: al, allowanceDay: Number(val('aday')), allowanceVacPause: $('#aVacPause').checked };
       if (p2.dadPid !== S.settings.dadPid || p2.allowanceDay !== Number(S.settings.allowanceDay) || !S.settings.allowanceLast) p2.allowanceLast = lastAllowanceDay(p2.allowanceDay);
       saveSettings(p2).then(function () { toast('Saved'); go(); }, fail);
     }
@@ -2129,7 +2511,11 @@
   document.addEventListener('input', onInput);
   document.addEventListener('keydown', onKey);
   document.addEventListener('submit', onSubmit);
-  document.addEventListener('focusout', function () { if (S.dirty) setTimeout(schedule, 300); });
+  document.addEventListener('focusout', function () {
+    if (!S.dirty) return;
+    if (S.tab === 'setup' && (S.edit || S.ctable)) S.fromData = true;   /* refresh the header (badges) but leave the editor as it is */
+    setTimeout(schedule, 300);
+  });
   document.addEventListener('click', touchAdmin, true);
   document.addEventListener('keydown', touchAdmin, true);
   document.addEventListener('touchstart', function () { S.lastActive = Date.now(); }, true);
@@ -2147,10 +2533,11 @@
 
   /* ================= data ================= */
   function watch(name, spec, apply) {
-    DB.watch(spec, function (res) { apply(res); S.ready[name] = true; schedule(); });
+    DB.watch(spec, function (res, meta) { if (apply(res, meta || {}) === false) return; S.ready[name] = true; S.fromData = true; schedule(); });
   }
   function startApp() {
-    S.phase = 'app'; schedule();
+    S.phase = 'app'; S.startedAt = Date.now(); schedule();
+    setTimeout(schedule, 12500);
     watch('people', { c: 'people' }, function (a) { a.sort(function (x, y) { return (x.order || 0) - (y.order || 0); }); S.people = a; });
     watch('chores', { c: 'chores' }, function (a) { S.chores = a; });
     watch('entries', { c: 'entries', where: [['date', '>=', addDays(today(), -LIVE_DAYS)]] }, function (a) { S.entries = a; });
@@ -2158,7 +2545,12 @@
     watch('reqs', { c: 'requests', orderBy: ['ts', 'desc'], limit: 150 }, function (a) { S.reqs = a; });
     watch('pets', { c: 'pets' }, function (a) { var m = {}; a.forEach(function (p) { m[p.id] = p; }); S.pets = m; });
     if (window.C3D) C3D.onReady(function () { schedule(); });
-    watch('settings', { c: 'meta', id: 'settings' }, function (d) { S.settingsDoc = d; S.settings = assign({}, DEFAULTS, d || {}); });
+    /* "no settings" read from this device's own cache (no connection yet) must never look like a brand-new household:
+       that would open the setup form and could overwrite the real family data once the device reconnects */
+    watch('settings', { c: 'meta', id: 'settings' }, function (d, meta) {
+      if (!d && meta.cache) { S.noReach = true; schedule(); return false; }
+      S.noReach = false; S.settingsDoc = d; S.settings = assign({}, DEFAULTS, d || {});
+    });
     watch('adv', { c: 'adv', id: today() }, function (d) { S.adv = d || {}; });
     watch('nudges', { c: 'nudges', where: [['date', '>=', addDays(today(), -1)]] }, function (a) { S.nudges = a; });
     watch('devices', { c: 'devices' }, function (a) { S.devices = a; });

@@ -13,7 +13,7 @@
   var T = 32;
   var GRASS = 0, PATH = 1, TREE = 2, WATER = 3, FLOWER = 4, SOLID = 6, DOOR = 7, SAND = 8, SWIM = 9, VINE = 10, CAVE = 11, ROCK = 12, PIER = 13, EXIT = 14, WET = 15, PALM = 16, DECK = 17, RAIL = 18, POOL = 19, TABLE = 20, CHAIR = 21, COUNTER = 22, WALL = 23, FURN = 24, FLOOR = 25, TILEF = 26;
   var ROOF = ['#c2571a', '#127a6e', '#6d3fcf', '#c0306f', '#2956c9', '#55801a', '#b3262a'];
-  var HOUSE_SPOTS = [[2, 8], [7, 8], [18, 8], [23, 8], [18, 14], [23, 14], [2, 20], [18, 20], [23, 20]];   /* 7,20 is the Pet Café */
+  var HOUSE_SPOTS = [[2, 8], [7, 8], [18, 8], [23, 8], [18, 14], [23, 14], [2, 20], [23, 20]];   /* 7,20 is the Pet Café, 17,20 the clothes shop */
   var ABIL = { Fire: ['light'], Water: ['swim'], Leaf: ['climb'], Cosmic: ['light', 'swim', 'climb'], Mythic: ['light', 'swim', 'climb'] };
   var W = { pid: null, region: 'town', map: null, mw: 30, mh: 26, key: '', bld: [], bg: null, bgs: {}, cv: null, ctx: null, root: null, run: false, last: 0, t: 0,
     P: null, pet: null, held: null, imgs: {}, msg: '', msgUntil: 0, scale: 1, cw: 0, ch: 0, dpr: 1, obj: null, fish: null };
@@ -49,6 +49,7 @@
     building('park', 2, 14, 10, 4, 4, { title: 'Park' });
     building('gate', 13, 25, 4, 1, 1, { title: 'Adventure Gate' });
     building('cafe', 7, 20, 5, 4, 2, { title: 'Pet Café' });
+    building('clothes', 17, 20, 5, 4, 2, { title: 'Clothes Shop' });
     set(15, 25, DOOR);
     people.slice(0, HOUSE_SPOTS.length).forEach(function (p, i) {
       var s = HOUSE_SPOTS[i];
@@ -410,8 +411,8 @@
       sign(g, b, '#6b4a2a', '#fff');
       return;
     }
-    var roof = b.kind === 'bank' ? '#123f36' : b.kind === 'store' ? '#b3262a' : b.kind === 'prizes' ? '#6d3fcf' : b.kind === 'cafe' ? '#1f8f6a' : b.color;
-    var wall = b.kind === 'bank' ? '#efe6cf' : b.kind === 'store' ? '#fff4e0' : b.kind === 'prizes' ? '#fff6d8' : b.kind === 'cafe' ? '#fff8ec' : '#f6ecd9';
+    var roof = b.kind === 'bank' ? '#123f36' : b.kind === 'store' ? '#b3262a' : b.kind === 'prizes' ? '#6d3fcf' : b.kind === 'cafe' ? '#1f8f6a' : b.kind === 'clothes' ? '#d9488f' : b.color;
+    var wall = b.kind === 'bank' ? '#efe6cf' : b.kind === 'store' ? '#fff4e0' : b.kind === 'prizes' ? '#fff6d8' : b.kind === 'cafe' ? '#fff8ec' : b.kind === 'clothes' ? '#fff0f6' : '#f6ecd9';
     g.fillStyle = 'rgba(0,0,0,.15)'; g.fillRect(x + 4, y + h - 4, w, 6);
     g.fillStyle = wall; g.fillRect(x + 2, y + h * 0.4, w - 4, h * 0.6);
     g.fillStyle = roof; g.beginPath(); g.moveTo(x - 2, y + h * 0.45); g.lineTo(x + 10, y + 4); g.lineTo(x + w - 10, y + 4); g.lineTo(x + w + 2, y + h * 0.45); g.closePath(); g.fill();
@@ -423,6 +424,12 @@
     var wy = y + h * 0.58;
     if (b.kind === 'house') { g.fillRect(x + 12, wy, 22, 18); g.fillRect(x + w - 34, wy, 22, 18); g.strokeStyle = '#fff'; g.lineWidth = 2; g.strokeRect(x + 12, wy, 22, 18); g.strokeRect(x + w - 34, wy, 22, 18); }
     else if (b.kind === 'store') { g.fillRect(x + 12, wy, 50, 26); g.fillRect(x + w - 62, wy, 50, 26); }
+    else if (b.kind === 'clothes') {   /* shop windows with a dress and a shirt on display */
+      g.fillRect(x + 10, wy, 40, 28); g.fillRect(x + w - 50, wy, 40, 28);
+      g.fillStyle = '#7a5fd6'; g.beginPath(); g.moveTo(x + 26, wy + 6); g.lineTo(x + 34, wy + 6); g.lineTo(x + 40, wy + 26); g.lineTo(x + 20, wy + 26); g.closePath(); g.fill();
+      g.fillStyle = '#ffd23f'; g.fillRect(x + w - 38, wy + 8, 16, 14); g.fillRect(x + w - 42, wy + 8, 24, 5);
+      g.strokeStyle = '#d9488f'; g.lineWidth = 2; g.strokeRect(x + 10, wy, 40, 28); g.strokeRect(x + w - 50, wy, 40, 28);
+    }
     else if (b.kind === 'cafe') { g.fillRect(x + 10, wy, 40, 26); g.fillRect(x + w - 50, wy, 40, 26); g.fillStyle = '#c0683a'; [[x + 30, wy + 22], [x + w - 30, wy + 22]].forEach(function (c) { g.beginPath(); g.arc(c[0], c[1], 6, Math.PI, 0); g.fill(); }); g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(x + 30, wy + 14, 3, 0, 7); g.arc(x + w - 30, wy + 14, 3, 0, 7); g.fill(); }
     g.fillStyle = '#7a4f2a'; rr(g, dX + 6, dY + 4, T - 12, T - 4, 6); g.fill();
     g.fillStyle = '#f2c14e'; g.beginPath(); g.arc(dX + T - 11, dY + 18, 2, 0, 7); g.fill();
@@ -458,14 +465,24 @@
   /* 3D pets have front, side and back views: walking down shows the face, up shows the back, sideways the profile */
   function is3d(p) { return !!(window.C3D && !C3D.off && p && C3D.has(p.sp)); }
   function petView(p, dir) { return !is3d(p) ? '' : dir === 'up' ? 'back' : dir === 'side' ? 'side' : 'front'; }
-  function petImage(pid, mood, moving, dir) {
+  function petImage(pid, mood, moving, dir, a) {
     var st = Pz().state(pid); if (!st.pet) return null;
-    var f = st.flags, p = st.pet, fr = petFrame(mood, pid.length * 0.7, moving), view = petView(p, dir);
+    var f = st.flags, p = st.pet, fr = petFrame(mood, pid.length * 0.7, moving), view = petView(p, dir), lf = legFrame(p, a, mood);
     if (view) { fr.t = 0; fr.w = 1; }
     var base = 'pet|' + pid + '|' + p.sp + p.stage + p.pal + '|' + (p.wear || '') + '|' + (p.dye || '') + '|' + mood + '|' + (f.thin ? 1 : 0) + (f.dirty ? 1 : 0) + (f.tired ? 1 : 0) + (f.pudgy ? 1 : 0) + '|' + view;
-    var im = img(base + '|' + fr.b + fr.t + fr.w, function () { return Pz().petSvg(p, mood, f, { blink: !!fr.b, tailRot: fr.t, wingFlap: fr.w === 1 ? 0 : fr.w, view: view || undefined, noStink: true }); });
+    var im = img(base + '|' + fr.b + fr.t + fr.w + '|' + (lf == null ? '' : lf), function () { return Pz().petSvg(p, mood, f, { blink: !!fr.b, tailRot: fr.t, wingFlap: fr.w === 1 ? 0 : fr.w, view: view || undefined, noStink: true, frame: lf }); });
     if (im) { petLast[base] = im; return im; }
     return petLast[base] || null;
+  }
+  /* real leg frames (rendered in Blender) for pets that walk: which frame to show now, or null for the still picture.
+     One stride per square walked, so the feet keep time with the ground. */
+  /* 3D pets that walk never get their picture cut up (that bent faces): leg frames when there are any, else it rides as one piece */
+  function hasLegs(p) { return !!(p && is3d(p) && petGait(p) === 'walk'); }
+  function legFrame(p, a, mood) {
+    if (!a || !a.moving || mood === 'asleep' || !hasLegs(p) || !C3D.walks || !C3D.walks(p.sp, p.stage || 0)) return null;
+    if (!C3D.walkReady(p.sp)) { C3D.preloadWalk(p.sp); return null; }
+    var n = C3D.walkFrames(p.sp), u = a.gait || 0;
+    return Math.floor(((u % 1) + 1) % 1 * n) % n;
   }
   function people3d() { return !!(window.C3D && C3D.hasPeople && C3D.hasPeople()); }
   function actorView(dir) { return !people3d() ? '' : dir === 'up' ? 'back' : dir === 'side' ? 'side' : 'front'; }
@@ -530,9 +547,24 @@
     return false;
   }
   function petSpeedFactor(f) { var s = 1; if (f.tired) s *= 0.45; if (f.pudgy) s *= 0.5; if (f.thin) s *= 0.65; return s; }
+  /* after a tuck-in the pet sleeps in its bed at home for 5 minutes: it's in the bed when you're home, and not with you anywhere else */
+  function bedTime() { return Pz().asleep ? Pz().asleep(W.pid) : 0; }
   function updatePet(dt, now) {
     var pet = W.pet, st = Pz().state(W.pid), f = st.flags, P = W.P;
     if (!st.pet) return;
+    if (bedTime() && !away()) {
+      var inMyHouse = W.region === 'home' && W.homeOwner === W.pid;
+      if (pet.mode !== 'bed') { pet.mode = 'bed'; pet.queue = []; pet.moving = false; }
+      pet.atBed = inMyHouse;
+      if (inMyHouse) { pet.x = pet.tx = pet.fx = 1; pet.y = pet.ty = pet.fy = 3; }
+      return;
+    }
+    if (pet.mode === 'bed') {   /* awake again: hop out of bed, or come running back to you */
+      pet.mode = 'follow'; pet.atBed = false;
+      var wx = W.region === 'home' && W.homeOwner === W.pid ? 3 : (walk(P.x + 1, P.y) ? P.x + 1 : walk(P.x - 1, P.y) ? P.x - 1 : P.x), wy = W.region === 'home' && W.homeOwner === W.pid ? 3 : P.y;
+      pet.x = pet.tx = pet.fx = wx; pet.y = pet.ty = pet.fy = wy; pet.queue = [];
+      say(st.pet.name + ' woke up and is ready to go!', 2500);
+    }
     var speed = 4.4 * petSpeedFactor(f);
     if (W.region === 'town') {
       if (st.starving && pet.mode !== 'dumpster' && pet.mode !== 'eat') {
@@ -893,6 +925,7 @@
   }
   function enterRegion(region) {
     Pz().G.room = null; renderRoom();
+    if (bedTime() && Pz().wake) Pz().wake(W.pid);   /* adventures wake the pet up: it comes along */
     A().startExpedition(W.pid, region);
     var m = load(region);
     placeAt(m.start.x, m.start.y);
@@ -941,6 +974,7 @@
       else if (Math.floor(W.t * 2) !== Math.floor((W.t - dt) * 2)) { timerHud(e); actionHud(); }
     }
     if (W.msgUntil && now > W.msgUntil) { W.msgUntil = 0; W.msg = ''; updateMsg(); }
+    if (!W.cv || !W.ctx) return;   /* something above closed the map (the mirror opens the creator) */
     draw();
     if (W.run) RAF(tick);
   }
@@ -977,7 +1011,7 @@
         var rp = pos(r);
         list.push({ y: rp.y, draw: function () {
           var pv = petView(r.p, r.dir);
-          actor(residentImage(r), rp.x, rp.y, r.p.current ? 52 : 46, { face: pv ? (pv === 'side' ? -r.face : 1) : r.face, gait: petGait(r.p), a: r, view: pv || (r.dir === 'side' ? 'side' : 'front'), seed: r.fx * 3 + r.fy, low: petLow(r.p), wings: petWings(r.p) });
+          actor(residentImage(r), rp.x, rp.y, r.p.current ? 52 : 46, { face: pv ? (pv === 'side' ? -r.face : 1) : r.face, gait: petGait(r.p), a: r, view: pv || (r.dir === 'side' ? 'side' : 'front'), seed: r.fx * 3 + r.fy, low: petLow(r.p), wings: petWings(r.p), legs3d: hasLegs(r.p) });
           if (CRE.byId(r.p.sp) && CRE.byId(r.p.sp).rare) sparkles(rp.x * T + 16, rp.y * T - 10, 20, '#ffe27a');
         } });
       });
@@ -1013,10 +1047,12 @@
       var mood = pet.mode === 'nap' ? 'asleep' : pet.mode === 'eat' ? 'eat' : pet.mode === 'dig' ? 'happy' : st.mood.key;
       var dump = pet.mode === 'dumpster' && !pet.moving && W.dig && pet.x === W.dig.x && pet.y === W.dig.y;
       var digging = dump || pet.mode === 'dig';
-      list.push({ y: petPos.y, draw: function () {
+      if (pet.mode === 'bed') {
+        if (pet.atBed) list.push({ y: 4.6, draw: function () { petInBed(st); } });
+      } else list.push({ y: petPos.y, draw: function () {
         var pv = petView(st.pet, pet.dir);
-        actor(petImage(W.pid, mood, pet.moving, pet.dir), petPos.x, petPos.y, 54, { face: pv ? (pv === 'side' ? -pet.face : 1) : pet.face, gait: mood === 'asleep' ? 'still' : petGait(st.pet), a: pet, view: pv || (pet.dir === 'side' ? 'side' : 'front'),
-          bob: digging ? Math.sin(W.t * 18) * 2 : 0, rot: digging ? Math.sin(W.t * 14) * 0.15 : 0, stink: st.flags && st.flags.dirty, seed: 0.3, low: petLow(st.pet), wings: petWings(st.pet) });
+        actor(petImage(W.pid, mood, pet.moving, pet.dir, pet), petPos.x, petPos.y, 54, { face: pv ? (pv === 'side' ? -pet.face : 1) : pet.face, gait: mood === 'asleep' ? 'still' : petGait(st.pet), a: pet, view: pv || (pet.dir === 'side' ? 'side' : 'front'),
+          bob: digging ? Math.sin(W.t * 18) * 2 : 0, rot: digging ? Math.sin(W.t * 14) * 0.15 : 0, stink: st.flags && st.flags.dirty, seed: 0.3, low: petLow(st.pet), wings: petWings(st.pet), legs3d: hasLegs(st.pet) });
         if (digging) trash(petPos.x, petPos.y, dump);
         if (pet.mode === 'nap') zzz(petPos.x, petPos.y);
         if (CRE.byId(st.pet.sp).rare) sparkles(petPos.x * T + 16, petPos.y * T - 12, 24, '#ffe27a');
@@ -1042,9 +1078,10 @@
     ctx.fill('evenodd'); ctx.restore();
   }
   /* ---------------- gaits ----------------
-   * Every actor is one still picture per view, so walking is made by moving parts of that picture:
-   *   walk   : the bottom band (legs) splits in two and each half steps up in turn (left/right legs facing you,
-   *            front/back legs from the side), with a small bob and rock
+   * Pets that walk on legs have real walk frames rendered in Blender (c3d-<id>-walk.webp: legs swing and bend, head and
+   * body hold still so the face never moves); the picture just rides up a little at each passing step. Everything else is
+   * one still picture per view, so walking is made by moving parts of that picture:
+   *   walk   : (only while a pet's leg frames are loading) the picture rides up and down as one piece
    *   stride : people (and two-legged pets): left/right feet step facing you; from the side the legs are drawn
    *            twice, swung forward and back like scissors
    *   hop    : squash, spring up, stretch, land (no legs, blobs, chicks, bunnies, frogs, grasshoppers)
@@ -1101,7 +1138,8 @@
       /* walk and stride: two steps per square */
       var s = Math.sin(u * Math.PI * 2);
       sy = 1 + breathe;
-      if (moving) {
+      if (moving && o.legs3d) lift = -Math.abs(Math.cos(u * Math.PI * 2)) * h * 0.022;   /* the legs move in the picture itself; the body rides up at each passing step */
+      else if (moving) {
         lift = -Math.abs(s) * h * 0.03;
         tilt = side ? s * 0.03 : s * 0.045;
         legs = g === 'stride' && side ? 'scissor' : 'halves';
@@ -1169,6 +1207,15 @@
     ctx.save(); ctx.translate(cx, base + bob); if (rot) ctx.rotate(rot); if (face < 0) ctx.scale(-1, 1);
     ctx.drawImage(im, -w / 2, -h, w, h);
     ctx.restore();
+  }
+  function petInBed(st) {
+    var ctx = W.ctx, b = null; (W.furn || []).forEach(function (f) { if (f.kind === 'bed') b = f; }); if (!b) return;
+    var x = b.x * T, y = b.y * T, w = b.w * T, h = b.h * T, hc = homeColors(), im = petImage(W.pid, 'asleep', false, 'down');
+    if (im) ctx.drawImage(im, x + w / 2 - 22, y + 2 + Math.sin(W.t * 1.6) * 0.8, 44, 48);
+    ctx.fillStyle = hc.accent; rr(ctx, x + 6, y + 34, w - 12, h - 42, 5); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.28)'; for (var q = 0; q < 3; q++) for (var r = 0; r < 2; r++) if ((q + r) % 2) ctx.fillRect(x + 6 + r * (w - 12) / 2, y + 34 + q * (h - 42) / 3, (w - 12) / 2, (h - 42) / 3);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 6, y + 34, w - 12, 5);
+    zzz(b.x + 0.6, b.y + 0.9);
   }
   function sparkles(cx, cy, rad, col) {
     var ctx = W.ctx; ctx.fillStyle = col;
@@ -1253,19 +1300,29 @@
     });
   }
   function residentImage(r) {
-    var p = r.p, v = petView(p, r.dir), key = 'res|' + p.sp + p.stage + p.pal + '|' + (p.wear || '') + (p.dye || '') + '|' + v;
-    return img(key, function () { return Pz().petSvg(p, 'happy', {}, { view: v || undefined, noStink: true }); });
+    var p = r.p, v = petView(p, r.dir), lf = v ? legFrame(p, r, 'happy') : null, key = 'res|' + p.sp + p.stage + p.pal + '|' + (p.wear || '') + (p.dye || '') + '|' + v;
+    var im = img(key + '|' + (lf == null ? '' : lf), function () { return Pz().petSvg(p, 'happy', {}, { view: v || undefined, noStink: true, frame: lf }); });
+    if (im) { petLast[key] = im; return im; }
+    return petLast[key] || null;
   }
   /* what the action button does next to each piece of furniture */
   function homeAction() {
     var P = W.P, mine = W.homeOwner === W.pid, st = Pz().state(W.pid), f = null;
     if (P.moving) return null;
     if (mine && st.pet && st.pet.final) return { kind: 'final', label: 'Move ' + st.pet.name + ' in' };
+    /* several pieces can be next to you (the mirror sits between the nightstand and the wardrobe): the one you tapped wins,
+       then any piece that does something (a nightstand used to hide the mirror) */
+    var aim = W.aim, best = null, first = null;
     (W.furn || []).forEach(function (o) {
       var dx = Math.max(o.x - P.x, 0, P.x - (o.x + o.w - 1)), dy = Math.max(o.y - P.y, 0, P.y - (o.y + o.h - 1));
-      if (!f && dx + dy === 1) f = o;
+      if (dx + dy !== 1) return;
+      var a = furnAct(o, mine, st); if (!a) return;
+      if (aim && aim.x >= o.x && aim.x < o.x + o.w && aim.y >= o.y && aim.y < o.y + o.h) best = a;
+      else if (!first) first = a;
     });
-    if (!f) return null;
+    return best || first;
+  }
+  function furnAct(f, mine, st) {
     if (f.kind === 'egg') return { kind: 'egg', label: 'Look at the egg' };
     if (!mine) return null;
     if (f.kind === 'fridge' || f.kind === 'table') return st.pet ? { kind: 'feed', label: 'Feed ' + st.pet.name } : null;
@@ -1278,7 +1335,9 @@
       Pz().feed(W.pid).then(function () { petMeal(2, 8); hud(); }, function () {});
       return;
     }
-    if (a.kind === 'sleep') { if (!w.rest) { say('No tuck-ins left. Bedtime chores earn them.', 3000); return; } G.game = { kind: 'sleep', mood: 'lazy', id: Date.now() }; }
+    if (a.kind === 'sleep') {
+      var bt = bedTime(); if (bt) { say('Shh! ' + nm + ' is sleeping. ' + Math.max(1, Math.ceil((bt - Date.now()) / 60000)) + ' more minute' + (bt - Date.now() > 60000 ? 's' : '') + '.', 3000); return; }
+      if (!w.rest) { say('No tuck-ins left. Bedtime chores earn them, or buy toothpaste at the Store.', 3000); return; } G.game = { kind: 'sleep', mood: 'lazy', id: Date.now() }; }
     else if (a.kind === 'bath') { if (!w.kits) { say('No bath kits. Buy one at the Store, then come back for a bath.', 3000); return; } G.game = { kind: 'bath', mood: 'ok', id: Date.now() }; }
     else if (a.kind === 'wardrobe' || a.kind === 'book' || a.kind === 'final') { G.room.panel = a.kind; }
     else if (a.kind === 'look') { G.creator = true; G.dirtyAvatar = null; unmount(); C().go(); return; }
@@ -1311,7 +1370,7 @@
       P.x = P.tx = door.x; P.y = P.ty = oy; P.moving = false; P.path = [];
       var pet = W.pet; if (pet.mode !== 'dumpster') { pet.x = pet.tx = door.x + (walk(door.x + 1, oy) ? 1 : -1); pet.y = pet.ty = oy; pet.moving = false; pet.queue = []; }
     }
-    hud(); start();
+    unstick(); hud(); start();
   }
 
   /* ================= HUD ================= */
@@ -1321,13 +1380,13 @@
     if (!p) { el.innerHTML = ''; return; }
     setTimeout(function () { if (el.offsetHeight) W.hudH = el.offsetHeight + 10; }, 0);
     el.innerHTML = '<div class="hud-line"><strong>' + C().esc(p.name) + '</strong> <span class="lvl mono">Lv ' + (p.level || 0) + '</span>' +
-      (!away() ? '<span class="hud-coins">' + Pz().coin('food') + '<b class="mono">' + w.food + '</b>' + Pz().coin('care') + '<b class="mono">' + w.care + '</b></span>' : '<span class="hud-coins hud-timer mono"></span><button type="button" class="btn small leave-btn" data-wact="leave">Leave</button>') + '</div>' +
+      (!away() ? '<span class="hud-coins">' + Pz().coin('food') + '<b class="mono">' + w.food + '</b>' + Pz().coin('care') + '<b class="mono">' + w.care + '</b>' + Pz().coin('pts') + '<b class="mono">' + w.pts + '</b></span>' : '<span class="hud-coins hud-timer mono"></span><button type="button" class="btn small leave-btn" data-wact="leave">Leave</button>') + '</div>' +
       '<div class="hud-needs">' + Pz().NEEDS.map(function (x) {
         var v = st.needs[x.k], cls = v >= Pz().GOOD ? 'full' : v < Pz().LOW ? 'low' : '';
         return '<span class="hn ' + cls + '"><small>' + x.label + '</small><span class="bar"><i style="width:' + v + '%"></i></span></span>';
       }).join('') + '</div>' +
-      (!away() ? '<div class="hud-bag note">Bag: ' + w.meals + ' meal &middot; ' + w.kits + ' bath kit &middot; ' + w.rest + ' tuck-in &middot; ' + w.energy + ' play' +
-        (st.doc.egg ? ' &middot; <b class="egg-tag">Rare egg at home!</b>' : '') + (p.final ? ' &middot; <b>Fully grown! Go home.</b>' : p.leveledOn === C().today() ? ' &middot; Leveled up today' : '') + '</div>'
+      (!away() ? '<div class="hud-bag note">Bag: ' + w.meals + ' meal &middot; ' + w.kits + ' bath kit &middot; ' + w.rest + ' tuck-in &middot; ' + w.energy + ' play' + (w.balls ? ' &middot; ' + w.balls + ' ball' + (w.balls > 1 ? 's' : '') : '') +
+        (st.doc.egg ? ' &middot; <b class="egg-tag">Rare egg at home!</b>' : '') + (bedTime() ? ' &middot; <b>' + C().esc(p.name) + ' is asleep at home</b>' : '') + (p.final ? ' &middot; <b>Fully grown! Go home.</b>' : p.leveledOn === C().today() ? ' &middot; Leveled up today' : '') + '</div>'
         : W.region === 'ship' && W.ship ? '<div class="hud-bag note">Lido Deck &middot; hands ' + W.ship.carry.length + '/' + capacity() + (W.ship.carry.length ? ' (' + W.ship.carry.join(', ') + ')' : '') + ' &middot; <b>' + A().tickets(W.pid) + '</b> tickets' + (capacity() > 3 ? '' : ' &middot; a healthy pet carries 1 more') + '</div>'
         : '<div class="hud-bag note">Sunny Beach &middot; found ' + ((A().exp() || {}).found || []).length + ' thing' + (((A().exp() || {}).found || []).length === 1 ? '' : 's') + ' so far</div>');
     var fb = W.root.querySelector('.feed-btn');
@@ -1396,14 +1455,14 @@
       W.root = root; W.cv = root.querySelector('canvas'); W.ctx = W.cv.getContext('2d');
       bindInput();
       size();
-    } else { W.root = root; }
+    } else { W.root = root; if (!W.cv) { W.cv = root.querySelector('canvas'); W.ctx = W.cv.getContext('2d'); } }
     if (W.region === 'home' && !Pz().G.room) {   /* back in the house after moving a grown pet in (it now wanders here) or a trip to the creator */
       var mine = W.homeOwner === W.pid, who = C().person(W.homeOwner);
       Pz().G.room = { kind: 'house', owner: W.homeOwner, title: mine ? 'Your house' : (who ? who.name : '') + '’s house', door: W.townDoor, tab: 'room', walk: true, panel: null };
       residents();
     } else if (W.region === 'home' && W.resKey !== resKey()) residents();
     hud(); updateMsg(); renderRoom();
-    if (overlayOn()) W.run = false; else start();
+    if (overlayOn()) W.run = false; else { unstick(); start(); }
   }
   function size() {
     if (!W.cv) return;
@@ -1417,13 +1476,14 @@
     W.root.style.height = ch + 'px';
   }
   function away() { return W.region === 'beach' || W.region === 'ship'; }
-  function unmount() { if (away()) A().saveTime(false); W.run = false; W.root = null; W.cv = null; }
+  function unmount() { if (away()) A().saveTime(false); W.run = false; W.root = null; W.cv = null; W.ctx = null; }
   var bound = false;
   function bindInput() {
     if (bound) return; bound = true;
     /* tap where to go; hold and drag to steer (the target follows your finger, and keeps going while the map scrolls) */
     function at(e) { var r = W.cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / W.scale + W.cam.x, y: (e.clientY - r.top) / W.scale + W.cam.y }; }
     document.addEventListener('pointerdown', function (e) {
+      if (W.cv && e.target === W.cv && W.P && !W.run && !overlayOn()) { unstick(); start(); }   /* never leave a tap on an open map unanswered */
       if (!W.cv || e.target !== W.cv || !W.cam || !W.P || !W.run) return;
       if (e.cancelable) e.preventDefault();
       try { W.cv.setPointerCapture(e.pointerId); } catch (er) {}
@@ -1466,6 +1526,18 @@
   }
   /* walk to a map point. A building takes you to its door; furniture, stations, chests and such take you next to them,
      and a tap (not a drag) uses them when you get there */
+  /* if a walker ends up on a square it can't stand on (or the map changed under it), move it to the nearest one it can */
+  function unstick() {
+    var moved = false;
+    [W.P, W.pet].forEach(function (a) {
+      if (!a || !W.map || walk(a.x, a.y, true)) return;
+      moved = true;
+      var best = null, bd = 1e9;
+      for (var y = 0; y < W.mh; y++) for (var x = 0; x < W.mw; x++) if (walk(x, y)) { var d = Math.abs(x - a.x) + Math.abs(y - a.y); if (d < bd) { bd = d; best = [x, y]; } }
+      if (best) { a.x = a.tx = a.fx = best[0]; a.y = a.ty = a.fy = best[1]; a.moving = false; if (a.path) a.path = []; if (a.queue) a.queue = []; }
+    });
+    if (moved) { W.steer = null; W.held = null; }
+  }
   function steerTo(wx, wy, tap) {
     var tx = Math.floor(wx / T), ty = Math.floor(wy / T), P = W.P, b = buildingAt(tx, ty), key = tx + ',' + ty;
     if (W.steer && !tap) { if (W.steer.tile === key && Date.now() - W.steer.last < 600) return; W.steer.tile = key; W.steer.last = Date.now(); }
@@ -1482,6 +1554,7 @@
       cand.forEach(function (c) { var p2 = (sx === c[0] && sy === c[1]) ? [] : bfs(sx, sy, c[0], c[1], false); if (p2 && (!path || p2.length < path.length)) path = p2; });
     }
     if (!path) return;
+    W.aim = tap ? { x: tx, y: ty } : null;
     P.path = path; P.onArrive = tap && (thing || objAt(W.obj ? W.obj.digs : [], tx, ty) || (W.fishAt && W.fishAt.x === tx && W.fishAt.y === ty)) ? { x: tx, y: ty } : null;
     if (!P.moving) arrived(P);
   }
@@ -1497,7 +1570,7 @@
   /* tap a pet to see its card */
   function petAt(wx, wy) {
     var c = [], st = Pz().state(W.pid);
-    if (st.pet && W.pet) c.push({ a: pos(W.pet), h: 54, o: { owner: W.pid }, fly: petGait(st.pet) === 'fly' });
+    if (st.pet && W.pet && !(W.pet.mode === 'bed' && !W.pet.atBed)) c.push({ a: pos(W.pet), h: 54, o: { owner: W.pid }, fly: petGait(st.pet) === 'fly' });
     if (W.region === 'home') (W.residents || []).forEach(function (r) { c.push({ a: pos(r), h: r.p.current ? 52 : 46, o: r.p.current ? { owner: W.homeOwner } : { owner: W.homeOwner, grown: r.p }, fly: petGait(r.p) === 'fly' }); });
     if (W.region === 'town') W.bld.forEach(function (b) { if (b.kind === 'house' && b.owner !== W.pid && Pz().doc(b.owner).pet) c.push({ a: { x: b.door.x + 2, y: b.door.y + 1 }, h: 48, o: { owner: b.owner } }); });
     /* a door, building or piece of furniture behind a pet wins over the top of the pet that overlaps it */
