@@ -170,7 +170,9 @@
     parts.push([TL, hb + '.' + spec.top, top, po(spec.topPat, spec.topInk)], ['face', spec.h + '.' + spec.face, beard], ['hair', spec.h + '.' + spec.hair, hair, hfx]);
     if (hasFr && spec.tendrils) parts.push(['fringe', spec.h + '.tendrils_' + spec.tendrils, hair, hfx ? { n: 4, pat: hfx.pat, ink: hfx.ink, k: hfx.k } : null]);
     if (hasFr && spec.bangs) parts.push(['fringe', spec.h + '.bangs_' + spec.bangs, hair, hfx ? { n: 4, pat: hfx.pat, ink: hfx.ink, k: hfx.k } : null]);
-    parts.push(['acc', spec.h + '.' + spec.acc, top]);
+    /* headwear (cap, bow, headband, visor) matches the pants; under a dress or one-piece outfit it matches the outfit */
+    var hw = spec.pants ? { main: pc, dark: shade(pc, -48), light: '#f6f3ec', accent: '#ffffff' } : top;
+    parts.push(['acc', spec.h + '.' + spec.acc, hw]);
     var SUB = PM.sub || {};
     for (i = 0; i < parts.length; i++) {
       var L = PM.layers[parts[i][0]], e = L && L[parts[i][1]], r = e && e[view], op = parts[i][3] || null, ns = SUB[parts[i][0]] || 3;

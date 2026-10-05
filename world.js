@@ -549,6 +549,34 @@
   function petSpeedFactor(f) { var s = 1; if (f.tired) s *= 0.45; if (f.pudgy) s *= 0.5; if (f.thin) s *= 0.65; return s; }
   /* after a tuck-in the pet sleeps in its bed at home for 5 minutes: it's in the bed when you're home, and not with you anywhere else */
   function bedTime() { return Pz().asleep ? Pz().asleep(W.pid) : 0; }
+  /* night (cl-v30): the town goes dark, shops and other houses close, pets sleep at home (in bed if tucked in, else under it) */
+  function nightInfo() { return Pz().night ? Pz().night(W.pid) : null; }
+  function hideInfo() { return Pz().hiding ? Pz().hiding(W.pid) : null; }
+  var PET_PLACES = { park: 1, cafe: 1, gate: 1 };
+  function nmOf() { var st = Pz().state(W.pid); return st.pet ? st.pet.name : 'Your pet'; }
+  function nightCheck() {
+    var nt = nightInfo(), on = !!nt, G = Pz().G;
+    if (on) {
+      if (away()) { leaveRegion('It’s ' + nt.sleep + '. Adventures are over until morning!'); return; }
+      if (G.room && !G.room.walk) { G.game = null; closeRoom(); }
+      else if (G.room && G.room.walk && W.homeOwner !== W.pid) leaveHome();
+      else if (G.game) { G.game = null; closeRoom(); }
+    }
+    var hd = hideInfo();
+    if (hd && !on) {
+      if (away()) { leaveRegion(nmOf() + ' is hiding under your bed. Adventures will have to wait.'); return; }
+      if (G.room && !G.room.walk && PET_PLACES[G.room.kind]) { G.game = null; closeRoom(); }
+      else if (G.game) { G.game = null; closeRoom(); }
+    }
+    if (W.hideWas !== undefined && !!hd !== W.hideWas) { say(hd ? nmOf() + ' ran home and is hiding under your bed after a terrible bedtime.' : nmOf() + ' came out from under the bed!', 4000); hud(); }
+    W.hideWas = !!hd;
+    if (W.nightWas !== undefined && on !== W.nightWas) {
+      var st = Pz().state(W.pid), nm = st.pet ? st.pet.name : 'Your pet';
+      say(on ? 'It’s ' + nt.sleep + '! The town is closed and ' + nm + (nt.tucked ? ' is asleep in bed.' : ' crawled under the bed to sleep.') : 'Good morning! The town is open.', 4000);
+      hud();
+    }
+    W.nightWas = on;
+  }
   function updatePet(dt, now) {
     var pet = W.pet, st = Pz().state(W.pid), f = st.flags, P = W.P;
     if (!st.pet) return;
@@ -620,9 +648,10 @@
     if (W.region === 'home') return homeAction();
     if (W.region !== 'beach' || !W.obj || W.P.moving) return null;
     var P = W.P, d = objAt(W.obj.digs, P.x, P.y);
+    if (!d || d.done) { d = null; for (var k = 0; k < W.obj.digs.length; k++) if (!W.obj.digs[k].done && near8(W.obj.digs[k])) { d = W.obj.digs[k]; break; } }   /* on the X or next to it */
     if (d && !d.done) return { kind: 'dig', o: d, label: 'Dig' };
-    for (var i = 0; i < W.obj.chests.length; i++) { var c = W.obj.chests[i]; if (!c.open && near(c)) return { kind: 'chest', o: c, label: 'Open' }; }
-    if (P.x === W.fishAt.x && P.y === W.fishAt.y) return { kind: 'fish', label: 'Fish' };
+    for (var i = 0; i < W.obj.chests.length; i++) { var c = W.obj.chests[i]; if (!c.open && near8(c)) return { kind: 'chest', o: c, label: 'Open' }; }
+    if (P.x === W.fishAt.x && P.y === W.fishAt.y) return { kind: 'fish', o: W.fishAt, label: 'Fish' };
     return null;
   }
   function pickupShell(x, y) {
@@ -692,15 +721,26 @@
       bangs: pick(['none', 'none', 'none', 'straight', 'curly']), tendrils: pick(['none', 'none', 'none', 'none', 'straight', 'curly']),
       pantsColor: n('pantsColor'), topPat: pick(['solid', 'solid', 'solid', 'solid', 'dots', 'stripes', 'plaid', 'stars', 'hearts', 'camo']), pantsPat: pick(['solid', 'solid', 'solid', 'solid', 'solid', 'plaid', 'camo', 'stripes']) };
   }
+  /* a small cast of passengers made once per trip and reused: every new face costs a picture build, which made the deck stutter */
+  function passenger() {
+    var S = W.ship; if (!S) return randomPassenger();
+    if (!S.pool) { S.pool = []; for (var i = 0; i < 8; i++) { var av = randomPassenger(); if (av) S.pool.push(av); } }
+    return S.pool.length ? pick(S.pool) : null;
+  }
+  function dropPassengers(S) {   /* leaving the ship: forget their pictures so they don't pile up in memory */
+    if (!S || !S.pool) return;
+    S.pool.forEach(function (av) { var k = 'av|' + JSON.stringify(av) + '|'; ['', 'front', 'side', 'back'].forEach(function (v) { delete W.imgs[k + v]; }); });
+  }
   function deckOk(x, y) { var t = tile(x, y); return t === DECK || t === WET || t === PATH; }
   function passengerImage(av, view) { return img('av|' + JSON.stringify(av) + '|' + (view || ''), function () { return window.CHAR.drawAvatar(av, null, view ? { view: view } : null); }); }
   function newShip() {
     W.ship = { items: {}, puddles: [], carry: [], done: 0, tickets: 0, next: Date.now() + 3000, mop: null, hintAt: 0, pops: [],
       swim: [0, 1, 2].map(function (i) { return { x: 9 + i * 2.5, y: 12 + (i % 2), ph: Math.random() * 6, c: ['#e45757', '#f2d43a', '#6d3fcf'][i] }; }),
       guests: {}, walkers: [] };
-    W.slots.forEach(function (s, i) { if (s.kind === 'dine' || (s.kind === 'chair' && i % 2)) W.ship.guests[s.x + ',' + s.y] = randomPassenger() || GUEST[i % GUEST.length]; });
+    passenger(); var v0 = people3d() ? 'front' : ''; W.ship.pool.forEach(function (av) { passengerImage(av, v0); });   /* start loading their pictures now */
+    W.slots.forEach(function (s, i) { if (s.kind === 'dine' || (s.kind === 'chair' && i % 2)) W.ship.guests[s.x + ',' + s.y] = passenger() || GUEST[i % GUEST.length]; });
     var spots = []; for (var yy = 0; yy < W.mh; yy++) for (var xx = 0; xx < W.mw; xx++) if (deckOk(xx, yy)) spots.push([xx, yy]);
-    for (var k = 0; k < 3 && spots.length; k++) { var sp0 = pick(spots), av = randomPassenger(); if (av) W.ship.walkers.push({ x: sp0[0], y: sp0[1], tx: sp0[0], ty: sp0[1], fx: sp0[0], fy: sp0[1], moving: false, path: [], face: 1, dir: 'down', av: av, wait: 1 + k * 2, goal: null }); }
+    for (var k = 0; k < 3 && spots.length; k++) { var sp0 = pick(spots), av = W.ship.pool[k] || null; if (av) W.ship.walkers.push({ x: sp0[0], y: sp0[1], tx: sp0[0], ty: sp0[1], fx: sp0[0], fy: sp0[1], moving: false, path: [], face: 1, dir: 'down', av: av, wait: 1 + k * 2, goal: null }); }
     for (var i = 0; i < 6; i++) spawnTask(true);
   }
   function capacity() { var st = Pz().state(W.pid), f = st.flags || {}; return st.pet && !f.thin && !f.dirty && !f.tired && !f.pudgy ? 4 : 3; }
@@ -728,18 +768,21 @@
     var S = W.ship;
     if (now >= S.next) { spawnTask(false); S.next = now + 6500 + Math.random() * 3500; }
     S.pops = S.pops.filter(function (p) { return now - p.t0 < 1200; });
-    W.slots.forEach(function (s) { var key = s.x + ',' + s.y; if (s.back && now >= s.back && !S.items[key]) { s.back = 0; if (s.kind === 'dine' || Math.random() < 0.5) S.guests[key] = randomPassenger() || GUEST[Math.floor(Math.random() * GUEST.length)]; } });
+    W.slots.forEach(function (s) { var key = s.x + ',' + s.y; if (s.back && now >= s.back && !S.items[key]) { s.back = 0; if (s.kind === 'dine' || Math.random() < 0.5) S.guests[key] = passenger() || GUEST[Math.floor(Math.random() * GUEST.length)]; } });
   }
   function puddleAt(x, y) { var list = W.ship ? W.ship.puddles : []; for (var i = 0; i < list.length; i++) if (list[i].x === x && list[i].y === y) return list[i]; return null; }
-  function nearStation(s) { var P = W.P, dx = Math.max(s.x - P.x, 0, P.x - (s.x + s.w - 1)), dy = Math.abs(P.y - s.y); return dx + dy === 1; }
+  /* on adventures, anything in the 8 squares around the kid counts as next to them (diagonals too) */
+  function near8(o) { var P = W.P; return Math.max(Math.abs(o.x - P.x), Math.abs(o.y - P.y)) <= 1; }
+  function puddleNear() { var P = W.P, on = puddleAt(P.x, P.y); if (on) return on; var list = W.ship ? W.ship.puddles : []; for (var i = 0; i < list.length; i++) if (near8(list[i])) return list[i]; return null; }
+  function nearStation(s) { var P = W.P, dx = Math.max(s.x - P.x, 0, P.x - (s.x + s.w - 1)), dy = Math.abs(P.y - s.y); return Math.max(dx, dy) === 1; }
   function shipAction() {
     var S = W.ship, P = W.P; if (!S || P.moving || S.mop) return null;
-    var pd = puddleAt(P.x, P.y); if (pd) return { kind: 'mop', o: pd, label: 'Mop' };
+    var pd = puddleNear(); if (pd) return { kind: 'mop', o: pd, label: 'Mop' };
     for (var i = 0; i < W.slots.length; i++) {
       var s = W.slots[i];
-      if (S.items[s.x + ',' + s.y] && near(s)) return S.carry.length < capacity() ? { kind: 'pick', o: s, label: 'Pick up' } : { kind: 'full', label: 'Full' };
+      if (S.items[s.x + ',' + s.y] && near8(s)) return S.carry.length < capacity() ? { kind: 'pick', o: s, label: 'Pick up' } : { kind: 'full', o: s, label: 'Hands full' };
     }
-    for (var j = 0; j < W.stations.length; j++) if (W.stations[j].kind === 'prize' && nearStation(W.stations[j])) return { kind: 'prizes', label: 'Prizes' };
+    for (var j = 0; j < W.stations.length; j++) { var ps = W.stations[j]; if (ps.kind === 'prize' && nearStation(ps)) return { kind: 'prizes', o: { x: ps.x + (ps.w - 1) / 2, y: ps.y }, label: 'Prizes' }; }
     return null;
   }
   function pickUp(s) {
@@ -749,17 +792,35 @@
     say('Picked up a ' + CARRY_NAME[it] + '. ' + (S.carry.length >= cap ? 'Hands full!' : (cap - S.carry.length) + ' more fit.') + (S.carry.length === 4 ? ' Your pet is carrying one!' : ''), 1600);
     hud(); dropOff();
   }
-  function dropOff() {
+  /* stopping next to a job does it by itself, a few times a second and one at a time:
+     on the ship drop-offs, puddles and pick-ups; at the beach digging an X */
+  /* Opening a chest, fishing and the prize desk stay a tap: their button pops up right above them (see actionHud). */
+  var AUTO = ['dig', 'mop', 'pick'];
+  function advAuto(now) {
+    var P = W.P; if (!P || P.moving || P.path.length || W.held || (W.steer && W.steer.moved) || now < (W.autoAt || 0)) return;
+    W.autoAt = now + 250;
+    if (Pz().G.room || W.fish || overlayOn() || openPanel()) return;
+    if (W.region === 'ship') {
+      var S = W.ship; if (!S || S.mop) return;
+      dropOff(true);
+      var a = shipAction(); if (a && AUTO.indexOf(a.kind) >= 0) { W.autoAt = now + 450; doAction(); }
+    } else if (W.region === 'beach' && W.obj) {
+      if (W.pet.mode === 'dig' && now <= W.pet.until) return;   /* one hole at a time */
+      var b = currentAction(); if (b && b.kind === 'dig') { W.autoAt = now + 1500; doAction(); }
+    }
+  }
+  function openPanel() { var el = W.root && W.root.querySelector('.prizes'); return !!(el && !el.hidden) || !!document.querySelector('.celebrate'); }
+  function dropOff(quiet) {
     var S = W.ship; if (!S || !S.carry.length) return;
     W.stations.forEach(function (st) {
       if (st.kind === 'prize' || !nearStation(st)) return;
       var keep = [], n = 0;
       S.carry.forEach(function (it) { if (it === st.kind) n++; else keep.push(it); });
       if (n) { S.carry = keep; award(n, n + ' ' + CARRY_NAME[st.kind] + (n > 1 ? (st.kind === 'glass' ? 'es' : 's') : '') + ' dropped off!', st.x + Math.floor(st.w / 2), st.y); hud(); }
-      else if (Date.now() - S.hintAt > 5000) { S.hintAt = Date.now(); say('Wrong spot! ' + st.title + ' takes ' + CARRY_NAME[st.kind] + (st.kind === 'glass' ? 'es' : 's') + '. Plates go to the Dish station, glasses to the Bar, towels to the Towels cart.', 3500); }
+      else if (!quiet && Date.now() - S.hintAt > 5000) { S.hintAt = Date.now(); say('Wrong spot! ' + st.title + ' takes ' + CARRY_NAME[st.kind] + (st.kind === 'glass' ? 'es' : 's') + '. Plates go to the Dish station, glasses to the Bar, towels to the Towels cart.', 3500); }
     });
   }
-  function startMop(pd) { var S = W.ship; S.mop = { pd: pd, until: Date.now() + 900 }; W.held = null; W.P.path = []; say('Mopping...', 900); actionHud(); }
+  function startMop(pd) { var S = W.ship; S.mop = { pd: pd, until: Date.now() + 900 }; W.held = null; W.P.path = []; if (pd.x !== W.P.x) W.P.face = pd.x > W.P.x ? 1 : -1; say('Mopping...', 900); actionHud(); }
   function finishMop() {
     var S = W.ship, pd = S.mop.pd; S.mop = null;
     S.puddles = S.puddles.filter(function (p) { return p !== pd; });
@@ -806,8 +867,9 @@
   function carryDraw(tx, ty, h, list) {
     list.forEach(function (it, i) { itemDraw(it, tx * T + 16 + (i - (list.length - 1) / 2) * 13, ty * T + T - h - 6 - (i % 2) * 3, 0.9); });
   }
-  function mopDraw(tx, ty) {
+  function mopDraw(tx, ty, pd) {
     var ctx = W.ctx, a = Math.sin(W.t * 16) * 0.5, cx = tx * T + 26, cy = ty * T + 26;
+    if (pd && (pd.x !== tx || pd.y !== ty)) { cx = pd.x * T + 16 - (pd.x - tx) * 6; cy = pd.y * T + 22 - (pd.y - ty) * 6; }   /* reaching over to the next square */
     ctx.save(); ctx.translate(cx, cy - 24); ctx.rotate(a);
     ctx.fillStyle = '#a8703a'; ctx.fillRect(-1.5, 0, 3, 26); ctx.fillStyle = '#e9e3d6'; rr(ctx, -7, 24, 14, 6, 2); ctx.fill();
     ctx.restore();
@@ -930,6 +992,7 @@
     var m = load(region);
     placeAt(m.start.x, m.start.y);
     stopFish(); closePrizes();
+    size();
     if (region === 'ship') { newShip(); say('Welcome aboard! Plates go to the Dish station, glasses to the Bar, towels to the Towels cart. Mop puddles by the pool.', 6000); }
     else { W.ship = null; newSession(); say('Welcome to Sunny Beach! Dig at the X marks, fish off the pier and look for chests.', 4500); }
     hud(); start();
@@ -938,11 +1001,12 @@
     if (W.region === 'town') return;
     if (W.region === 'home') { leaveHome(); return; }
     var tk = W.region === 'ship' && W.ship ? W.ship.tickets : 0;
+    dropPassengers(W.ship);
     A().saveTime(true);
     stopFish(); closePrizes();
     if (!reason && tk) reason = 'Back in town. You earned ' + tk + ' deck ticket' + (tk === 1 ? '' : 's') + ' on the ship!';
     W.ship = null;
-    load('town'); W.key = peopleKey();
+    load('town'); W.key = peopleKey(); size();
     var gate = null; W.bld.forEach(function (b) { if (b.kind === 'gate') gate = b; });
     placeAt(gate.door.x, gate.door.y - 1);
     W.obj = null;
@@ -964,7 +1028,9 @@
     else if (W.held) playerTryDir(W.held);
     if (W.steer && Math.floor(W.t * 6) !== Math.floor((W.t - dt) * 6)) steerHeld();
     if (W.region === 'ship' && W.ship) { shipTick(now); walkersStep(dt); }
+    if (away()) advAuto(now);
     if (W.region === 'home') residentsStep(dt);
+    if (Math.floor(W.t) !== Math.floor(W.t - dt)) nightCheck();
     if (W.run) updatePet(dt, now);
     if (W.fish) { var f = W.fish; f.pos += f.dir * f.speed * dt; if (f.pos > 1) { f.pos = 1; f.dir = -1; } if (f.pos < 0) { f.pos = 0; f.dir = 1; } var hk = W.root.querySelector('.fish-hook'); if (hk) hk.style.left = (f.pos * 100) + '%'; }
     if (away()) {
@@ -1015,17 +1081,17 @@
           if (CRE.byId(r.p.sp) && CRE.byId(r.p.sp).rare) sparkles(rp.x * T + 16, rp.y * T - 10, 20, '#ffe27a');
         } });
       });
-      W.furn.forEach(function (f) { if (f.kind === 'egg') list.push({ y: f.y + 0.3, draw: function () { var im = eggImage(); if (im) W.ctx.drawImage(im, f.x * T + 4, f.y * T - 4 + Math.sin(W.t * 2) * 1.5, 24, 24); sparkles(f.x * T + 16, f.y * T + 6, 14, '#ffe27a'); } }); });
+      W.furn.forEach(function (f) { if (f.kind === 'egg') list.push({ y: f.y + 0.3, draw: function () { var im = eggImage(); if (im) W.ctx.drawImage(fastIm(im, 24, 24), f.x * T + 4, f.y * T - 4 + Math.sin(W.t * 2) * 1.5, 24, 24); sparkles(f.x * T + 16, f.y * T + 6, 14, '#ffe27a'); } }); });
       A().toysIn(W.homeOwner).slice(0, 4).forEach(function (id, i) {
         var tx = [8, 7, 8, 7][i], ty = [9, 9, 8, 8][i];
-        list.push({ y: ty - 0.5, draw: function () { var im = itemImage(id); if (im) W.ctx.drawImage(im, tx * T + 6, ty * T + 8, 20, 20); } });
+        list.push({ y: ty - 0.5, draw: function () { var im = itemImage(id); if (im) W.ctx.drawImage(fastIm(im, 20, 20), tx * T + 6, ty * T + 8, 20, 20); } });
       });
     } else if (W.region === 'ship' && W.ship) {
       shipDraw(list);
     } else if (W.obj) {
       var lit = can('light');
       W.obj.digs.forEach(function (d) { if (!d.done) list.push({ y: d.y - 0.5, draw: function () { xMark(d.x, d.y); } }); });
-      W.obj.shells.forEach(function (sh) { if (!sh.taken) list.push({ y: sh.y - 0.4, draw: function () { var im = itemImage(sh.id); if (im) ctx.drawImage(im, sh.x * T + 7, sh.y * T + 8, 18, 18); sparkles(sh.x * T + 16, sh.y * T + 14, 10, '#fff'); } }); });
+      W.obj.shells.forEach(function (sh) { if (!sh.taken) list.push({ y: sh.y - 0.4, draw: function () { var im = itemImage(sh.id); if (im) ctx.drawImage(fastIm(im, 18, 18), sh.x * T + 7, sh.y * T + 8, 18, 18); sparkles(sh.x * T + 16, sh.y * T + 14, 10, '#fff'); } }); });
       W.obj.chests.forEach(function (c) {
         if (c.need === 'light' && !lit) return;
         list.push({ y: c.y, draw: function () { chest(c.x, c.y, c.open); } });
@@ -1048,7 +1114,7 @@
       var dump = pet.mode === 'dumpster' && !pet.moving && W.dig && pet.x === W.dig.x && pet.y === W.dig.y;
       var digging = dump || pet.mode === 'dig';
       if (pet.mode === 'bed') {
-        if (pet.atBed) list.push({ y: 4.6, draw: function () { petInBed(st); } });
+        if (pet.atBed) { var hid = !!hideInfo(), ub = !hid && nightInfo() && nightInfo().under; list.push({ y: hid || ub ? 5.6 : 4.6, draw: function () { if (hid) petHiding(); else if (ub) petUnderBed(); else petInBed(st); } }); }
       } else list.push({ y: petPos.y, draw: function () {
         var pv = petView(st.pet, pet.dir);
         actor(petImage(W.pid, mood, pet.moving, pet.dir, pet), petPos.x, petPos.y, 54, { face: pv ? (pv === 'side' ? -pet.face : 1) : pet.face, gait: mood === 'asleep' ? 'still' : petGait(st.pet), a: pet, view: pv || (pet.dir === 'side' ? 'side' : 'front'),
@@ -1061,13 +1127,15 @@
     list.push({ y: pp.y + 0.01, draw: function () {
       var av = actorView(W.P.dir);
       actor(avatarImage(W.pid, av), pp.x, pp.y, avatarPx(Pz().kidAv(Pz().doc(W.pid).avatar)), { face: av ? (av === 'side' ? -W.P.face : 1) : W.P.face, gait: 'stride', a: W.P, view: av || (W.P.dir === 'side' ? 'side' : 'front'), isAvatar: true });
-      if (W.ship) { carryDraw(pp.x, pp.y, 58, W.ship.carry.slice(0, 3)); if (W.ship.mop) mopDraw(pp.x, pp.y); }
+      if (W.ship) { carryDraw(pp.x, pp.y, 58, W.ship.carry.slice(0, 3)); if (W.ship.mop) mopDraw(pp.x, pp.y, W.ship.mop.pd); }
     } });
     if (W.ship && W.ship.carry.length > 3) list.push({ y: petPos.y + 0.02, draw: function () { carryDraw(petPos.x, petPos.y, 50, W.ship.carry.slice(3)); } });
     list.sort(function (a, b) { return a.y - b.y; });
     list.forEach(function (it) { it.draw(); });
     if (W.region === 'beach') caveDark(pp);
+    if ((W.region === 'town' || W.region === 'home') && nightInfo()) nightDark(pp);
     if (W.ship) popsDraw();
+    if (W.floatAt) placeFloat();
   }
   function caveDark(pp) {
     var ctx = W.ctx, x0 = 19 * T, y0 = 2 * T, w = 5 * T, h = 8 * T, inCave = pp.x >= 19 && pp.x <= 23 && pp.y >= 2 && pp.y <= 9;
@@ -1110,6 +1178,8 @@
     try { cv.getContext('2d').drawImage(im, 0, 0, cw, ch); } catch (e) { return null; }
     return (c[key] = cv);
   }
+  /* pictures made from SVG are turned into a canvas once at screen size: drawing SVG every frame is slow on phones and tablets */
+  function fastIm(im, w, h) { return im && !im.getContext && im.complete !== false ? raster(im, w, h) || im : im; }
   var LEG = { walk: 0.24, stride: 0.27, lowWalk: 0.15 };
   function actor(im, tx, ty, h, o) {
     var ctx = W.ctx, w = o.isAvatar ? h * 0.75 : h * 0.906, cx = tx * T + T / 2, base = ty * T + T - 2, a = o.a || {}, t = W.t + (o.seed || 0);
@@ -1164,7 +1234,7 @@
       ctx.fill(); ctx.restore();
     }
     if (flap !== null && ctx.ellipse) { if (side) wing(1, true); else { wing(-1); wing(1); } }
-    if (!r) ctx.drawImage(im, -w / 2, -h, w, h);
+    if (!r) ctx.drawImage(fastIm(im, w, h), -w / 2, -h, w, h);
     else {
       var k = r.width / w, band = h * (o.gait === 'walk' && isLow(o) ? LEG.lowWalk : g === 'stride' ? LEG.stride : LEG.walk), top = h - band, bk = Math.round(top * k);
       ctx.drawImage(r, 0, 0, r.width, bk, -w / 2, -h, w, bk / k);                                     /* body */
@@ -1205,17 +1275,54 @@
     ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse ? ctx.ellipse(cx, base - 2, w * 0.3, 4, 0, 0, 7) : ctx.arc(cx, base - 2, w * 0.3, 0, 7); ctx.fill();
     if (!im) return;
     ctx.save(); ctx.translate(cx, base + bob); if (rot) ctx.rotate(rot); if (face < 0) ctx.scale(-1, 1);
-    ctx.drawImage(im, -w / 2, -h, w, h);
+    ctx.drawImage(fastIm(im, w, h), -w / 2, -h, w, h);
     ctx.restore();
   }
   function petInBed(st) {
     var ctx = W.ctx, b = null; (W.furn || []).forEach(function (f) { if (f.kind === 'bed') b = f; }); if (!b) return;
     var x = b.x * T, y = b.y * T, w = b.w * T, h = b.h * T, hc = homeColors(), im = petImage(W.pid, 'asleep', false, 'down');
-    if (im) ctx.drawImage(im, x + w / 2 - 22, y + 2 + Math.sin(W.t * 1.6) * 0.8, 44, 48);
+    if (im) ctx.drawImage(fastIm(im, 44, 48), x + w / 2 - 22, y + 2 + Math.sin(W.t * 1.6) * 0.8, 44, 48);
     ctx.fillStyle = hc.accent; rr(ctx, x + 6, y + 34, w - 12, h - 42, 5); ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,.28)'; for (var q = 0; q < 3; q++) for (var r = 0; r < 2; r++) if ((q + r) % 2) ctx.fillRect(x + 6 + r * (w - 12) / 2, y + 34 + q * (h - 42) / 3, (w - 12) / 2, (h - 42) / 3);
     ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 6, y + 34, w - 12, 5);
     zzz(b.x + 0.6, b.y + 0.9);
+  }
+  /* not tucked in: it sleeps under the bed, just its back end sticking out */
+  function petUnderBed() {
+    var ctx = W.ctx, b = null; (W.furn || []).forEach(function (f) { if (f.kind === 'bed') b = f; }); if (!b) return;
+    var x = b.x * T, y = b.y * T, w = b.w * T, h = b.h * T, im = petImage(W.pid, 'asleep', false, 'down');
+    ctx.fillStyle = 'rgba(0,0,0,.35)'; rr(ctx, x + 4, y + h - 8, w - 8, 12, 5); ctx.fill();
+    if (im) { ctx.save(); ctx.beginPath(); ctx.rect(x - 6, y + h - 2, w + 12, 40); ctx.clip(); ctx.drawImage(fastIm(im, 38, 42), x + w / 2 - 19, y + h - 24 + Math.sin(W.t * 1.6) * 0.8, 38, 42); ctx.restore(); }
+    ctx.fillStyle = '#8a5a34'; rr(ctx, x + 2, y + h - 8, w - 4, 8, 3); ctx.fill();
+    zzz(b.x + 1.3, b.y + b.h + 0.1);
+  }
+  /* hiding after a terrible bedtime: just two eyes in the dark under the bed, and a stink cloud drifting out */
+  function petHiding() {
+    var ctx = W.ctx, b = null; (W.furn || []).forEach(function (f) { if (f.kind === 'bed') b = f; }); if (!b) return;
+    var x = b.x * T, y = b.y * T, w = b.w * T, h = b.h * T, cx = x + w / 2, ey = y + h + 3, t = W.t;
+    ctx.fillStyle = 'rgba(10,8,18,.85)'; rr(ctx, x + 2, y + h - 10, w - 4, 20, 8); ctx.fill();
+    var blink = (t % 4.2) > 4.05, look = Math.sin(t * 0.9) * 1.6;
+    [-7, 7].forEach(function (dx) {
+      if (blink) { ctx.strokeStyle = '#f4f0d8'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(cx + dx - 4, ey); ctx.lineTo(cx + dx + 4, ey); ctx.stroke(); return; }
+      ctx.fillStyle = '#f4f0d8'; ctx.beginPath(); if (ctx.ellipse) ctx.ellipse(cx + dx, ey, 4.2, 3.2, 0, 0, 7); else ctx.arc(cx + dx, ey, 3.6, 0, 7); ctx.fill();
+      ctx.fillStyle = '#1a1420'; ctx.beginPath(); ctx.arc(cx + dx + look, ey + 0.4, 1.8, 0, 7); ctx.fill();
+    });
+    stinkFx(cx - 10, y + h - 6, 40, t); stinkFx(cx + 14, y + h - 2, 34, t + 1.3);
+    ctx.fillStyle = '#8a5a34'; rr(ctx, x + 2, y + h - 12, w - 4, 6, 3); ctx.fill();
+  }
+  /* night: dark all round, a little light where you stand, and CLOSED signs on the shop doors */
+  function nightDark(pp) {
+    var ctx = W.ctx, vw = W.cw / W.scale, vh = W.ch / W.scale, cx = pp.x * T + 16, cy = pp.y * T + 8;
+    var gr = ctx.createRadialGradient(cx, cy, 18, cx, cy, W.region === 'home' ? 190 : 150);
+    gr.addColorStop(0, 'rgba(12,16,48,0.3)'); gr.addColorStop(0.45, 'rgba(10,12,40,0.62)'); gr.addColorStop(1, W.region === 'home' ? 'rgba(6,8,30,0.8)' : 'rgba(4,6,24,0.86)');
+    ctx.fillStyle = gr; ctx.fillRect(W.cam.x - 40, W.cam.y - 40, vw + 80, vh + 80);
+    if (W.region === 'town') W.bld.forEach(function (b) {
+      if (b.kind === 'house' || !b.door) return;
+      var x = b.door.x * T + 16, y = b.door.y * T - 4;
+      ctx.fillStyle = '#7a1f22'; rr(ctx, x - 20, y - 8, 40, 14, 4); ctx.fill();
+      ctx.fillStyle = '#ffe6c8'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('CLOSED', x, y - 1);
+    });
+    else if (W.region === 'home') { var lg = ctx.createRadialGradient(3 * T + 16, 2 * T, 4, 3 * T + 16, 2 * T, 44); lg.addColorStop(0, 'rgba(255,214,120,.35)'); lg.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = lg; ctx.fillRect(3 * T - 40, 2 * T - 44, 112, 88); }
   }
   function sparkles(cx, cy, rad, col) {
     var ctx = W.ctx; ctx.fillStyle = col;
@@ -1245,7 +1352,12 @@
 
   /* ================= rooms ================= */
   function openRoom(b) {
-    var G = Pz().G;
+    var G = Pz().G, nt = nightInfo();
+    var hd = hideInfo();
+    if (hd && PET_PLACES[b.kind]) { say(nmOf() + ' is hiding under your bed after a terrible bedtime, so no ' + (b.kind === 'park' ? 'park' : b.kind === 'cafe' ? 'café' : 'adventures') + ' until ' + hd.back + '.', 3500); bump(b); return; }
+    if (nt && !(b.kind === 'house' && b.owner === W.pid)) {
+      say(b.kind === 'house' ? 'Everyone at ' + b.title + '’s house is asleep.' : (b.title || 'It') + ' is closed for the night. It opens at ' + nt.wake + '.', 3000); bump(b); return;
+    }
     if (b.kind === 'house' && b.owner !== W.pid && !Pz().doc(b.owner).avatar && !Pz().doc(b.owner).pet) { say('Nobody is home at ' + b.title + '’s house yet.', 2500); bump(b); return; }
     if (b.kind === 'house') { enterHome(b); return; }
     G.room = { kind: b.kind, owner: b.owner, title: b.title, door: b.door, tab: 'room' };
@@ -1325,11 +1437,20 @@
   function furnAct(f, mine, st) {
     if (f.kind === 'egg') return { kind: 'egg', label: 'Look at the egg' };
     if (!mine) return null;
+    if (hideInfo()) { if (f.kind === 'bed') return { kind: 'sleep', label: 'Hiding' }; if (f.kind === 'fridge' || f.kind === 'table' || f.kind === 'tub' || f.kind === 'toys') return null; }
+    if (nightInfo()) { if (f.kind === 'bed') return { kind: 'sleep', label: 'Shh, asleep' }; if (f.kind === 'fridge' || f.kind === 'table' || f.kind === 'tub' || f.kind === 'toys') return null; }
     if (f.kind === 'fridge' || f.kind === 'table') return st.pet ? { kind: 'feed', label: 'Feed ' + st.pet.name } : null;
     return { bed: { kind: 'sleep', label: 'Tuck in' }, tub: { kind: 'bath', label: 'Bath' }, wardrobe: { kind: 'wardrobe', label: 'Wardrobe' }, shelf: { kind: 'book', label: 'Collection' }, mirror: { kind: 'look', label: 'Change my look' }, toys: { kind: 'toys', label: 'Toys' } }[f.kind] || null;
   }
   function homeDo(a) {
-    var G = Pz().G, st = Pz().state(W.pid), w = st.wallet, nm = st.pet ? st.pet.name : 'your pet';
+    var G = Pz().G, st = Pz().state(W.pid), w = st.wallet, nm = st.pet ? st.pet.name : 'your pet', nt = nightInfo();
+    var hd = hideInfo();
+    if (hd && (a.kind === 'feed' || a.kind === 'sleep' || a.kind === 'bath' || a.kind === 'toys' || a.kind === 'final')) {
+      say(nm + ' is hiding under the bed after a terrible bedtime and won’t come out until ' + hd.back + '. Have a better bedtime tonight!', 4000); return;
+    }
+    if (nt && (a.kind === 'feed' || a.kind === 'sleep' || a.kind === 'bath' || a.kind === 'toys' || a.kind === 'final')) {
+      say(nt.under ? 'Shh! ' + nm + ' is asleep under the bed. Tuck it in before ' + nt.sleep + ' tomorrow so it sleeps in bed.' : 'Shh! ' + nm + ' is fast asleep. Pets wake up at ' + nt.wake + '.', 3500); return;
+    }
     if (a.kind === 'feed') {
       if (!w.meals) { say('The fridge is empty. Buy meals at the Store, or take ' + nm + ' to the Pet Café.', 3500); return; }
       Pz().feed(W.pid).then(function () { petMeal(2, 8); hud(); }, function () {});
@@ -1337,7 +1458,7 @@
     }
     if (a.kind === 'sleep') {
       var bt = bedTime(); if (bt) { say('Shh! ' + nm + ' is sleeping. ' + Math.max(1, Math.ceil((bt - Date.now()) / 60000)) + ' more minute' + (bt - Date.now() > 60000 ? 's' : '') + '.', 3000); return; }
-      if (!w.rest) { say('No tuck-ins left. Bedtime chores earn them, or buy toothpaste at the Store.', 3000); return; } G.game = { kind: 'sleep', mood: 'lazy', id: Date.now() }; }
+      if (!w.rest) { say('No tuck-ins left' + (w.restPart ? ' (' + w.restPart + '% toward the next)' : '') + '. Chores tagged tuck-in earn them, or buy toothpaste at the Store.', 3000); return; } G.game = { kind: 'sleep', mood: 'lazy', id: Date.now() }; }
     else if (a.kind === 'bath') { if (!w.kits) { say('No bath kits. Buy one at the Store, then come back for a bath.', 3000); return; } G.game = { kind: 'bath', mood: 'ok', id: Date.now() }; }
     else if (a.kind === 'wardrobe' || a.kind === 'book' || a.kind === 'final') { G.room.panel = a.kind; }
     else if (a.kind === 'look') { G.creator = true; G.dirtyAvatar = null; unmount(); C().go(); return; }
@@ -1349,12 +1470,12 @@
   function renderRoom(force) {
     var G = Pz().G, el = W.root && W.root.querySelector('#room');
     if (!el) return;
-    if (!overlayOn()) { el.hidden = true; el.innerHTML = ''; el.setAttribute('data-game', ''); W.root.className = 'world'; return; }
+    if (!overlayOn()) { el.hidden = true; el.innerHTML = ''; el.setAttribute('data-game', ''); W.root.className = 'world' + (away() ? ' adv' : ''); return; }
     var gid = G.game ? String(G.game.id) : '';
     if (!force && gid && el.getAttribute('data-game') === gid) return;
     el.hidden = false;
     el.setAttribute('data-game', gid);
-    W.root.className = 'world in-room';
+    W.root.className = 'world in-room' + (away() ? ' adv' : '');
     el.innerHTML = '<div class="room-inner">' + Pz().roomHtml(G.room, W.pid) + '</div>';
     if (G.game) Pz().mountGame();
   }
@@ -1379,28 +1500,52 @@
     var st = Pz().state(W.pid), w = st.wallet, p = st.pet;
     if (!p) { el.innerHTML = ''; return; }
     setTimeout(function () { if (el.offsetHeight) W.hudH = el.offsetHeight + 10; }, 0);
+    if (W.root.classList) { if (away()) W.root.classList.add('adv'); else W.root.classList.remove('adv'); }
+    if (away()) {   /* adventures get one slim line (no need bars, no help text) so more of the game shows */
+      var found = ((A().exp() || {}).found || []).length;
+      el.innerHTML = '<div class="hud-line"><span class="hud-adv">' + (W.region === 'ship' && W.ship ? '<b>Lido Deck</b> &middot; hands ' + W.ship.carry.length + '/' + capacity() + (W.ship.carry.length ? ' (' + W.ship.carry.join(', ') + ')' : '') + ' &middot; <b>' + A().tickets(W.pid) + '</b> tickets'
+        : '<b>Sunny Beach</b> &middot; found ' + found + ' thing' + (found === 1 ? '' : 's')) + '</span>' +
+        '<span class="hud-coins hud-timer mono"></span><button type="button" class="btn small leave-btn" data-wact="leave">Leave</button></div>';
+    } else
     el.innerHTML = '<div class="hud-line"><strong>' + C().esc(p.name) + '</strong> <span class="lvl mono">Lv ' + (p.level || 0) + '</span>' +
       (!away() ? '<span class="hud-coins">' + Pz().coin('food') + '<b class="mono">' + w.food + '</b>' + Pz().coin('care') + '<b class="mono">' + w.care + '</b>' + Pz().coin('pts') + '<b class="mono">' + w.pts + '</b></span>' : '<span class="hud-coins hud-timer mono"></span><button type="button" class="btn small leave-btn" data-wact="leave">Leave</button>') + '</div>' +
       '<div class="hud-needs">' + Pz().NEEDS.map(function (x) {
         var v = st.needs[x.k], cls = v >= Pz().GOOD ? 'full' : v < Pz().LOW ? 'low' : '';
         return '<span class="hn ' + cls + '"><small>' + x.label + '</small><span class="bar"><i style="width:' + v + '%"></i></span></span>';
       }).join('') + '</div>' +
-      (!away() ? '<div class="hud-bag note">Bag: ' + w.meals + ' meal &middot; ' + w.kits + ' bath kit &middot; ' + w.rest + ' tuck-in &middot; ' + w.energy + ' play' + (w.balls ? ' &middot; ' + w.balls + ' ball' + (w.balls > 1 ? 's' : '') : '') +
+      (!away() && hideInfo() ? '<div class="hud-bag note"><b>' + C().esc(p.name) + ' is hiding</b> under your bed after a terrible bedtime. No playing with it until ' + hideInfo().back + '.</div>'
+        : !away() && nightInfo() ? '<div class="hud-bag note"><b>Night time.</b> ' + C().esc(p.name) + ' is asleep ' + (nightInfo().tucked ? 'in bed' : 'under the bed') + ' until ' + nightInfo().wake + '. Shops are closed.</div>'
+        : !away() ? '<div class="hud-bag note">Bag: ' + w.meals + ' meal &middot; ' + w.kits + ' bath kit &middot; ' + w.rest + ' tuck-in' + (w.restPart ? ' +' + w.restPart + '%' : '') + ' &middot; ' + w.energy + ' play' + (w.playPart ? ' +' + w.playPart + '%' : '') + (w.balls ? ' &middot; ' + w.balls + ' ball' + (w.balls > 1 ? 's' : '') : '') +
         (st.doc.egg ? ' &middot; <b class="egg-tag">Rare egg at home!</b>' : '') + (bedTime() ? ' &middot; <b>' + C().esc(p.name) + ' is asleep at home</b>' : '') + (p.final ? ' &middot; <b>Fully grown! Go home.</b>' : p.leveledOn === C().today() ? ' &middot; Leveled up today' : '') + '</div>'
         : W.region === 'ship' && W.ship ? '<div class="hud-bag note">Lido Deck &middot; hands ' + W.ship.carry.length + '/' + capacity() + (W.ship.carry.length ? ' (' + W.ship.carry.join(', ') + ')' : '') + ' &middot; <b>' + A().tickets(W.pid) + '</b> tickets' + (capacity() > 3 ? '' : ' &middot; a healthy pet carries 1 more') + '</div>'
         : '<div class="hud-bag note">Sunny Beach &middot; found ' + ((A().exp() || {}).found || []).length + ' thing' + (((A().exp() || {}).found || []).length === 1 ? '' : 's') + ' so far</div>');
     var fb = W.root.querySelector('.feed-btn');
-    if (fb) { fb.hidden = away(); fb.disabled = w.meals < 1; fb.innerHTML = 'Feed<small>' + w.meals + ' meal</small>'; }
+    if (fb) { fb.hidden = away() || !!nightInfo() || !!hideInfo(); fb.disabled = w.meals < 1; fb.innerHTML = 'Feed<small>' + w.meals + ' meal</small>'; }
     var mood = W.root.querySelector('.hud-mood');
-    if (mood) mood.textContent = away() ? '' : st.starving ? 'Starving! Buy food at the Store' : st.mood.label;
+    if (mood) mood.textContent = away() ? '' : hideInfo() ? 'Hiding' : nightInfo() ? 'Asleep' : st.starving ? 'Starving! Buy food at the Store' : st.mood.label;
     if (mood) mood.hidden = !mood.textContent;
     actionHud();
     if (away() && A().exp()) timerHud(A().exp());
   }
   function actionHud() {
     var b = W.root && W.root.querySelector('.act-btn'); if (!b) return;
-    var a = currentAction();
+    var a = currentAction(), fl = W.root.querySelector('.float-act');
+    if (away() && fl) {   /* adventures: the button floats right above the chest, fishing spot or desk instead of sitting in the corner */
+      var show = !!(a && a.o && AUTO.indexOf(a.kind) < 0 && !W.fish);
+      b.hidden = true; fl.hidden = !show; W.floatAt = show ? a.o : null;
+      if (show) { if (fl.textContent !== a.label) fl.textContent = a.label; fl.className = 'float-act' + (a.kind === 'full' ? ' muted' : '') + (fl.classList && fl.classList.contains('below') ? ' below' : ''); placeFloat(); }
+      return;
+    }
+    if (fl) { fl.hidden = true; W.floatAt = null; }
     b.hidden = !a; if (a) b.textContent = a.label;
+  }
+  function placeFloat() {
+    var fl = W.floatAt && W.root && W.root.querySelector('.float-act'); if (!fl || !W.cam) return;
+    /* above the thing, or below it when the kid stands on the square above (so the button never covers the kid) */
+    var below = W.P && W.P.y < W.floatAt.y, x = ((W.floatAt.x + 0.5) * T - W.cam.x) * W.scale, y = ((below ? W.floatAt.y + 1 : W.floatAt.y) * T + (below ? 2 : -4) - W.cam.y) * W.scale;
+    if (!below) y = Math.max(y, (W.hudH || 50) + 46);   /* never under the top bar */
+    if (fl.classList) { if (below) fl.classList.add('below'); else fl.classList.remove('below'); }
+    fl.style.left = Math.round(x) + 'px'; fl.style.top = Math.round(y) + 'px';
   }
   function timerHud(e) {
     var el = W.root && W.root.querySelector('.hud-timer'); if (!el) return;
@@ -1413,7 +1558,7 @@
   function peopleKey() { return C().activePeople().map(function (p) { return p.id + ':' + p.name + ':' + p.order + ':' + (C().isAdult(p.id) ? 1 : 0); }).join('|') + '|' + C().bankName(); }
   /* grown-ups standing at their spot in town */
   function hostSpots() {
-    if (W.region !== 'town') return [];
+    if (W.region !== 'town' || nightInfo()) return [];
     var out = [], used = {};
     ['bank', 'store', 'prizes', 'park', 'gate', 'square'].forEach(function (kind) {
       Pz().hosts(kind).forEach(function (h, i) {
@@ -1448,6 +1593,7 @@
       view.innerHTML = '<div class="world" id="world"><canvas class="wcanvas" aria-label="Map. Use the arrows to walk."></canvas>' +
         '<div class="hud-top"></div><div class="wmsg" hidden></div>' +
         '<div class="hud-act"><span class="hud-mood"></span><button type="button" class="act-btn" data-wact="act" hidden>Dig</button><button type="button" class="feed-btn" data-pact="feed">Feed</button></div>' +
+        '<button type="button" class="float-act" data-wact="act" hidden></button>' +
         '<div class="fishing" hidden></div><div class="fishing prizes" hidden></div>' +
         '<div class="pcard-wrap" data-wact="closeCard" hidden></div><div id="room" class="room-overlay" hidden></div></div>' +
         '<p class="note town-help">Tap where you want to go, or hold and drag to keep walking. Tap a door to go in, tap furniture to use it, and tap a pet to see how it’s doing. The Adventure Gate at the bottom of town opens when you have an Adventure Pass.</p>';
@@ -1462,12 +1608,14 @@
       residents();
     } else if (W.region === 'home' && W.resKey !== resKey()) residents();
     hud(); updateMsg(); renderRoom();
+    if (nightInfo() && (overlayOn() || away() || (W.region === 'home' && W.homeOwner !== W.pid))) { nightCheck(); return; }
+    if (hideInfo() && (away() || (Pz().G.room && !Pz().G.room.walk && PET_PLACES[Pz().G.room.kind]) || Pz().G.game)) { nightCheck(); return; }
     if (overlayOn()) W.run = false; else { unstick(); start(); }
   }
   function size() {
     if (!W.cv) return;
     var cw = W.root.clientWidth || 320, vh = window.innerHeight || 640;
-    var ch = Math.max(280, Math.min(Math.round(cw * 1.35), vh - 190));
+    var ch = Math.max(280, Math.min(Math.round(cw * (away() ? 1.75 : 1.35)), vh - 190));   /* adventures have no help text below, so the map gets that room */
     W.dpr = Math.min(2, window.devicePixelRatio || 1);
     W.cw = cw; W.ch = ch;
     W.cv.style.height = ch + 'px';

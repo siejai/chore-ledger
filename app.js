@@ -113,7 +113,9 @@
   var DEFAULTS = {
     bankName: 'Family Bank', requireApproval: true, catOrder: [], centsPerPoint: 1, petEvolve1Cents: 500, petEvolve2Cents: 1500,
     dadPid: '', allowanceCents: 0, allowanceDay: 5, allowanceLast: '', parents: [], foodCoins: 10, mealPrice: 10, careCoins: 10, kitPrice: 10,
-    coinsPerDollar: 100, swapPrice: 20, toothPrice: 20, ballPrice: 20      /* chore coins: earned 1 per chore point, traded at the bank, spent on clothes and store items */
+    coinsPerDollar: 100, swapPrice: 20, toothPrice: 20, ballPrice: 20,
+    logCooldown: 60, logCap: 5, hideHours: 24,   /* hideHours: how long a pet hides after a "pet hides" rating (cl-v32) */   /* kids: seconds between logging the same chore, and the most times a day (0 = no limit) */
+    nightStart: '20:00', nightEnd: '06:30', nightOff: false, drainFood: 50, drainClean: 25, drainRest: 50, drainEnergy: 50   /* pets sleep at night; how fast each need drops per day */      /* chore coins: each chore's pts, traded at the bank, spent on clothes and store items */
   };
   var S = {
     phase: 'boot', err: '', ready: {},
@@ -121,7 +123,7 @@
     me: MODE === 'bank' ? '@parent' : null, lastMe: LS.get('cl.me'), picking: false, lastActive: Date.now(),
     admin: false, parent: null, adminOpen: MODE === 'bank', adminTimer: 0, fails: 0, lockUntil: 0,
     tab: LS.get(MODE === 'bank' ? 'cl.ptab' : 'cl.tab') || (MODE === 'bank' ? 'approvals' : 'log'), keepTried: false,
-    sel: null, date: today(), dateAuto: true, q: '', cat: 'all', sort: 'cat', quest: null,
+    sel: null, date: today(), dateAuto: true, q: '', cat: 'all', sort: 'cat', quest: null, chLv: {}, lvPick: null, lastLog: {},
     hist: { pid: 'all', range: '7', status: 'all' }, older: null,
     apMode: LS.get('cl.apmode') || 'chore', apClosed: {}, apSkip: {}, logMode: LS.get('cl.logmode') || 'person', chOpen: null, chPick: {}, queue: [],
     bankPid: null, bankForm: null, allTx: null,
@@ -224,6 +226,78 @@
     return '';
   }
   var NEED_LABEL = { '': 'Nothing', none: 'Nothing', off: 'Nothing', food: 'Food coins', clean: 'Clean coins', rest: 'Tuck-in', energy: 'Play time', any: 'What the pet needs most' };
+  /* ----- what a chore pays (cl-v29). Chore coins are the chore's pts: 100 trade for $1 at the bank, and they also buy food and clean
+     coins, toothpaste, balls and clothes. rw holds the pet rewards: food and clean coins, tuck-in and play as a percent of one
+     (100 = a whole one, 50 = half), and "needs most" as a percent of one share of whatever the pet needs most when it is approved
+     (a share is the Setup amount of food or clean coins, or one tuck-in or play). Chores saved before rw existed are read through
+     their old single "need". ----- */
+  var RW_KEYS = ['food', 'clean', 'tuck', 'play', 'any'];
+  function legacyRw(need, amt) {
+    var st = S.settings, r = { food: 0, clean: 0, tuck: 0, play: 0, any: 0 };
+    if (need === 'food') r.food = Number(amt) || Number(st.foodCoins) || 10;
+    else if (need === 'clean') r.clean = Number(amt) || Number(st.careCoins) || 10;
+    else if (need === 'rest') r.tuck = 100;
+    else if (need === 'energy') r.play = 100;
+    else if (need === 'any') r.any = 100;
+    return r;
+  }
+  function cleanRw(o) { var r = {}; RW_KEYS.forEach(function (k) { r[k] = Math.max(0, Math.round(Number(o && o[k]) || 0)); }); return r; }
+  function rewardsOf(c) { return c && c.rw ? cleanRw(c.rw) : legacyRw(needOf(c || {}), c && c.coins); }
+  function entryRw(e) { return e.rw ? cleanRw(e.rw) : legacyRw(e.need || '', e.amt); }
+  function scaleRw(r, pct) { var o = {}; RW_KEYS.forEach(function (k) { o[k] = Math.round((r[k] || 0) * pct / 100); }); return o; }
+  /* for app versions before cl-v29, which still read a single "need" */
+  function compatNeed(r) { return r.food ? 'food' : r.clean ? 'clean' : r.tuck >= 50 ? 'rest' : r.play >= 50 ? 'energy' : r.any ? 'any' : 'off'; }
+  function pctTxt(v, one, many) { return v % 100 === 0 ? (v === 100 ? '1 ' + one : v / 100 + ' ' + many) : v + '% ' + one; }
+  function rwText(pts, r) {
+    var b = [];
+    if (pts) b.push('+' + n0(pts) + ' chore coin' + (pts === 1 ? '' : 's'));
+    if (r.food) b.push('+' + r.food + ' food');
+    if (r.clean) b.push('+' + r.clean + ' clean');
+    if (r.tuck) b.push(pctTxt(r.tuck, 'tuck-in', 'tuck-ins'));
+    if (r.play) b.push(pctTxt(r.play, 'play', 'plays'));
+    if (r.any) b.push(r.any === 100 ? 'what the pet needs most' : r.any + '% of what the pet needs most');
+    return b.length ? b.join(' &middot; ') : 'no reward';
+  }
+  /* graded chores: levels [{n: 'Great', p: 100}, ...]; logging asks which one, and every reward scales by p percent */
+  var DEFAULT_LEVELS = [{ n: 'Great', p: 100 }, { n: 'Good', p: 75 }, { n: 'OK', p: 50 }, { n: 'Bad', p: 0 }];
+  function levelsOf(c) { return c && c.levels && c.levels.length ? c.levels : null; }
+  function levelsText(lv) { return (lv || []).map(function (x) { return x.n + ' ' + x.p; }).join(', '); }
+  function parseLevels(str) {
+    var out = [];
+    String(str || '').split(/[,;\n]+/).forEach(function (part) {
+      var m = trim(part).match(/^(.*?)[\s:=]*(\d+)\s*%?$/);
+      if (m && trim(m[1])) out.push({ n: trim(m[1]).slice(0, 20), p: Math.min(200, Math.round(Number(m[2]))) });
+    });
+    return out;
+  }
+  /* how often kids can log a chore: freq '' (any time, up to the daily limit) or 'Nd' / 'Nw' (N a day / N a week) */
+  var FREQS = [['', 'Any time'], ['1d', 'Once a day'], ['2d', 'Twice a day'], ['3d', '3 times a day'], ['1w', 'Once a week'], ['2w', 'Twice a week'], ['3w', '3 times a week']];
+  function freqOf(c) { var m = /^(\d+)([dw])$/.exec((c && c.freq) || ''); return m && Number(m[1]) > 0 ? { n: Number(m[1]), per: m[2] } : null; }
+  function freqOpts(cur) {   /* the menu, plus an unusual limit from the spreadsheet (e.g. 5 times a day) so it isn't shown as Any time */
+    var list = FREQS.slice(), f = freqOf({ freq: cur });
+    if (f && !list.some(function (x) { return x[0] === cur; })) list.push([cur, freqText(f)]);
+    return list.map(function (x) { return '<option value="' + x[0] + '"' + ((cur || '') === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('');
+  }
+  function freqText(f) { if (!f) return 'Any time'; return (f.n === 1 ? 'Once' : f.n === 2 ? 'Twice' : f.n + ' times') + ' a ' + (f.per === 'd' ? 'day' : 'week'); }
+  function freqKey(str) {
+    var t = lc(String(str || '')).replace(/[^a-z0-9 \/]/g, ' ').replace(/\s+/g, ' ');
+    if (!t || /^(any|any time|anytime|no limit|none|unlimited)$/.test(t)) return '';
+    var per = /week/.test(t) || /\bw\b/.test(t) ? 'w' : /day|daily|\bd\b/.test(t) ? 'd' : '';
+    if (!per) return null;
+    var n = /(\d+)/.exec(t), k = n ? Number(n[1]) : /twice/.test(t) ? 2 : /three|thrice/.test(t) ? 3 : 1;
+    return k > 0 && k < 100 ? k + per : null;
+  }
+  function freqUsed(pid, c, date) {   /* times logged (not denied) in the day or week of that date */
+    var f = freqOf(c); if (!f) return 0;
+    var from = f.per === 'd' ? date : weekStart(date), to = f.per === 'd' ? date : addDays(from, 6), n = 0;
+    S.entries.forEach(function (e) { if (e.pid === pid && e.cid === c.id && e.status !== 'rejected' && e.date >= from && e.date <= to) n++; });
+    return n;
+  }
+  function freqFull(pid, c, date) { var f = freqOf(c); return !!f && freqUsed(pid, c, date) >= f.n; }
+  function hideOpts(lv, cur) { return '<option value="">never</option>' + (lv || []).map(function (x) { return '<option value="' + esc(x.n) + '"' + (cur === x.n ? ' selected' : '') + '>' + esc(x.n) + '</option>'; }).join(''); }
+  function levelExtra(c, i) { var lv = levelsOf(c), x = lv && lv[i]; return x ? { lv: x.n, lvPct: x.p } : null; }
+  var STAR_SVG = '<svg class="rw-i" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="#b58cff" stroke="#6a4bc4" stroke-width="1.5"/><path d="M10 4.2 L11.7 8 L15.8 8.3 L12.7 11 L13.6 15 L10 12.9 L6.4 15 L7.3 11 L4.2 8.3 L8.3 8 Z" fill="#fff"/></svg>';
+  function ptsBadge(n, graded) { return '<span class="pts mono" title="chore coins">' + STAR_SVG + (graded ? 'up to ' : '') + '+' + n0(n) + '</span>'; }
   /* the pet's biggest need right now, counting what is already in the bag and the coin purse */
   function needMost(pid) {
     if (!window.Pets) return 'food';
@@ -258,14 +332,22 @@
   function parentName(id) { var p = find(S.settings.parents || [], function (x) { return x.id === id; }); return p ? p.name : ''; }
 
   /* ================= writes ================= */
+  /* everything an approved entry pays the pet: tuck-ins and plays add up in percent (pctRest, pctPlay; 100 = one) */
   function petGrantOps(e, sign) {
-    var st = S.settings, d = {}, need = e.need || '';
-    if (need === 'any') need = sign > 0 ? (e.needGot = needMost(e.pid)) : (e.needGot || '');
-    if (need === 'food') d.coinsFood = DB.inc(sign * (Number(e.amt) || Number(st.foodCoins) || 10));
-    else if (need === 'clean') d.coinsCare = DB.inc(sign * (Number(e.amt) || Number(st.careCoins) || 10));
-    else if (need === 'rest') d.tokRest = DB.inc(sign);
-    else if (need === 'energy') d.tokEnergy = DB.inc(sign);
+    var st = S.settings, d = {}, r = entryRw(e);
+    if (r.any) {
+      var got = sign > 0 ? (e.needGot = needMost(e.pid)) : (e.needGot || ''), f = r.any / 100;
+      if (got === 'food') r.food += Math.round((Number(st.foodCoins) || 10) * f);
+      else if (got === 'clean') r.clean += Math.round((Number(st.careCoins) || 10) * f);
+      else if (got === 'rest') r.tuck += r.any;
+      else if (got === 'energy') r.play += r.any;
+    }
+    if (r.food) d.coinsFood = DB.inc(sign * r.food);
+    if (r.clean) d.coinsCare = DB.inc(sign * r.clean);
+    if (r.tuck) d.pctRest = DB.inc(sign * r.tuck);
+    if (r.play) d.pctPlay = DB.inc(sign * r.play);
     if (e.pts) d.chorePts = DB.inc(sign * e.pts);
+    if (e.hide) d.hideUntil = sign > 0 ? Date.now() + Math.max(1, Number(st.hideHours) || 24) * 3600000 : 0;
     e.coins = sign > 0;
     if (!Object.keys(d).length) return [];
     return [{ t: 'merge', c: 'pets', id: e.pid, d: d }];
@@ -303,7 +385,11 @@
   function bankTx(pid, cents, kind, memo, extraOps) { return DB.commit(txOps(pid, cents, kind, memo).concat(extraOps || [])); }
   function autoApprove() { return S.admin || S.settings.requireApproval === false; }
   function newEntry(pid, date, chore, extra) {
-    return assign({ pid: pid, cid: chore.id, name: chore.name, pts: chore.pts, cat: chore.cat || '', need: needOf(chore), amt: Number(chore.coins) || 0, date: date, ts: Date.now(), status: 'pending', paid: false, by: S.me || '' }, extra || {});
+    var r = rewardsOf(chore), pts = Number(chore.pts) || 0, base = null;
+    if (extra && extra.lvPct !== undefined) { base = { pts: pts, rw: r }; pts = Math.round(pts * extra.lvPct / 100); r = scaleRw(r, extra.lvPct); }
+    var hide = !!(extra && extra.lv && chore.hideLv && extra.lv === chore.hideLv);
+    return assign({ pid: pid, cid: chore.id, name: chore.name, pts: pts, cat: chore.cat || '', rw: r, need: compatNeed(r), amt: r.food || r.clean || 0, date: date, ts: Date.now(), status: 'pending', paid: false, by: S.me || '' },
+      base ? { lvBase: base } : {}, hide ? { hide: true } : {}, extra || {});
   }
   function saveEntries(list) {
     var ops = [], auto = autoApprove();
@@ -317,14 +403,101 @@
     });
     return DB.commit(ops);
   }
-  function addEntry(pid, date, chore) { return saveEntries([newEntry(pid, date, chore)]).catch(fail); }
+  function addEntry(pid, date, chore, extra) { S.lastLog[pid + '|' + chore.id] = Date.now(); return saveEntries([newEntry(pid, date, chore, extra)]).catch(fail); }
+  /* kids can't flood the approvals: a short wait between logs of the same chore, and a daily limit (parents are never limited) */
+  /* ----- the daily review (cl-v33): chores marked review, rated for every kid in one place; saving logs them as approved ----- */
+  function reviewItems() { var cats = catList(S.chores); return S.chores.filter(function (c) { return c.active !== false && c.review; }).sort(function (a, b) { return (cats.indexOf(catName(a)) - cats.indexOf(catName(b))) || ((a.order || 0) - (b.order || 0)); }); }
+  function reviewKids() { return kids().filter(function (p) { return p.active !== false; }); }
+  function rvEntry(pid, cid, date) { var best = null; S.entries.forEach(function (e) { if (e.pid === pid && e.cid === cid && e.date === date && e.status !== 'rejected' && (!best || (e.ts || 0) > (best.ts || 0))) best = e; }); return best; }
+  function reviewLeft(date) {
+    var n = 0, items = reviewItems();
+    reviewKids().forEach(function (p) { if (items.some(function (c) { return (c.who || []).indexOf(p.id) >= 0 && !rvEntry(p.id, c.id, date); })) n++; });
+    return n;
+  }
+  function rvState() { var d = S.rvDate || today(); if (!S.rv || S.rv.date !== d) S.rv = { date: d, picks: {} }; return S.rv; }
+  function renderReview() {
+    if (!S.admin) { view.innerHTML = locked('The daily review'); return; }
+    var rv = rvState(), date = rv.date, items = reviewItems(), kidsL = reviewKids(), changes = Object.keys(rv.picks).length;
+    var h = '<section class="stack review"><div class="wrap end"><label class="field w-md" for="rvDate"><span>Day</span><input type="date" id="rvDate" value="' + esc(date) + '" max="' + today() + '"></label>' +
+      (date !== today() ? '<button class="btn" type="button" data-act="rvToday">Today</button>' : '') + '</div>';
+    if (!items.length) {
+      view.innerHTML = h + '<div class="card stack tight"><h2>Daily review</h2><p class="note">Pick the chores you want to rate for every kid at the end of the day, like bedtime, attitude or cursing. ' +
+        'Tick <b>Daily review</b> on them in Setup → Chores → Edit all in a table (or in the spreadsheet), or tick <b>Show it in the daily review</b> in a chore’s editor. Rated chores show their levels here; the rest just get a Done.</p>' +
+        '<button class="btn primary" type="button" data-act="rvSetup">Open the chore table</button></div></section>';
+      return;
+    }
+    h += '<p class="note">Tap how each one went for ' + (date === today() ? 'today' : esc(fmtDate(date))) + ', then Save. Saving approves them and pays the rewards; a kid’s own request is replaced by your rating.</p>';
+    h += kidsL.map(function (p) {
+      var mine = items.filter(function (c) { return (c.who || []).indexOf(p.id) >= 0; }); if (!mine.length) return '';
+      return '<div class="card rv-kid ' + pCls(p) + '"><div class="rv-name"><span class="dot"></span><strong>' + esc(p.name) + '</strong></div>' + mine.map(function (c) {
+        var k = p.id + '|' + c.id, ex = rvEntry(p.id, c.id, date), lv = levelsOf(c), opts = lv ? lv.map(function (x) { return x.n; }) : ['Done'];
+        var cur = ex ? (lv ? opts.indexOf(ex.lv) : 0) : -1, ok = ex && ex.status === 'approved', pick = rv.picks[k] !== undefined ? rv.picks[k] : ok ? cur : -1;
+        var st = ex ? (ok ? 'approved' + (ex.lv ? ': ' + ex.lv : '') : 'waiting' + (ex.lv ? ', ' + p.name + ' said ' + ex.lv : '') + ' (tap to rate it)') : 'not rated yet';
+        return '<div class="rv-row"><div class="rv-chore">' + esc(c.name) + '<small' + (ex ? '' : ' class="rv-none"') + '>' + esc(st) + (rv.picks[k] !== undefined ? ' &middot; <b>changed</b>' : '') + '</small></div><div class="rv-lv">' + opts.map(function (n, i) {
+          return '<button type="button" class="rv-b rv-' + (lv ? Math.min(i, 3) + (i === opts.length - 1 && opts.length > 2 ? ' rv-last' : '') : 0) + (!ok && ex && cur === i ? ' rv-said' : '') + '" data-act="rvPick" data-k="' + esc(k) + '" data-i="' + i + '" aria-pressed="' + (pick === i) + '">' + esc(n) + (lv && c.hideLv === n ? ' &#128064;' : '') + '</button>';
+        }).join('') + '</div></div>';
+      }).join('') + '</div>';
+    }).join('');
+    var nobody = items.filter(function (c) { return !kidsL.some(function (p) { return (c.who || []).indexOf(p.id) >= 0; }); });
+    if (nobody.length) h += '<p class="note">Not given to any kid, so not shown: ' + nobody.map(function (c) { return '<b>' + esc(c.name) + '</b>'; }).join(', ') + '. Pick who does it in the chore’s editor (Setup → Chores).</p>';
+    h += '<div class="rv-bar"><span class="grow">' + (changes ? changes + ' rating' + (changes === 1 ? '' : 's') + ' to save' : 'Tap a rating to change it') + '</span>' +
+      '<button class="btn" type="button" data-act="rvClear"' + (changes ? '' : ' disabled') + '>Clear</button><button class="btn primary" type="button" data-act="rvSave"' + (changes ? '' : ' disabled') + '>Save review</button></div></section>';
+    view.innerHTML = h;
+  }
+  function rvSave() {
+    var rv = rvState(), date = rv.date, ops = [], n = 0, by = S.parent ? S.parent.id : '';
+    Object.keys(rv.picks).forEach(function (k) {
+      var parts = k.split('|'), pid = parts[0], i = rv.picks[k], c = find(S.chores, function (x) { return x.id === parts[1]; }); if (!c) return;
+      var lv = levelsOf(c), extra = lv ? levelExtra(c, i) : null, ex = rvEntry(pid, c.id, date);
+      if (ex && ex.status === 'approved' && (!lv || ex.lv === extra.lv)) return;   /* already that */
+      if (ex) { ops.push({ t: 'delete', c: 'entries', id: ex.id }); if (ex.status === 'approved') ops = ops.concat(petGrantOps(ex, -1)); }
+      var e = newEntry(pid, date, c, extra); e.status = 'approved'; e.decidedTs = Date.now(); e.decidedBy = by; e.by = '@review';
+      ops = ops.concat(petGrantOps(e, 1)); if (e.needGot) e.needGot = e.needGot;
+      ops.unshift({ t: 'set', c: 'entries', id: DB.newId('entries'), d: e }); n++;
+    });
+    if (!ops.length) { rv.picks = {}; go(); return; }
+    DB.commit(ops).then(function () { rv.picks = {}; toast('Review saved: ' + n + ' rating' + (n === 1 ? '' : 's') + '.'); go(); }, fail);
+  }
+  function canLog(pid, c) {
+    if (S.admin) return true;
+    var st = S.settings, cd = Math.max(0, Number(st.logCooldown != null ? st.logCooldown : 60) || 0) * 1000, cap = Math.max(0, Number(st.logCap != null ? st.logCap : 5) || 0);
+    var k = pid + '|' + c.id, last = S.lastLog[k] || 0, n = 0;
+    S.entries.forEach(function (e) {
+      if (e.pid !== pid || e.cid !== c.id || e.status === 'rejected') return;
+      if ((Number(e.ts) || 0) > last) last = Number(e.ts) || 0;
+      if (e.date === S.date) n++;
+    });
+    var wait = cd - (Date.now() - last);
+    if (wait > 0) { var sec = Math.ceil(wait / 1000); toast('You just logged ' + c.name + '. Wait ' + sec + ' more second' + (sec === 1 ? '' : 's') + ' to log it again.', true); return false; }
+    if (cap && n >= cap) { toast(c.name + ' can be logged ' + cap + ' time' + (cap === 1 ? '' : 's') + ' a day, and that’s done for today. Ask a parent if you did it again.', true); return false; }
+    var f = freqOf(c);
+    if (f && freqUsed(pid, c, S.date) >= f.n) { toast(c.name + ' can be logged ' + freqText(f).toLowerCase() + ', and that’s done ' + (f.per === 'd' ? 'for today' : 'for this week') + '.', true); return false; }
+    return true;
+  }
+  /* a parent changes how well a waiting graded chore went: the rewards are worked out again from the full amounts */
+  function setLevel(eid, i) {
+    var e = find(S.entries, function (x) { return x.id === eid; }); if (!e || e.status !== 'pending') return;
+    var c = find(S.chores, function (x) { return x.id === e.cid; }), lv = levelsOf(c) || DEFAULT_LEVELS, x = lv[i]; if (!x) return;
+    var base = e.lvBase || { pts: Number(e.pts) || 0, rw: entryRw(e) }, r = scaleRw(cleanRw(base.rw), x.p), pts = Math.round((Number(base.pts) || 0) * x.p / 100);
+    var d = { lv: x.n, lvPct: x.p, pts: pts, rw: r, need: compatNeed(r), amt: r.food || r.clean || 0, lvBase: base, hide: !!(c && c.hideLv && c.hideLv === x.n) };
+    assign(e, d);
+    DB.commit([{ t: 'update', c: 'entries', id: eid, d: d }]).then(function () { toast(e.name + ': ' + x.n); }, fail);
+  }
+  /* chores saved before cl-v29 get their rewards written out once (from a parent's device), so the table shows real numbers */
+  function rwMigrate() {
+    if (S.rwMig || !S.admin || !S.ready.chores || !S.ready.settings) return;
+    var ops = S.chores.filter(function (c) { return !c.rw; }).map(function (c) { return { t: 'update', c: 'chores', id: c.id, d: { rw: rewardsOf(c) } }; });
+    if (!ops.length) return;
+    S.rwMig = true;
+    DB.commit(ops).then(function () { S.rwMig = false; }, function () { S.rwMig = false; });
+  }
   function addQuest(chore, shares, date) {
     var qid = DB.newId('entries'), pids = Object.keys(shares).filter(function (k) { return shares[k] > 0; });
     var bounty = Number(chore.bountyCents) || 0, list = [], given = 0, biggest = null;
     pids.forEach(function (pid) {
       var sh = shares[pid], cents = Math.floor(bounty * sh / 100);
       given += cents;
-      var e = newEntry(pid, date, chore, { questId: qid, share: sh, pts: Math.max(1, Math.round(chore.pts * sh / 100)), bountyCents: cents, bountyPaid: false });
+      var e = newEntry(pid, date, chore, { questId: qid, share: sh, pts: Math.max(chore.pts > 0 ? 1 : 0, Math.round((Number(chore.pts) || 0) * sh / 100)), bountyCents: cents, bountyPaid: false });
       if (!biggest || sh > biggest.share) biggest = e;
       list.push(e);
     });
@@ -489,8 +662,8 @@
 
   /* ================= render ================= */
   function tabsFor() {
-    if (MODE === 'bank') return [['approvals', 'Approvals'], ['bank', 'Accounts'], ['log', 'Chores'], ['lists', 'Lists'], ['pet', 'Pets'], ['history', 'History'], ['setup', 'Setup']];
-    if (S.admin) return [['log', 'Chores'], ['pet', 'Pets'], ['approvals', 'Approvals'], ['bank', 'Bank'], ['lists', 'Lists'], ['history', 'History'], ['setup', 'Setup']];
+    if (MODE === 'bank') return [['approvals', 'Approvals'], ['review', 'Review'], ['bank', 'Accounts'], ['log', 'Chores'], ['lists', 'Lists'], ['pet', 'Pets'], ['history', 'History'], ['setup', 'Setup']];
+    if (S.admin) return [['log', 'Chores'], ['pet', 'Pets'], ['approvals', 'Approvals'], ['review', 'Review'], ['bank', 'Bank'], ['lists', 'Lists'], ['history', 'History'], ['setup', 'Setup']];
     if (isAdult(S.me)) return [['log', 'Chores'], ['history', 'History']];
     return [['log', 'Chores'], ['pet', 'My Pet'], ['history', 'History']];
   }
@@ -501,6 +674,7 @@
     var tabs = tabsFor().map(function (t) {
       var badge = '';
       if (t[0] === 'approvals' && D && D.pendCount) badge = '<span class="badge">' + D.pendCount + '</span>';
+      if (t[0] === 'review' && S.admin && new Date().getHours() >= 16) { var rl = reviewLeft(today()); if (rl) badge = '<span class="badge">' + rl + '</span>'; }
       if (t[0] === 'bank' && D && D.reqPend.length && S.admin) badge = '<span class="badge">' + D.reqPend.length + '</span>';
       return '<button role="tab" data-tab="' + t[0] + '" aria-selected="' + (S.tab === t[0]) + '">' + t[1] + badge + '</button>';
     }).join('');
@@ -522,6 +696,7 @@
     if (typing && (S.phase === 'app' || S.phase === 'wizard')) { if (S.phase === 'app') paintLists(); S.dirty = true; return; }
     S.dirty = false;
     if (S.phase === 'app' && S.admin && S.ready.settings && S.ready.pets) coinBackfill();
+    if (S.phase === 'app' && S.admin) rwMigrate();
     if (S.phase === 'boot') { root.innerHTML = '<p class="note" style="margin-top:40px;text-align:center">Loading...</p>'; lastShell = ''; return; }
     if (S.phase === 'error') { root.innerHTML = '<div class="banner" style="margin-top:24px"><strong>Could not start.</strong><br>' + esc(S.err) + '</div>'; lastShell = ''; return; }
     if (S.phase === 'login') { renderLogin(); lastShell = ''; return; }
@@ -562,6 +737,7 @@
     else if (S.tab === 'bank') renderBank(D);
     else if (S.tab === 'history') { if (S.admin && S.mtg && S.mtg.open) renderMeeting(); else renderHistory(D); }
     else if (S.tab === 'lists') renderLists();
+    else if (S.tab === 'review') renderReview();
     else renderSetup(D);
   }
   function scrollNav() {
@@ -832,7 +1008,7 @@
         '<div id="questBox"></div>' +
         '<div class="cats" id="cats"></div><div class="cats gives" id="gives"></div>' +
         '<div class="wrap"><div class="field w-lg"><input type="search" id="q" placeholder="Search chores" aria-label="Search chores"></div>' +
-        '<div class="field w-md"><select id="sort" aria-label="Sort chores"><option value="cat">By category</option><option value="routine">Routine order</option><option value="used">Most used</option><option value="points">Most points</option><option value="name">A to Z</option></select></div></div>' +
+        '<div class="field w-md"><select id="sort" aria-label="Sort chores"><option value="cat">By category</option><option value="routine">Routine order</option><option value="used">Most used</option><option value="points">Most chore coins</option><option value="name">A to Z</option></select></div></div>' +
         '<ul class="list" id="logList"></ul></section>';
       $('#q').value = S.q; $('#sort').value = S.sort;
     }
@@ -850,7 +1026,7 @@
     var mine = S.entries.filter(function (e) { return e.pid === pid && e.date === S.date; });
     var ok = 0, pe = 0;
     mine.forEach(function (e) { if (e.status === 'approved') ok += e.pts; else if (e.status === 'pending') pe += e.pts; });
-    $('#logHead').innerHTML = '<strong>' + esc(pname(pid)) + '</strong> &middot; <span class="mono">' + n0(ok) + '</span> pts approved' +
+    $('#logHead').innerHTML = '<strong>' + esc(pname(pid)) + '</strong> &middot; <span class="mono">' + n0(ok) + '</span> chore coins approved' +
       (pe ? ', <span class="mono">' + n0(pe) + '</span> waiting' : '') + ' ' + (S.date === D.t ? 'today' : 'on ' + esc(fmtDate(S.date))) +
       (S.date !== D.t ? '<span class="pill">Past date</span>' : '');
     renderQuestBox();
@@ -910,7 +1086,7 @@
       var tags = giveTag(c) + (nw ? '<span class="tag pend">' + nw + ' waiting</span>' : '') + (nok ? '<span class="tag ok">' + nok + ' of ' + ppl.length + ' done</span>' : '') +
         (!nw && !nok ? '<span class="tag">' + ppl.length + ' assigned</span>' : '') + (c.bountyCents > 0 ? '<span class="tag bounty">' + money(c.bountyCents) + ' bounty</span>' : '');
       var h = '<li class="crow' + (open ? ' open' : '') + (nw ? ' has-wait' : '') + '"><button type="button" class="crow-head" data-act="chOpen" data-cid="' + esc(c.id) + '" aria-expanded="' + open + '">' +
-        '<span class="rname">' + esc(c.name) + '<span class="meta">' + tags + '</span></span><span class="pts mono">+' + c.pts + '</span><span class="chev" aria-hidden="true">' + (open ? '&#9652;' : '&#9662;') + '</span></button>';
+        '<span class="rname">' + esc(c.name) + '<span class="meta">' + tags + '</span></span>' + ptsBadge(c.pts, !!levelsOf(c)) + '<span class="chev" aria-hidden="true">' + (open ? '&#9652;' : '&#9662;') + '</span></button>';
       if (open) {
         var n = 0;
         h += '<div class="crow-body">' + ppl.map(function (p, i) {
@@ -924,6 +1100,8 @@
             (st === 'none' || st === 'no' ? bellBtn(c.id, p.id, p.name) : '') +
             (pend ? '<button class="btn small danger" type="button" data-act="rjUnit" data-key="e' + esc(pend.id) + '" aria-label="Send back ' + esc(p.name) + '">&#10005;</button>' : '') + '</div>';
         }).join('') +
+          (levelsOf(c) ? '<div class="crow-lv"><label class="field w-md"><span>How did it go?</span><select data-act="chLv" data-cid="' + esc(c.id) + '">' + levelsOf(c).map(function (x, i) {
+            return '<option value="' + i + '"' + ((S.chLv[c.id] || 0) === i ? ' selected' : '') + '>' + esc(x.n) + ' (' + x.p + '%)</option>'; }).join('') + '</select></label></div>' : '') +
           '<div class="crow-foot"><button class="btn small" type="button" data-act="chAll" data-cid="' + esc(c.id) + '">Everyone</button><button class="btn small" type="button" data-act="chNone" data-cid="' + esc(c.id) + '">Nobody</button>' +
           (sts.filter(function (x) { return x === 'none' || x === 'no'; }).length ? '<button class="btn small" type="button" data-act="nudgeAll" data-cid="' + esc(c.id) + '">&#128276; Remind the rest</button>' : '') +
           '<button class="btn primary" type="button" data-act="chGo" data-cid="' + esc(c.id) + '"' + (n ? '' : ' disabled') + '>Approve ' + (n || '') + '</button></div></div>';
@@ -948,7 +1126,7 @@
         var sh = {}, each = Math.floor(100 / fresh.length), left = 100 - each * fresh.length;
         fresh.forEach(function (pid, i) { sh[pid] = each + (i === 0 ? left : 0); });
         addQuest(c, sh, S.date);
-      } else saveEntries(fresh.map(function (pid) { return newEntry(pid, S.date, c); })).catch(fail);
+      } else saveEntries(fresh.map(function (pid) { return newEntry(pid, S.date, c, levelExtra(c, S.chLv[cid] || 0)); })).catch(fail);
     }
     Object.keys(S.chPick).forEach(function (k) { if (k.indexOf(cid + '|') === 0) delete S.chPick[k]; });
     if (names.length) toast('Approved ' + c.name + ': ' + names.join(', '));
@@ -972,7 +1150,7 @@
     var total = 0; Object.keys(q.shares).forEach(function (k) { total += q.shares[k]; });
     var ps = activePeople().filter(function (p) { return (c.who || []).indexOf(p.id) >= 0 || q.shares[p.id]; });
     box.innerHTML = '<div class="card attn"><h2>Bounty: ' + esc(c.name) + '</h2>' +
-      '<p class="note">' + money(c.bountyCents) + ' plus ' + c.pts + ' pts. If others helped, split it by how much of the work each person did.</p>' +
+      '<p class="note">' + money(c.bountyCents) + ' plus ' + c.pts + ' chore coins. If others helped, split it by how much of the work each person did.</p>' +
       '<div class="list">' + ps.map(function (p) {
         var v = q.shares[p.id] || 0;
         return '<div class="row' + (v ? ' done' : '') + '"><span class="dot ' + pCls(p) + '" style="margin-right:8px"></span><div class="rname">' + esc(p.name) +
@@ -985,25 +1163,44 @@
   }
   /* "Gives": filter chores by what they earn in the pet game */
   var GIVE_ORDER = ['food', 'clean', 'rest', 'energy', 'any'], GIVE_CHIP = { food: 'Food coins', clean: 'Clean coins', rest: 'Tuck-ins', energy: 'Play time', any: 'Needs most' };
+  var GIVE_RW = { food: 'food', clean: 'clean', rest: 'tuck', energy: 'play', any: 'any' };
+  function gives(c, k) { return rewardsOf(c)[GIVE_RW[k]] > 0; }
   function givesChips(list) {
     var el = $('#gives'); if (!el) return list;
-    var per = {}; list.forEach(function (c) { var n = needOf(c); if (n) per[n] = (per[n] || 0) + 1; });
+    var per = {}; list.forEach(function (c) { GIVE_ORDER.forEach(function (k) { if (gives(c, k)) per[k] = (per[k] || 0) + 1; }); });
     if (S.give && !per[S.give]) S.give = '';
     var ks = GIVE_ORDER.filter(function (k) { return per[k]; });
     el.innerHTML = ks.length ? '<span class="gives-l">Gives</span>' + ks.map(function (k) {
       return '<button type="button" class="cat gv-' + k + '" data-act="give" data-k="' + k + '" aria-pressed="' + (S.give === k) + '"><i class="gv-dot"></i>' + GIVE_CHIP[k] + '<small>' + per[k] + '</small></button>';
     }).join('') : '';
-    return S.give ? list.filter(function (c) { return needOf(c) === S.give; }) : list;
+    return S.give ? list.filter(function (c) { return gives(c, S.give); }) : list;
   }
+  /* the pet rewards as little tags (chore coins show on the right of the row) */
   function giveTag(c) {
-    var n = needOf(c), st = S.settings; if (!n) return '';
-    var t = n === 'food' ? '+' + (Number(c.coins) || Number(st.foodCoins) || 10) + ' food' : n === 'clean' ? '+' + (Number(c.coins) || Number(st.careCoins) || 10) + ' clean' : n === 'rest' ? 'Tuck-in' : n === 'energy' ? 'Play time' : 'Needs most';
-    return '<span class="tag gv gv-' + n + '"><i class="gv-dot"></i>' + t + '</span>';
+    var r = rewardsOf(c), h = '', lv = levelsOf(c);
+    function t(k, x) { h += '<span class="tag gv gv-' + k + '"><i class="gv-dot"></i>' + x + '</span>'; }
+    if (r.food) t('food', '+' + r.food + ' food');
+    if (r.clean) t('clean', '+' + r.clean + ' clean');
+    if (r.tuck) t('rest', r.tuck === 100 ? 'Tuck-in' : pctTxt(r.tuck, 'tuck-in', 'tuck-ins'));
+    if (r.play) t('energy', r.play === 100 ? 'Play' : pctTxt(r.play, 'play', 'plays'));
+    if (r.any) t('any', r.any === 100 ? 'Needs most' : r.any + '% needs most');
+    if (lv) h += '<span class="tag plain" title="' + esc(lv.map(function (x) { return x.n; }).join(' / ')) + '">Rated</span>';
+    return h;
+  }
+  /* graded chore: pick how it went before it is logged */
+  function levelPickHtml(c, pid) {
+    var lv = levelsOf(c) || DEFAULT_LEVELS, r = rewardsOf(c), pts = Number(c.pts) || 0;
+    return '<li class="lvpick"><div class="lv-q">How did <strong>' + esc(c.name) + '</strong> go' + (S.admin ? ' for ' + esc(pname(pid)) : '') + '?</div><div class="lv-btns">' + lv.map(function (x, i) {
+      return '<button type="button" class="btn lv lv-' + Math.min(i, 3) + '" data-act="lvPick" data-cid="' + esc(c.id) + '" data-i="' + i + '"><b>' + esc(x.n) + '</b><small>' + rwText(Math.round(pts * x.p / 100), scaleRw(r, x.p)) +
+        (c.hideLv && c.hideLv === x.n ? ' &middot; your pet hides under the bed' : '') + '</small></button>';
+    }).join('') + '</div><button class="btn small" type="button" data-act="lvCancel">Cancel</button></li>';
   }
   function rowHtml(c, x, pid) {
     var n = x ? x.a + x.p : 0, tags = giveTag(c);
     if (c.bountyCents > 0) tags += '<span class="tag bounty">' + money(c.bountyCents) + ' bounty</span>';
     if (c.major && window.ADV && ADV.bigJobsToday().indexOf(c) >= 0) tags += '<span class="tag big">Big job</span>';
+    var full = pid && !S.admin && freqFull(pid, c, S.date), fq = freqOf(c);
+    if (full) tags += '<span class="tag ok">Done ' + (fq.per === 'd' ? 'for today' : 'this week') + '</span>';
     if (x) {
       if (x.p) tags += '<span class="tag pend">' + x.p + ' waiting</span>';
       if (x.a) tags += '<span class="tag ok">' + x.a + ' approved</span>';
@@ -1011,11 +1208,12 @@
     }
     var ln = S.admin && pid && !n ? lastNudge(c.id, pid) : null;
     if (ln) tags += '<span class="tag plain">' + nudgeNote(ln) + '</span>';
+    var pick = S.lvPick && S.lvPick.cid === c.id && S.lvPick.pid === pid ? levelPickHtml(c, pid) : '';
     return '<li class="row' + (n ? ' done' : '') + '"><div class="rname">' + esc(c.name) + (tags ? '<div class="meta">' + tags + '</div>' : '') + '</div>' +
-      '<span class="pts mono">+' + c.pts + '</span>' + (S.admin && pid && !n ? bellBtn(c.id, pid, pname(pid)) : '') +
+      ptsBadge(c.pts, !!levelsOf(c)) + (S.admin && pid && !n ? bellBtn(c.id, pid, pname(pid)) : '') +
       '<div class="step"><button type="button" data-act="dec" data-cid="' + esc(c.id) + '" aria-label="Remove one: ' + esc(c.name) + '"' + (x && (x.p || (S.admin && x.a)) ? '' : ' disabled') + '>&minus;</button>' +
       '<span class="n' + (n ? '' : ' zero') + '">' + n + '</span>' +
-      '<button type="button" class="plus" data-act="inc" data-cid="' + esc(c.id) + '" aria-label="Log: ' + esc(c.name) + '">+</button></div></li>';
+      '<button type="button" class="plus" data-act="inc" data-cid="' + esc(c.id) + '" aria-label="Log: ' + esc(c.name) + '"' + (full ? ' disabled' : '') + '>+</button></div></li>' + pick;
   }
   function updateLogList(pid) {
     if (S.admin && S.logMode === 'chore') { updateChoreBoard(); return; }
@@ -1080,6 +1278,34 @@
     units.sort(function (a, b) { return a.ts - b.ts; });
     return units;
   }
+  /* the same chore by the same person on the same day, waiting more than once (a kid tapping + over and over) */
+  function dupGroups(units) {
+    var by = {}, out = [];
+    (units || pendingUnits()).forEach(function (u) { if (u.quest) return; var e = u.entries[0], k = e.pid + '|' + e.cid + '|' + e.date; (by[k] = by[k] || []).push(e); });
+    Object.keys(by).forEach(function (k) { if (by[k].length > 1) out.push({ key: k, entries: by[k].sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); }) }); });
+    return out.sort(function (a, b) { return b.entries.length - a.entries.length; });
+  }
+  function dupHtml(units) {
+    var gs = dupGroups(units); if (!gs.length) return '';
+    var extra = 0; gs.forEach(function (g) { extra += g.entries.length - 1; });
+    var list = gs.slice(0, 12).map(function (g) {
+      var e = g.entries[0], p = person(e.pid);
+      return '<div class="srow dup-row"><span class="dot ' + pCls(p) + '"></span><div class="grow">' + esc(pname(e.pid)) + ' &middot; ' + esc(e.name) + '<br><small>' + (e.date === today() ? 'Today' : esc(fmtDate(e.date))) + ' &middot; ' + g.entries.length + ' waiting</small></div>' +
+        '<button class="btn small" type="button" data-act="dupKeep" data-k="' + esc(g.key) + '">Keep 1</button>' +
+        '<button class="btn small' + (S.armed === 'dupNo' + g.key ? ' danger' : '') + '" type="button" data-act="dupDeny" data-k="' + esc(g.key) + '">' + (S.armed === 'dupNo' + g.key ? 'Tap again' : 'Deny all') + '</button></div>';
+    }).join('');
+    return '<div class="card attn stack tight dup-card"><h2>Logged more than once</h2><p class="note">' + n0(extra) + ' extra request' + (extra === 1 ? '' : 's') + ': the same chore by the same person on the same day, sent ' +
+      'more than once. <b>Keep 1</b> removes the extras and leaves one to approve.</p>' +
+      '<button class="btn primary block' + (S.armed === 'dupAll' ? ' danger' : '') + '" type="button" data-act="dupAll">' + (S.armed === 'dupAll' ? 'Tap again to remove ' + n0(extra) + ' extras' : 'Keep 1 of each (remove ' + n0(extra) + ' extras)') + '</button>' +
+      '<div class="list">' + list + '</div>' + (gs.length > 12 ? '<p class="note">...and ' + (gs.length - 12) + ' more.</p>' : '') + '</div>';
+  }
+  /* extras are deleted outright: they were never approved, so nothing has to be taken back */
+  function dupRemove(gs) {
+    var ops = [];
+    gs.forEach(function (g) { g.entries.slice(1).forEach(function (e) { if (e.status === 'pending') ops.push({ t: 'delete', c: 'entries', id: e.id }); }); });
+    if (!ops.length) return;
+    DB.commit(ops).then(function () { toast('Removed ' + n0(ops.length) + ' extra request' + (ops.length === 1 ? '' : 's') + '.'); }, fail);
+  }
   function unitWho(u) { return u.entries.map(function (e) { return pname(e.pid) + (u.quest ? ' ' + e.share + '%' : ''); }).join(', '); }
   function groupUnits(units, mode) {
     var groups = [], gmap = {};
@@ -1107,6 +1333,7 @@
       '<button type="button" data-act="apMode" data-m="person" aria-pressed="' + (mode === 'person') + '">By person</button></div></div>';
     if (!S.admin) { view.innerHTML = h + locked('Approving') + '</section>'; return; }
     if (!units.length) { view.innerHTML = h + '<p class="note">Nothing is waiting for approval.</p>' + (window.ADV ? ADV.passesAdminHtml() : '') + '</section>'; return; }
+    h += dupHtml(units);
     h += '<p class="note swipe-hint">Swipe right to approve, left to deny. Undo appears at the bottom.</p>';
     h += groupUnits(units, mode).map(function (g) {
       var open = !S.apClosed[g.key], n = g.units.length, p = g.pid ? person(g.pid) : null;
@@ -1116,14 +1343,16 @@
       var picked = g.units.filter(function (u) { return !S.apSkip[u.key]; }).length;
       var btn = picked === n ? 'Approve' + (n > 1 ? ' all ' + n : '') : 'Approve ' + picked + ' of ' + n;
       var head = '<div class="agrp-head"><div class="grow"><div class="agrp-title">' + (p ? '<span class="dot ' + pCls(p) + '"></span> ' : '') + esc(g.title) + '</div>' +
-        '<div class="note">' + n + ' waiting &middot; ' + n0(g.pts) + ' pts' + (g.cents ? ' &middot; ' + money(g.cents) + ' bounty' : '') + '</div>' +
+        '<div class="note">' + n + ' waiting &middot; ' + n0(g.pts) + ' chore coins' + (g.cents ? ' &middot; ' + money(g.cents) + ' bounty' : '') + '</div>' +
         (open || mode === 'chore' ? '' : '<div class="note agrp-sum">' + esc(sum) + '</div>') + '</div>' +
         '<div class="agrp-btns"><button class="btn small primary" type="button" data-act="apGroup" data-key="' + esc(g.key) + '"' + (picked ? '' : ' disabled') + '>' + btn + '</button>' +
+        '<button class="btn small' + (S.armed === 'rjg' + g.key ? ' danger' : '') + '" type="button" data-act="rjGroup" data-key="' + esc(g.key) + '">' + (S.armed === 'rjg' + g.key ? 'Tap again' : 'Deny' + (picked > 1 ? ' ' + picked : '')) + '</button>' +
         '<button class="btn small" type="button" data-act="apToggle" data-key="' + esc(g.key) + '" aria-expanded="' + open + '">' + (open ? 'Hide' : 'Show') + '</button></div></div>';
       var body = !open ? '' : '<div class="list">' + g.units.map(function (u) { return swipeRow(u, mode, t, mode === 'chore'); }).join('') + '</div>';
       return '<div class="agrp">' + head + (mode === 'chore' ? roster(g, t) : '') + body + '</div>';
     }).join('');
-    h += '<div class="ap-foot"><button class="btn primary block" type="button" data-act="apRest">Approve remaining (' + units.length + ')</button></div>';
+    h += '<div class="ap-foot"><button class="btn primary block" type="button" data-act="apRest">Approve remaining (' + units.length + ')</button>' +
+      '<button class="btn block' + (S.armed === 'rjRest' ? ' danger' : '') + '" type="button" data-act="rjRest">' + (S.armed === 'rjRest' ? 'Tap again to deny all ' + units.length : 'Deny all (' + units.length + ')') + '</button></div>';
     if (window.ADV) h += ADV.passesAdminHtml();
     view.innerHTML = h + '</section>';
   }
@@ -1150,10 +1379,18 @@
     return '<div class="swipe-wrap"><div class="swipe-bg"><span class="ok">Approve</span><span class="no">Deny</span></div>' +
       '<div class="hrow swipe' + (up ? ' ' + pCls(up) : '') + '" data-key="' + esc(u.key) + '">' +
       (sel ? '<label class="ap-sel" aria-label="Include in Approve"><input type="checkbox" data-act="apSel" data-key="' + esc(u.key) + '"' + (S.apSkip[u.key] ? '' : ' checked') + '></label>' : '') +
-      (up && mode !== 'person' ? '<span class="dot"></span>' : '') + '<div class="desc">' + esc(label) +
+      (up && mode !== 'person' ? '<span class="dot"></span>' : '') + '<div class="desc">' + esc(label) + apLevelHtml(u) +
       '<small>' + (mode === 'full' ? esc(who) + ' &middot; ' : '') + (u.date === t ? 'Today' : esc(fmtDate(u.date))) + ' ' + esc(fmtTime(u.ts)) + (u.cents ? ' &middot; ' + money(u.cents) + ' bounty' : '') + '</small></div>' +
       '<span class="amt plus">+' + u.pts + '</span>' +
       '<span class="ap-btns"><button class="btn small ok-btn" type="button" data-act="apUnit" data-key="' + esc(u.key) + '" aria-label="Approve">&#10003;</button><button class="btn small danger" type="button" data-act="rjUnit" data-key="' + esc(u.key) + '" aria-label="Deny">&#10005;</button></span></div></div>';
+  }
+  function apLevelHtml(u) {
+    var e = u.entries[0]; if (u.quest || !e || !e.lv) return '';
+    var c = find(S.chores, function (x) { return x.id === e.cid; }), lv = levelsOf(c);
+    if (!lv) return ' <span class="tag plain">' + esc(e.lv) + '</span>';
+    return ' <select class="ap-lv" data-act="apLevel" data-id="' + esc(e.id) + '" aria-label="How it went">' + lv.map(function (x, i) {
+      return '<option value="' + i + '"' + (x.n === e.lv ? ' selected' : '') + '>' + esc(x.n) + (c.hideLv === x.n ? ' (pet hides)' : '') + '</option>'; }).join('') + '</select>' +
+      (e.hide ? ' <span class="tag no">Pet hides ' + (Number(S.settings.hideHours) || 24) + ' h</span>' : '');
   }
   function unitsFor(key) {
     var units = pendingUnits();
@@ -1179,7 +1416,7 @@
   function pt(e) { var t = e.touches && e.touches[0] || e.changedTouches && e.changedTouches[0] || e; return { x: t.clientX, y: t.clientY }; }
   function swipeStart(e) {
     var el = e.target.closest ? e.target.closest('.swipe') : null;
-    if (!el || e.target.closest('button') || e.target.closest('.ap-sel')) return;
+    if (!el || e.target.closest('button') || e.target.closest('.ap-sel') || e.target.closest('select')) return;
     var p = pt(e); drag = { el: el, x0: p.x, y0: p.y, dx: 0, on: false };
   }
   function swipeMove(e) {
@@ -1246,7 +1483,7 @@
       var next = addDays(lastAllowanceDay(Number(S.settings.allowanceDay)), 7);
       h += '<p class="note">Next weekly deposit: ' + money(S.settings.allowanceCents) + ' on ' + esc(fmtDate(next)) + '.</p>';
     }
-    h += '<div class="card"><h2>Chore coins</h2><p class="note">Every approved chore point is a chore coin. Kids spend them on clothes, toothpaste and balls, buy 10 food or clean coins for ' + (Number(S.settings.swapPrice) || 20) + ', or trade ' +
+    h += '<div class="card"><h2>Chore coins</h2><p class="note">Chores pay chore coins (set per chore in Setup). Kids spend them on clothes, toothpaste and balls, buy 10 food or clean coins for ' + (Number(S.settings.swapPrice) || 20) + ', or trade ' +
       n0(Number(S.settings.coinsPerDollar) || 100) + ' of them for $1 at the bank.</p><div class="coin-list">' + kids().map(function (p) {
         return '<span class="coin-chip ' + pCls(p) + '"><span class="dot"></span>' + esc(p.name) + ' <b class="mono">' + n0(chorePts(p.id)) + '</b></span>';
       }).join('') + '</div></div>';
@@ -1426,13 +1663,13 @@
         cur.rows.push(r); if (r.status === 'approved') cur.sum += r.pts;
       });
       html += groups.map(function (g) {
-        return '<div><div class="day"><span>' + esc(fmtDate(g.date)) + '</span><span class="mono">' + n0(g.sum) + ' pts approved</span></div><div class="list">' +
+        return '<div><div class="day"><span>' + esc(fmtDate(g.date)) + '</span><span class="mono">' + n0(g.sum) + ' chore coins</span></div><div class="list">' +
           g.rows.map(function (r) {
             var p = person(r.pid), key = 'rm' + r.id, acts = '', by = r.decidedBy ? parentName(r.decidedBy) : '';
             var canRm = !r.paid && !r.bountyPaid && (r.status === 'pending' || S.admin);
             if (S.admin && r.status === 'rejected') acts += '<button class="btn small" type="button" data-act="reopen" data-id="' + esc(r.id) + '">Reopen</button>';
             if (canRm) acts += '<button class="btn small' + (S.armed === key ? ' danger' : '') + '" type="button" data-act="rm" data-id="' + esc(r.id) + '">' + (S.armed === key ? 'Confirm remove' : 'Remove') + '</button>';
-            return '<div class="hrow ' + pCls(p) + (r.status === 'rejected' ? ' rej' : '') + '"><span class="dot"></span><div class="desc">' + esc(r.name) + (r.questId ? ' (' + r.share + '%)' : '') +
+            return '<div class="hrow ' + pCls(p) + (r.status === 'rejected' ? ' rej' : '') + '"><span class="dot"></span><div class="desc">' + esc(r.name) + (r.lv ? ' <span class="tag plain">' + esc(r.lv) + '</span>' : '') + (r.questId ? ' (' + r.share + '%)' : '') +
               '<small>' + esc(pname(r.pid)) + ' &middot; ' + esc(fmtTime(r.ts)) + (by && r.status !== 'pending' ? ' &middot; ' + (r.status === 'approved' ? 'approved' : 'denied') + ' by ' + esc(by) : '') +
               (r.bountyCents ? ' &middot; ' + money(r.bountyCents) + ' bounty' : '') + (r.paid ? ' &middot; paid' : '') + '</small></div>' + tagFor(r.status) +
               '<span class="amt plus">+' + r.pts + '</span>' + acts + '</div>';
@@ -1492,7 +1729,7 @@
     activePeople().forEach(function (p) {
       var es = (m.entries || []).filter(function (e) { return e.pid === p.id; });
       var ok = es.filter(function (e) { return e.status === 'approved'; }), pts = 0, byName = {}, dayset = {};
-      ok.forEach(function (e) { pts += Number(e.pts) || 0; byName[e.name] = (byName[e.name] || 0) + 1; dayset[e.date] = 1; });
+      ok.forEach(function (e) { var nm = e.name + (e.lv ? ' (' + e.lv + ')' : ''); pts += Number(e.pts) || 0; byName[nm] = (byName[nm] || 0) + 1; dayset[e.date] = 1; });
       var top = Object.keys(byName).sort(function (a, b) { return byName[b] - byName[a]; }).slice(0, 3).map(function (k) { return { name: k, n: byName[k] }; });
       var row = { p: p, done: ok.length, pts: pts, waiting: es.filter(function (e) { return e.status === 'pending'; }).length,
         back: es.filter(function (e) { return e.status === 'rejected'; }).length, days: Object.keys(dayset).length, top: top };
@@ -1518,7 +1755,7 @@
     function best(f, min) { var b = null; kids.forEach(function (r) { var v = f(r); if (v != null && v >= (min || 1) && (!b || v > f(b))) b = r; }); return b; }
     var sh = [], a = best(function (r) { return r.done; }), b = best(function (r) { return r.pts; }), c = best(function (r) { return r.lv; }), d = best(function (r) { return r.days; }, 2);
     if (a) sh.push(['Most chores', a.p.name + ' (' + a.done + ')']);
-    if (b && b !== a) sh.push(['Most points', b.p.name + ' (' + n0(b.pts) + ')']);
+    if (b && b !== a) sh.push(['Most chore coins', b.p.name + ' (' + n0(b.pts) + ')']);
     if (c) sh.push(['Biggest pet glow-up', c.p.name + ' (+' + c.lv + ' level' + (c.lv === 1 ? '' : 's') + ')']);
     if (d && d !== a) sh.push(['Most days helping', d.p.name + ' (' + d.days + ')']);
     kids.forEach(function (r) { if (r.evolved) sh.push(['Evolved!', r.p.name + '’s ' + (r.pet.name || 'pet') + ' is now a ' + (window.Pets ? Pets.speciesName(r.pet) : 'new form')]); });
@@ -1542,13 +1779,13 @@
     if (sn.meeting && (sn.meeting.notes || lastTalk.length)) h += '<div class="card mtg-notes"><div class="grp" style="margin:-14px -14px 10px;border-radius:var(--r) var(--r) 0 0">From that meeting</div>' +
       (lastTalk.length ? '<p class="note" style="margin:0 0 4px">Talked about</p><ul class="mtg-talked">' + lastTalk.map(function (x) { return '<li>' + esc(x.text) + '</li>'; }).join('') + '</ul>' : '') +
       (sn.meeting.notes ? '<p style="white-space:pre-wrap;margin:0">' + esc(sn.meeting.notes) + '</p>' : '') + '</div>';
-    h += '<div class="mtg-tot">' + [[n0(tot.done), 'chores done'], [n0(tot.pts), 'points'], [money(tot.inC), 'earned by kids'], [sn.snap ? n0(tot.lv) : '&ndash;', 'pet levels']].map(function (x) {
+    h += '<div class="mtg-tot">' + [[n0(tot.done), 'chores done'], [n0(tot.pts), 'chore coins'], [money(tot.inC), 'earned by kids'], [sn.snap ? n0(tot.lv) : '&ndash;', 'pet levels']].map(function (x) {
       return '<div class="card"><div class="big-num">' + x[0] + '</div><div class="note">' + x[1] + '</div></div>'; }).join('') + '</div>';
     var sh = mtgShout(kids);
     if (sh.length) h += '<div class="card mtg-shout"><h3>Shout-outs</h3>' + sh.map(function (x) { return '<div class="hrow"><span class="tag">' + esc(x[0]) + '</span><span class="grow">' + esc(x[1]) + '</span></div>'; }).join('') + '</div>';
     h += kids.map(function (r) {
       var p = r.p, pet = r.pet, parts = [];
-      var head = '<div class="mtg-kid-head"><span class="dot ' + pCls(p) + '"></span><strong class="grow">' + esc(p.name) + '</strong><span class="mono">' + n0(r.pts) + ' pts</span></div>';
+      var head = '<div class="mtg-kid-head"><span class="dot ' + pCls(p) + '"></span><strong class="grow">' + esc(p.name) + '</strong><span class="mono">' + n0(r.pts) + ' chore coins</span></div>';
       var chores = '<div class="mtg-line"><b>Chores</b> ' + (r.done ? r.done + ' done on ' + r.days + ' day' + (r.days === 1 ? '' : 's') : 'none yet') +
         (r.waiting ? ' &middot; ' + r.waiting + ' waiting' : '') + (r.back ? ' &middot; ' + r.back + ' sent back' : '') +
         (r.top.length ? '<br><small class="note">' + r.top.map(function (t) { return esc(t.name) + (t.n > 1 ? ' &times;' + t.n : ''); }).join(', ') + '</small>' : '') + '</div>';
@@ -1577,7 +1814,7 @@
     mtgShout(D.kids).forEach(function (x) { t.push('★ ' + x[0] + ': ' + x[1]); });
     D.kids.forEach(function (r) {
       if (!r.done && !r.money.inC && !r.money.outC && !r.pet) return;
-      t.push('', r.p.name + ': ' + r.done + ' chore' + (r.done === 1 ? '' : 's') + ', ' + n0(r.pts) + ' pts' + (r.money.inC ? ', +' + money(r.money.inC) : '') + (r.money.outC ? ', ' + money(r.money.outC) + ' spent' : '') + ', balance ' + money(r.money.bal));
+      t.push('', r.p.name + ': ' + r.done + ' chore' + (r.done === 1 ? '' : 's') + ', ' + n0(r.pts) + ' chore coins' + (r.money.inC ? ', +' + money(r.money.inC) : '') + (r.money.outC ? ', ' + money(r.money.outC) + ' spent' : '') + ', balance ' + money(r.money.bal));
       if (r.pet) t.push('  ' + (r.pet.name || 'Pet') + ' Lv ' + (r.pet.level || 0) + (r.lv ? ' (+' + r.lv + ')' : '') + (r.evolved ? ', evolved!' : '') + ', ' + r.tickets + ' tickets');
     });
     if (S.mtg.notes) t.push('', 'Notes: ' + S.mtg.notes);
@@ -1611,8 +1848,8 @@
   function downloadCsv() {
     var rows = histRows();
     function q(s) { s = String(s == null ? '' : s); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
-    var csv = ['date,person,chore,category,points,status,decided_by,bounty,paid'].concat(rows.map(function (r) {
-      return [r.date, pname(r.pid), r.name, r.cat, r.pts, r.status, parentName(r.decidedBy), r.bountyCents ? dollars(r.bountyCents) : '', r.paid ? 'yes' : 'no'].map(q).join(',');
+    var csv = ['date,person,chore,level,category,chore_coins,status,decided_by,bounty,paid'].concat(rows.map(function (r) {
+      return [r.date, pname(r.pid), r.name, r.lv || '', r.cat, r.pts, r.status, parentName(r.decidedBy), r.bountyCents ? dollars(r.bountyCents) : '', r.paid ? 'yes' : 'no'].map(q).join(',');
     })).join('\n');
     try {
       var a = document.createElement('a');
@@ -1759,6 +1996,8 @@
     h += '<form class="stack tight" data-form="money2"><h2>Money</h2>' +
       '<label class="field" for="bname"><span>Bank name</span><input type="text" id="bname" maxlength="30" value="' + esc(bankName()) + '"></label>' +
       '<div class="checks"><label><input type="checkbox" id="reqAppr"' + (st.requireApproval !== false ? ' checked' : '') + '>Chores need parent approval before they count</label></div>' +
+      '<div class="wrap end"><label class="field w-md" for="lgWait"><span>Seconds a kid waits before logging the same chore again</span><input type="number" id="lgWait" min="0" max="3600" step="5" value="' + (st.logCooldown != null ? st.logCooldown : 60) + '"></label>' +
+      '<label class="field w-md" for="lgCap"><span>Most times a kid can log the same chore in a day (0 = no limit)</span><input type="number" id="lgCap" min="0" max="100" step="1" value="' + (st.logCap != null ? st.logCap : 5) + '"></label></div>' +
       '<div class="wrap end"><label class="field w-sm" for="cpd"><span>Chore coins for $1</span><input type="number" id="cpd" min="1" step="1" value="' + (st.coinsPerDollar || 100) + '"></label>' +
       '<label class="field w-sm" for="ppc"><span>Chore coins for 10 food or clean coins</span><input type="number" id="ppc" min="1" step="1" value="' + (st.swapPrice || 20) + '"></label>' +
       '<label class="field w-sm" for="tprice"><span>Toothpaste (chore coins)</span><input type="number" id="tprice" min="1" step="1" value="' + (st.toothPrice || 20) + '"></label>' +
@@ -1770,13 +2009,23 @@
       '<label class="field w-sm" for="allow"><span>Amount ($)</span><input type="text" id="allow" inputmode="decimal" value="' + dollars(st.allowanceCents) + '"></label>' +
       '<label class="field w-md" for="aday"><span>Every</span><select id="aday">' + DAYS.map(function (d, i) { return opt(String(i), d, String(st.allowanceDay)); }).join('') + '</select></label></div>' +
       '<div class="checks"><label><input type="checkbox" id="aVacPause"' + (st.allowanceVacPause !== false ? ' checked' : '') + '>Pause the weekly allowance during vacation (uses the vacation dates below)</label></div>' +
-      '<div class="wrap end"><label class="field w-sm" for="fcoins"><span>Food coins per kitchen chore</span><input type="number" id="fcoins" min="1" step="1" value="' + (st.foodCoins || 10) + '"></label>' +
+      '<div class="wrap end"><label class="field w-sm" for="fcoins"><span>Food coins in a "needs most" share</span><input type="number" id="fcoins" min="1" step="1" value="' + (st.foodCoins || 10) + '"></label>' +
       '<label class="field w-sm" for="mprice"><span>Meal price</span><input type="number" id="mprice" min="1" step="1" value="' + (st.mealPrice || 10) + '"></label>' +
-      '<label class="field w-sm" for="ccoins"><span>Clean coins per self-care chore</span><input type="number" id="ccoins" min="1" step="1" value="' + (st.careCoins || 10) + '"></label>' +
+      '<label class="field w-sm" for="ccoins"><span>Clean coins in a "needs most" share</span><input type="number" id="ccoins" min="1" step="1" value="' + (st.careCoins || 10) + '"></label>' +
       '<label class="field w-sm" for="kprice"><span>Bath kit price</span><input type="number" id="kprice" min="1" step="1" value="' + (st.kitPrice || 10) + '"></label></div>' +
-      '<p class="note">A pet eats about two meals a day, so with equal numbers it takes about two kitchen chores a day to keep it fed. Coin purses hold two purchases and the bag holds one, so coins cannot be saved up for long.</p>' +
+      '<p class="note">How many food and clean coins each chore pays is set per chore (Setup → Chores). A pet eats about two meals a day. Coin purses hold two purchases, so food and clean coins cannot be saved up for long; chore coins have no limit.</p>' +
+      '<fieldset class="rw-edit"><legend>Pet night and needs</legend>' +
+      '<div class="checks"><label><input type="checkbox" id="nOn"' + (st.nightOff ? '' : ' checked') + '>Pets sleep at night: the town goes dark, shops and the bank close, and nobody can play with their pet</label></div>' +
+      '<div class="wrap end"><label class="field w-sm" for="nFrom"><span>Night starts</span><input type="time" id="nFrom" value="' + esc(st.nightStart || '20:00') + '"></label>' +
+      '<label class="field w-sm" for="nTo"><span>Morning</span><input type="time" id="nTo" value="' + esc(st.nightEnd || '06:30') + '"></label></div>' +
+      '<p class="note">A pet tucked in that evening (from 4 hours before night starts) sleeps in its bed; otherwise it sleeps under the bed and wakes up a little tired. The other needs don’t drop at night.</p>' +
+      '<div class="wrap end">' + [['dFood', 'Food drops', 'drainFood', 50], ['dClean', 'Clean drops', 'drainClean', 25], ['dRest', 'Sleep drops', 'drainRest', 50], ['dEnergy', 'Energy drops', 'drainEnergy', 50]].map(function (x) {
+        return '<label class="field w-sm" for="' + x[0] + '"><span>' + x[1] + '</span><input type="number" id="' + x[0] + '" min="0" max="200" step="1" inputmode="numeric" value="' + (st[x[2]] != null && st[x[2]] !== '' ? st[x[2]] : x[3]) + '"></label>';
+      }).join('') + '</div>' +
+      '<div class="wrap end"><label class="field w-md" for="hHours"><span>Hours a pet hides after a “pet hides” rating</span><input type="number" id="hHours" min="1" max="168" step="1" value="' + (st.hideHours || 24) + '"></label></div>' +
+      '<p class="note">How much each need drops in a whole day, out of 100 (it all happens during the waking hours). A meal adds 50, a bath 60, a tuck-in 60 and a game 60, so Clean at 25 means a bath about every two to three days.</p></fieldset>' +
       '<button class="btn primary" type="submit">Save</button>' +
-      '<p class="note">Chore points are paid as chore coins, not on paydays: a 10-point chore earns 10 chore coins, and kids trade them for dollars at the bank when they want. The weekly allowance lands the first time a parent unlocks on or after that day. The allowance account is hidden from the kids.</p></form>';
+      '<p class="note">Chores pay chore coins instead of money on paydays; kids trade them for dollars at the bank when they want (100 chore coins = $1 by default). The weekly allowance lands the first time a parent unlocks on or after that day. The allowance account is hidden from the kids.</p></form>';
     var ac = window.ADV ? ADV.cfg() : {}, vac = ac.vacation || {};
     h += '<form class="stack tight" data-form="advset"><h2>Adventures and vacation</h2>' +
       '<div class="wrap end"><label class="field w-sm" for="aJobs"><span>Big jobs for a pass</span><input type="number" id="aJobs" min="1" step="1" value="' + ac.passBigJobs + '"></label>' +
@@ -1819,7 +2068,7 @@
       '<button class="btn primary" type="submit">Add</button></form><p class="note">Tap Kid or Grown-up to switch. Grown-ups keep their bank account and chores but have no pet or house in the game.</p></section>';
     h += '<section class="stack tight"><h2>Chores</h2><div class="wrap"><div class="field w-lg"><input type="search" id="cq" placeholder="Search chores" aria-label="Search chores" value="' + esc(S.cq) + '"></div>' +
       '<button class="btn primary" type="button" data-act="newChore">Add chore</button><button class="btn" type="button" data-act="ctOpen">Edit all in a table</button><span class="checks"><label><input type="checkbox" id="showArch" data-act="showArch"' + (S.showArchived ? ' checked' : '') + '>Show archived</label></span></div>' +
-      '<p class="note">In the pet game, kitchen chores earn food coins, self-care earns clean coins for soap and shampoo, bedtime chores earn tuck-ins and exercise earns play time. Grown-up favors give whatever the pet needs most. Every chore also earns its points as chore coins.</p>' +
+      '<p class="note">Each chore can pay any mix of chore coins (100 = $1 at the bank), food coins, clean coins, part or all of a tuck-in or a play, and a share of whatever the pet needs most. Rated chores ask how it went (like Great, Good, OK, Bad) and pay that part. Edit all in a table is the quickest way to change many at once.</p>' +
       '<ul class="list" id="choreList"></ul></section>';
     var cats = catList(S.chores).filter(function (n) { return n !== 'Other'; });
     h += '<section class="stack tight"><h2>Categories</h2><div class="list">' + (cats.length ? cats.map(function (n, i) {
@@ -1841,32 +2090,37 @@
       html += '<li class="grp"><span>' + esc(n) + '</span><span class="mono">' + items.length + '</span></li>';
       items.forEach(function (c) {
         if (S.edit === c.id) { html += choreEditor(c, act); return; }
-        var who = (c.who || []).map(pname), nd = needOf(c);
+        var who = (c.who || []).map(pname);
         html += '<li class="srow' + (c.active === false ? ' off' : '') + '"><div class="grow">' + esc(c.name) + (c.active === false ? ' (archived)' : '') +
-          (nd ? ' <span class="tag plain">' + NEED_LABEL[nd] + '</span>' : '') + (c.bountyCents > 0 ? ' <span class="tag bounty">' + money(c.bountyCents) + '</span>' : '') +
-          (c.major ? ' <span class="tag big">Big job' + (c.majorEach ? ', everyone' : '') + '</span>' : '') + (c.travel && c.major ? ' <span class="tag plain">Trip big job</span>' : '') + (c.homeOnly ? ' <span class="tag plain">Home only</span>' : '') +
+          ' ' + giveTag(c) + (c.bountyCents > 0 ? ' <span class="tag bounty">' + money(c.bountyCents) + '</span>' : '') +
+          (c.major ? ' <span class="tag big">Big job' + (c.majorEach ? ', everyone' : '') + '</span>' : '') + (c.travel && c.major ? ' <span class="tag plain">Trip big job</span>' : '') + (c.homeOnly ? ' <span class="tag plain">Home only</span>' : '') + (freqOf(c) ? ' <span class="tag plain">' + freqText(freqOf(c)) + '</span>' : '') + (c.review ? ' <span class="tag plain">Daily review</span>' : '') +
           '<br><small>' + (who.length ? esc(who.join(', ')) : 'Nobody assigned') + '</small></div>' +
-          '<span class="pts mono">+' + c.pts + '</span><button class="btn small" type="button" data-act="editChore" data-cid="' + esc(c.id) + '">Edit</button></li>';
+          ptsBadge(c.pts, !!levelsOf(c)) + '<button class="btn small" type="button" data-act="editChore" data-cid="' + esc(c.id) + '">Edit</button></li>';
       });
     });
     el.innerHTML = html || '<li class="empty">No chores match.</li>';
   }
   /* ----- the chore table: every chore in one grid, plus a spreadsheet (CSV) round trip.
-     Edits wait in S.ct (d: changes per chore id, n: new rows) until Save; data arriving meanwhile never redraws it. ----- */
-  var CT_GIVES = ['food', 'clean', 'rest', 'energy', 'any', 'off'];
-  var GIVES_WORD = { food: 'Food coins', clean: 'Clean coins', rest: 'Tuck-in', energy: 'Play time', any: 'Needs most', off: 'Nothing' };
+     Edits wait in S.ct (d: changes per chore id, n: new rows) until Save; data arriving meanwhile never redraws it.
+     Columns: chore coins (pts), food and clean coins, tuck-in %, play %, needs most %, levels (graded chores), bounty, on. ----- */
+  var CT_NUM = ['pts', 'food', 'clean', 'tuck', 'play', 'any'];
+  var CT_HEAD = { pts: 'Chore coins', food: 'Food coins', clean: 'Clean coins', tuck: 'Tuck-in %', play: 'Play %', any: 'Needs most %' };
+  var CT_FILTER = [['', 'All'], ['food', 'Food coins'], ['clean', 'Clean coins'], ['tuck', 'Tuck-ins'], ['play', 'Play'], ['any', 'Needs most'], ['rated', 'Rated'], ['review', 'Daily review'], ['only', 'Chore coins only']];
   function ctState() { if (!S.ct) S.ct = { d: {}, n: [], q: '', cat: '', give: '', arch: false, msg: '' }; return S.ct; }
-  function isAuto(c) { return !c.need; }
   function whoKey(ids) { return (ids || []).slice().sort().join(','); }
   function ctBase(c) {
-    return { name: c.name || '', cat: c.cat || '', pts: Number(c.pts) || 0, need: needOf(c) || 'off', coins: Number(c.coins) || 0, bounty: Number(c.bountyCents) || 0, active: c.active !== false, who: whoKey(c.who) };
+    var r = rewardsOf(c);
+    return { name: c.name || '', cat: c.cat || '', pts: Number(c.pts) || 0, food: r.food, clean: r.clean, tuck: r.tuck, play: r.play, any: r.any,
+      lv: levelsText(levelsOf(c)), freq: (freqOf(c) ? c.freq : ''), review: !!c.review, bounty: Number(c.bountyCents) || 0, active: c.active !== false, who: whoKey(c.who) };
   }
+  function ctNewRow(cat) { return { name: '', cat: cat || '', pts: 4, food: 0, clean: 0, tuck: 0, play: 0, any: 0, lv: '', freq: '', review: false, bounty: 0, active: true, who: '' }; }
   function ctRow(c) { var d = ctState().d[c.id]; return d ? assign(ctBase(c), d) : ctBase(c); }
   function ctChanged(c) {
     var b = ctBase(c), d = ctState().d[c.id] || {}, out = {};
     Object.keys(d).forEach(function (k) {
       var v = typeof d[k] === 'string' && k !== 'who' ? trim(d[k]) : d[k];
-      if (v !== b[k] || (k === 'need' && isAuto(c))) out[k] = v;   /* picking a value on a guessed row sets it for good */
+      if (k === 'lv') v = levelsText(parseLevels(v));
+      if (v !== b[k]) out[k] = v;
     });
     return out;
   }
@@ -1882,20 +2136,19 @@
       var r = ctRow(c);
       if (!ct.arch && c.active === false && !ct.d[c.id]) return false;
       if (ct.cat && catName(c) !== ct.cat) return false;
-      if (ct.give === 'auto' ? !isAuto(c) : (ct.give && r.need !== ct.give)) return false;
+      if (ct.give === 'review' ? !r.review : ct.give === 'rated' ? !trim(r.lv) : ct.give === 'only' ? (r.food || r.clean || r.tuck || r.play || r.any) : ct.give && !(r[ct.give] > 0)) return false;
       return !q || lc(r.name).indexOf(q) >= 0 || lc(r.cat).indexOf(q) >= 0;
     });
   }
-  function coinDefault(need) { var st = S.settings; return need === 'clean' ? (Number(st.careCoins) || 10) : (Number(st.foodCoins) || 10); }
-  function coinable(need) { return need === 'food' || need === 'clean' || need === 'any'; }
-  function ctCells(key, r, ch, auto) {
+  function ctCells(key, r, ch) {
     function td(k, inner) { return '<td' + (ch[k] !== undefined ? ' class="chg"' : '') + '>' + inner + '</td>'; }
     var at = ' data-ct="' + esc(key) + '"';
     return td('name', '<input type="text"' + at + ' data-f="name" maxlength="120" aria-label="Chore" value="' + esc(r.name) + '">' + (ch.who !== undefined ? '<small class="ct-who">Who: ' + esc(r.who ? r.who.split(',').map(pname).join(', ') : 'nobody') + '</small>' : '')) +
       td('cat', '<input type="text"' + at + ' data-f="cat" maxlength="40" list="ctcats" aria-label="Category" value="' + esc(r.cat) + '">') +
-      td('pts', '<input type="number"' + at + ' data-f="pts" min="1" step="1" inputmode="numeric" aria-label="Points" value="' + (r.pts || '') + '">') +
-      td('need', '<select' + at + ' data-f="need" aria-label="Gives">' + CT_GIVES.map(function (k) { return '<option value="' + k + '"' + (r.need === k ? ' selected' : '') + '>' + GIVES_WORD[k] + '</option>'; }).join('') + '</select>' + (auto && ch.need === undefined ? '<small class="ct-auto">auto</small>' : '')) +
-      td('coins', '<input type="number"' + at + ' data-f="coins" min="0" step="1" inputmode="numeric" aria-label="Coins" placeholder="' + (coinable(r.need) ? coinDefault(r.need) : '-') + '" value="' + (r.coins && coinable(r.need) ? r.coins : '') + '"' + (coinable(r.need) ? '' : ' disabled') + '>') +
+      CT_NUM.map(function (k) { return td(k, '<input type="number"' + at + ' data-f="' + k + '" min="0" step="1" inputmode="numeric" aria-label="' + CT_HEAD[k] + '" placeholder="0" value="' + (r[k] ? r[k] : '') + '">'); }).join('') +
+      td('lv', '<input type="text"' + at + ' data-f="lv" maxlength="120" aria-label="Levels" placeholder="none" value="' + esc(r.lv) + '">') +
+      td('freq', '<select' + at + ' data-f="freq" aria-label="How often">' + freqOpts(r.freq) + '</select>') +
+      td('review', '<input type="checkbox"' + at + ' data-f="review" aria-label="Daily review"' + (r.review ? ' checked' : '') + '>') +
       td('bounty', '<input type="text"' + at + ' data-f="bounty" inputmode="decimal" placeholder="0.00" aria-label="Bounty" value="' + (r.bounty ? dollars(r.bounty) : '') + '">') +
       td('active', '<input type="checkbox"' + at + ' data-f="active" aria-label="Active"' + (r.active ? ' checked' : '') + '>');
   }
@@ -1905,74 +2158,79 @@
       '<button class="btn' + (S.armed === 'ctDiscard' ? ' danger' : '') + '" type="button" data-act="ctDiscard"' + (n ? '' : ' disabled') + '>' + (S.armed === 'ctDiscard' ? 'Tap again to undo' : 'Undo all') + '</button>' +
       '<button class="btn primary" type="button" data-act="ctSave"' + (n ? '' : ' disabled') + '>Save</button>';
   }
-  function ctBar() { var el = $('#ctBar'); if (el) el.innerHTML = ctBarHtml(); }
+  function ctBar() {
+    // update the bar in place: replacing its buttons while a cell loses focus would swallow the tap on Save
+    var el = $('#ctBar'); if (!el) return;
+    var n = ctCount(), sp = el.querySelector('.grow'), un = el.querySelector('[data-act=ctDiscard]'), sv = el.querySelector('[data-act=ctSave]');
+    if (!sp || !un || !sv) { el.innerHTML = ctBarHtml(); return; }
+    sp.textContent = n ? n + ' chore' + (n === 1 ? '' : 's') + ' changed, not saved yet' : 'No changes yet';
+    un.disabled = !n; sv.disabled = !n;
+  }
   function renderChoreTable() {
-    var ct = ctState(), list = ctList(), cats = catList(S.chores), st = S.settings, cur = '', anyAuto = S.chores.some(isAuto);
+    var ct = ctState(), list = ctList(), cats = catList(S.chores), st = S.settings, cur = '', NC = 13;
     var rows = list.map(function (c) {
       var head = '';
-      if (catName(c) !== cur) { cur = catName(c); head = '<tr class="grp"><td colspan="7"><span>' + esc(cur) + '</span></td></tr>'; }
-      return head + '<tr' + (c.active === false ? ' class="off"' : '') + '>' + ctCells(c.id, ctRow(c), ctChanged(c), isAuto(c)) + '</tr>';
+      if (catName(c) !== cur) { cur = catName(c); head = '<tr class="grp"><td colspan="' + NC + '"><span>' + esc(cur) + '</span></td></tr>'; }
+      return head + '<tr' + (c.active === false ? ' class="off"' : '') + '>' + ctCells(c.id, ctRow(c), ctChanged(c)) + '</tr>';
     }).join('');
-    var news = ct.n.map(function (r, i) { return '<tr class="new">' + ctCells('+' + i, r, { name: 1, cat: 1, pts: 1, need: 1, coins: 1, bounty: 1, active: 1 }, false) + '</tr>'; }).join('');
+    var all = { name: 1, cat: 1, pts: 1, food: 1, clean: 1, tuck: 1, play: 1, any: 1, lv: 1, freq: 1, review: 1, bounty: 1, active: 1 };
+    var news = ct.n.map(function (r, i) { return '<tr class="new">' + ctCells('+' + i, r, all) + '</tr>'; }).join('');
     view.innerHTML = '<section class="stack tight ct">' +
       '<div class="wrap"><button class="btn" type="button" data-act="ctClose">&lsaquo; Setup</button><h2 class="grow">All chores</h2></div>' +
-      '<p class="note"><b>Points</b> = chore coins (100 = $1 at the bank; they also buy clothes, toothpaste and balls). <b>Gives</b> = what the chore adds in the pet game. <b>Coins</b> = how many food or clean coins it gives; blank means ' +
-      (Number(st.foodCoins) || 10) + ' food or ' + (Number(st.careCoins) || 10) + ' clean. Tuck-in and Play time give one each.' + (anyAuto ? ' <b>auto</b> means the app is guessing from the name; pick a value to set it.' : '') + ' Nothing changes until you tap Save.</p>' +
+      '<p class="note">Each chore can pay any mix of these. <b>Chore coins</b>: 100 trade for $1 at the bank, and they buy food and clean coins, toothpaste, balls and clothes. <b>Food</b> and <b>clean coins</b> buy meals and bath kits. ' +
+      '<b>Tuck-in %</b> and <b>Play %</b>: 100 is a whole tuck-in or play, 50 is half (two of those chores earn one). <b>Needs most %</b>: 100 gives one share of whatever the pet needs most (' + (Number(st.foodCoins) || 10) + ' food or ' + (Number(st.careCoins) || 10) + ' clean coins, or a tuck-in or play). ' +
+      '<b>Levels</b> make a chore rated, like <i>Great 100, Good 75, OK 50, Bad 0</i>: logging it asks how it went and pays that percent. Nothing changes until you tap Save.</p>' +
       (ct.msg ? '<div class="banner info">' + ct.msg + '</div>' : '') +
       '<div class="wrap"><button class="btn" type="button" data-act="ctDown">Download spreadsheet</button><button class="btn" type="button" data-act="ctUp">Upload spreadsheet</button>' +
       '<input type="file" id="ctFile" accept=".csv,.txt,text/csv,text/plain" class="hide-file"></div>' +
       '<div class="wrap end"><div class="field w-md"><input type="search" id="ctq" placeholder="Search chores" aria-label="Search chores" value="' + esc(ct.q) + '"></div>' +
       '<div class="field w-md"><select id="ctCat" aria-label="Category"><option value="">Every category</option>' + cats.map(function (n) { return '<option value="' + esc(n) + '"' + (ct.cat === n ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '</select></div>' +
       '<span class="checks"><label><input type="checkbox" id="ctArch"' + (ct.arch ? ' checked' : '') + '>Show archived</label></span></div>' +
-      '<div class="cats gives"><span class="gives-l">Gives</span>' + [''].concat(CT_GIVES, anyAuto || ct.give === 'auto' ? ['auto'] : []).map(function (k) {
-        return '<button type="button" class="cat' + (k && k !== 'auto' && k !== 'off' ? ' gv-' + (k === 'clean' ? 'clean' : k) : '') + '" data-act="ctGive" data-k="' + k + '" aria-pressed="' + (ct.give === k) + '">' + (k && k !== 'auto' && k !== 'off' ? '<i class="gv-dot"></i>' : '') + (k === '' ? 'All' : k === 'auto' ? 'auto (guessed)' : GIVES_WORD[k]) + '</button>';
+      '<div class="cats gives"><span class="gives-l">Gives</span>' + CT_FILTER.map(function (f) {
+        var gv = { food: 'food', clean: 'clean', tuck: 'rest', play: 'energy', any: 'any' }[f[0]];
+        return '<button type="button" class="cat' + (gv ? ' gv-' + gv : '') + '" data-act="ctGive" data-k="' + f[0] + '" aria-pressed="' + (ct.give === f[0]) + '">' + (gv ? '<i class="gv-dot"></i>' : '') + f[1] + '</button>';
       }).join('') + '</div>' +
       '<div class="wrap end ct-bulk"><span class="note">Set all ' + list.length + ' shown:</span>' +
-      '<div class="field w-sm"><select id="ctBGive" aria-label="Gives for all shown"><option value="">Gives...</option>' + CT_GIVES.map(function (k) { return '<option value="' + k + '">' + GIVES_WORD[k] + '</option>'; }).join('') + '</select></div>' +
-      '<div class="field w-xs"><input type="number" id="ctBCoins" min="0" step="1" inputmode="numeric" placeholder="Coins" aria-label="Coins for all shown"></div>' +
-      '<div class="field w-xs"><input type="number" id="ctBPts" min="1" step="1" inputmode="numeric" placeholder="Points" aria-label="Points for all shown"></div>' +
+      '<div class="field w-sm"><select id="ctBF" aria-label="Which column">' + CT_NUM.map(function (k) { return '<option value="' + k + '">' + CT_HEAD[k] + '</option>'; }).join('') + '</select></div>' +
+      '<div class="field w-xs"><input type="number" id="ctBV" min="0" step="1" inputmode="numeric" placeholder="to" aria-label="Value for all shown"></div>' +
       '<button class="btn" type="button" data-act="ctBulk"' + (list.length ? '' : ' disabled') + '>Apply</button></div>' +
-      '<div class="ct-wrap"><table class="ct-t"><thead><tr><th>Chore</th><th>Category</th><th>Points</th><th>Gives</th><th>Coins</th><th>Bounty $</th><th>On</th></tr></thead><tbody>' +
-      (rows || '<tr><td colspan="7" class="empty">No chores match.</td></tr>') + (news ? '<tr class="grp"><td colspan="7"><span>New chores</span></td></tr>' + news : '') + '</tbody></table></div>' +
+      '<div class="wrap end ct-bulk"><span class="note">Levels for all shown:</span><div class="field w-lg"><input type="text" id="ctBL" maxlength="120" value="' + esc(levelsText(DEFAULT_LEVELS)) + '" aria-label="Levels for all shown"></div>' +
+      '<button class="btn" type="button" data-act="ctBulkLv"' + (list.length ? '' : ' disabled') + '>Rate them</button><button class="btn" type="button" data-act="ctBulkLvOff"' + (list.length ? '' : ' disabled') + '>No levels</button></div>' +
+      '<div class="ct-wrap"><table class="ct-t"><thead><tr><th>Chore</th><th>Category</th>' + CT_NUM.map(function (k) { return '<th>' + CT_HEAD[k] + '</th>'; }).join('') + '<th>Levels</th><th>How often</th><th>Daily review</th><th>Bounty $</th><th>On</th></tr></thead><tbody>' +
+      (rows || '<tr><td colspan="' + NC + '" class="empty">No chores match.</td></tr>') + (news ? '<tr class="grp"><td colspan="' + NC + '"><span>New chores</span></td></tr>' + news : '') + '</tbody></table></div>' +
       '<div class="wrap"><button class="btn" type="button" data-act="ctAdd">Add a chore row</button></div>' +
-      '<p class="note">Who does each chore, big jobs and travel settings are in each chore’s editor (Setup → Chores → Edit). The spreadsheet has a Who column too. Rows you delete from the spreadsheet are left alone; to retire a chore, set Active to no.</p>' +
+      '<p class="note">Who does each chore, big jobs and travel settings are in each chore’s editor (Setup → Chores → Edit); the spreadsheet also has a column per person (1 = they do it). Rows you delete from the spreadsheet are left alone; to retire a chore, set Active to no.</p>' +
       '<datalist id="ctcats">' + cats.filter(function (n) { return n !== 'Other'; }).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
       '<div class="ct-bar" id="ctBar">' + ctBarHtml() + '</div></section>';
   }
   function upTo(el, tag) { while (el && el.tagName !== tag) el = el.parentNode; return el; }
   function ctEdit(t) {
     var key = t.getAttribute('data-ct'), f = t.getAttribute('data-f'), ct = ctState(), v;
-    if (f === 'active') v = t.checked;
-    else if (f === 'pts' || f === 'coins') v = t.value === '' ? 0 : Math.max(0, Math.round(Number(t.value) || 0));
+    if (f === 'active' || f === 'review') v = t.checked;
+    else if (CT_NUM.indexOf(f) >= 0) v = t.value === '' ? 0 : Math.max(0, Math.round(Number(t.value) || 0));
     else if (f === 'bounty') { v = parseMoney(t.value); if (isNaN(v)) { t.classList.add('bad'); return; } t.classList.remove('bad'); }
     else v = t.value;
-    var c = null;
     if (key.charAt(0) === '+') { var r = ct.n[Number(key.slice(1))]; if (!r) return; r[f] = v; }
     else {
-      c = find(S.chores, function (x) { return x.id === key; }); if (!c) return;
+      var c = find(S.chores, function (x) { return x.id === key; }); if (!c) return;
       (ct.d[key] = ct.d[key] || {})[f] = v;
       var cell = upTo(t, 'TD'); if (cell) cell.className = ctChanged(c)[f] !== undefined ? 'chg' : '';
-      if (f === 'need' && cell) { var au = cell.querySelector('.ct-auto'); if (au) au.parentNode.removeChild(au); }
-    }
-    if (f === 'need') {   /* coins only mean something for food, clean and "needs most" */
-      var tr = upTo(t, 'TR'), co = tr && tr.querySelector('[data-f=coins]');
-      if (co) { co.disabled = !coinable(v); co.placeholder = coinable(v) ? coinDefault(v) : '-'; if (!coinable(v)) co.value = ''; }
     }
     ctBar();
   }
   function ctBulk() {
-    var ct = ctState(), g = val('ctBGive'), co = val('ctBCoins'), pp = val('ctBPts'), n = 0;
-    if (!g && co === '' && pp === '') { toast('Pick what to set: Gives, Coins or Points.', true); return; }
-    if (pp !== '' && !(Math.round(Number(pp)) > 0)) { toast('Points must be 1 or more.', true); return; }
-    ctList().forEach(function (c) {
-      var d = ct.d[c.id] = ct.d[c.id] || {};
-      if (g) d.need = g;
-      if (co !== '') d.coins = Math.max(0, Math.round(Number(co) || 0));
-      if (pp !== '') d.pts = Math.round(Number(pp));
-      n++;
-    });
-    ct.msg = ''; toast('Set ' + n + ' chore' + (n === 1 ? '' : 's') + '. Tap Save to keep it.'); renderChoreTable();
+    var ct = ctState(), f = val('ctBF'), v = val('ctBV'), n = 0;
+    if (v === '' || isNaN(Number(v)) || Number(v) < 0) { toast('Type the number to set, 0 or more.', true); return; }
+    ctList().forEach(function (c) { (ct.d[c.id] = ct.d[c.id] || {})[f] = Math.round(Number(v)); n++; });
+    ct.msg = ''; toast(CT_HEAD[f] + ' set on ' + n + ' chore' + (n === 1 ? '' : 's') + '. Tap Save to keep it.'); renderChoreTable();
   }
+  function ctBulkLv(off) {
+    var ct = ctState(), t = off ? '' : levelsText(parseLevels(val('ctBL'))), n = 0;
+    if (!off && !t) { toast('Type the levels like: Great 100, Good 75, OK 50, Bad 0', true); return; }
+    ctList().forEach(function (c) { (ct.d[c.id] = ct.d[c.id] || {}).lv = t; n++; });
+    ct.msg = ''; toast((off ? 'Levels removed from ' : 'Levels set on ') + n + ' chore' + (n === 1 ? '' : 's') + '. Tap Save to keep it.'); renderChoreTable();
+  }
+  function rwFromRow(r) { return cleanRw({ food: r.food, clean: r.clean, tuck: r.tuck, play: r.play, any: r.any }); }
   function ctSave() {
     var ct = ctState(), ops = [], bad = [], known = catList(S.chores).filter(function (x) { return x !== 'Other'; }), newCats = [];
     var order = S.chores.reduce(function (m, c) { return Math.max(m, c.order || 0); }, 0);
@@ -1980,21 +2238,23 @@
     S.chores.forEach(function (c) {
       var ch = ctChanged(c), d = {};
       if (!Object.keys(ch).length) return;
+      var row = ctRow(c);
       if (ch.name !== undefined) { if (!ch.name) { bad.push('Every chore needs a name'); return; } d.name = ch.name; }
       if (ch.cat !== undefined) { d.cat = ch.cat; noteCat(ch.cat); }
-      if (ch.pts !== undefined) { if (!(ch.pts > 0)) { bad.push((d.name || c.name) + ': points must be 1 or more'); return; } d.pts = ch.pts; }
-      if (ch.need !== undefined) d.need = ch.need;
-      if (ch.coins !== undefined) d.coins = ch.coins;
+      if (ch.pts !== undefined) d.pts = ch.pts;
+      if (['food', 'clean', 'tuck', 'play', 'any'].some(function (k) { return ch[k] !== undefined; })) { var rw = rwFromRow(row); d.rw = rw; d.need = compatNeed(rw); d.coins = rw.food || rw.clean || 0; }
+      if (ch.lv !== undefined) d.levels = parseLevels(ch.lv);
+      if (ch.freq !== undefined) d.freq = ch.freq;
+      if (ch.review !== undefined) d.review = ch.review;
       if (ch.bounty !== undefined) d.bountyCents = ch.bounty;
       if (ch.active !== undefined) d.active = ch.active;
       if (ch.who !== undefined) d.who = ch.who ? ch.who.split(',') : [];
       ops.push({ t: 'update', c: 'chores', id: c.id, d: d });
     });
     ctNew().forEach(function (r) {
-      var name = trim(r.name), cat = trim(r.cat || '');
-      if (!(r.pts > 0)) { bad.push(name + ': points must be 1 or more'); return; }
+      var name = trim(r.name), cat = trim(r.cat || ''), rw = rwFromRow(r);
       noteCat(cat);
-      ops.push({ t: 'set', c: 'chores', id: DB.newId('chores'), d: { name: name, pts: r.pts, cat: cat, need: r.need || 'off', coins: r.coins || 0, bountyCents: r.bounty || 0,
+      ops.push({ t: 'set', c: 'chores', id: DB.newId('chores'), d: { name: name, pts: Math.max(0, Math.round(Number(r.pts) || 0)), cat: cat, rw: rw, need: compatNeed(rw), coins: rw.food || rw.clean || 0, levels: parseLevels(r.lv), freq: r.freq || '', review: !!r.review, bountyCents: r.bounty || 0,
         who: r.who ? r.who.split(',') : activePeople().map(function (p) { return p.id; }), active: r.active !== false, order: ++order, major: false, majorEach: false, majorDays: [], travel: false, homeOnly: false } });
     });
     if (bad.length) { toast(bad[0] + (bad.length > 1 ? ' (and ' + (bad.length - 1) + ' more)' : ''), true); return; }
@@ -2008,10 +2268,10 @@
   function csvCell(s) { s = String(s == null ? '' : s); return /[",;\t\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
   function ctDownload() {
     var ppl = activePeople();
-    var lines = [['ID', 'Chore', 'Category', 'Points', 'Gives', 'Coins', 'Bounty', 'Active'].concat(ppl.map(function (p) { return p.name; })).map(csvCell).join(',')];
+    var lines = [['ID', 'Chore', 'Category'].concat(CT_NUM.map(function (k) { return CT_HEAD[k]; }), ['Levels', 'How often', 'Daily review', 'Bounty', 'Active']).concat(ppl.map(function (p) { return p.name; })).map(csvCell).join(',')];
     ctOrder().forEach(function (c) {
-      var r = ctRow(c), auto = isAuto(c) && !(ctState().d[c.id] || {}).need, who = r.who ? r.who.split(',') : [];
-      lines.push([c.id, trim(r.name), trim(r.cat), r.pts, GIVES_WORD[r.need] + (auto ? ' (auto)' : ''), coinable(r.need) && r.coins ? r.coins : '', r.bounty ? dollars(r.bounty) : '', r.active ? 'yes' : 'no']
+      var r = ctRow(c), who = r.who ? r.who.split(',') : [];
+      lines.push([c.id, trim(r.name), trim(r.cat)].concat(CT_NUM.map(function (k) { return r[k] || 0; }), [levelsText(parseLevels(r.lv)), freqOf(r) ? freqText(freqOf(r)).toLowerCase() : 'any time', r.review ? 'yes' : '', r.bounty ? dollars(r.bounty) : '', r.active ? 'yes' : 'no'])
         .concat(ppl.map(function (p) { return who.indexOf(p.id) >= 0 ? 1 : ''; })).map(csvCell).join(','));
     });
     try {
@@ -2036,6 +2296,7 @@
     if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
     return rows.filter(function (r) { return r.some(function (x) { return trim(x); }); });
   }
+  /* the old single "Gives" words (spreadsheets made before cl-v29) */
   function giveFrom(s) {
     s = lc(String(s || '').replace(/\(.*?\)/g, '')).replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ');
     s = trim(s);
@@ -2053,40 +2314,47 @@
     if (rows.length < 2) { toast('That file has no chore rows.', true); return; }
     var head = rows[0].map(function (h) { return lc(h).replace(/[^a-z]/g, ''); });
     function col(names) { for (var i = 0; i < head.length; i++) if (names.indexOf(head[i]) >= 0) return i; return -1; }
-    var cI = col(['id']), cN = col(['chore', 'name', 'chorename', 'chores', 'quest', 'quests']), cC = col(['category', 'cat', 'group']), cP = col(['points', 'pts', 'point', 'chorecoins']),
-      cG = col(['gives', 'give', 'cointype', 'reward', 'petgame']), cK = col(['coins', 'coin', 'petcoins', 'amount']), cB = col(['bounty', 'bountyusd', 'bountydollars']),
-      cA = col(['active', 'on', 'enabled']), cW = col(['who', 'assigned', 'assignedto', 'people', 'kids']);
-    if (cN < 0) { toast('The first row needs column names, with at least a Chore column (and Points, Gives, Coins as you like).', true); return; }
+    var C = {
+      id: col(['id']), name: col(['chore', 'name', 'chorename', 'chores', 'quest', 'quests']), cat: col(['category', 'cat', 'group']),
+      pts: col(['chorecoins', 'chorecoin', 'points', 'pts', 'point']), food: col(['foodcoins', 'foodcoin', 'food']), clean: col(['cleancoins', 'cleancoin', 'clean']),
+      tuck: col(['tuckin', 'tuckins', 'tuck', 'tuckinpct', 'tuckinpercent']), play: col(['play', 'plays', 'playtime', 'playpct', 'playpercent']), any: col(['needsmost', 'needmost', 'any']),
+      lv: col(['levels', 'level', 'grades', 'rating']), freq: col(['howoften', 'often', 'frequency', 'freq', 'limit']), review: col(['dailyreview', 'review', 'inreview', 'checkin']), bounty: col(['bounty', 'bountyusd', 'bountydollars']), active: col(['active', 'on', 'enabled']), who: col(['who', 'assigned', 'assignedto', 'people', 'kids']),
+      gives: col(['gives', 'give', 'cointype', 'reward', 'petgame']), coins: col(['coins', 'coin', 'petcoins', 'amount'])
+    };
+    if (C.name < 0) { toast('The first row needs column names, with at least a Chore column.', true); return; }
+    var newStyle = ['food', 'clean', 'tuck', 'play', 'any'].some(function (k) { return C[k] >= 0; }), oldStyle = !newStyle && C.gives >= 0;
+    var used = []; Object.keys(C).forEach(function (k) { if (C[k] >= 0) used.push(C[k]); });
     var ct = ctState(), byId = {}, byName = {}, warn = [], changed = 0, added = 0, seen = {};
     S.chores.forEach(function (c) { byId[c.id] = c; if (!byName[lc(c.name)]) byName[lc(c.name)] = c; });
     var ppl = S.people.map(function (p) { return { id: p.id, n: lc(p.name) }; });
     /* a column per person (1, x or yes = they do it), like the family's own quest sheet */
-    var pcols = []; ppl.forEach(function (p) { var i = head.indexOf(p.n.replace(/[^a-z]/g, '')); if (i >= 0 && [cI, cN, cC, cP, cG, cK, cB, cA, cW].indexOf(i) < 0) pcols.push({ id: p.id, i: i }); });
+    var pcols = []; ppl.forEach(function (p) { var i = head.indexOf(p.n.replace(/[^a-z]/g, '')); if (i >= 0 && used.indexOf(i) < 0) pcols.push({ id: p.id, i: i }); });
     ct.d = {}; ct.n = [];
     rows.slice(1).forEach(function (r, ri) {
       var line = ri + 2;
       function get(i) { return i >= 0 ? trim(r[i] == null ? '' : String(r[i])) : null; }
-      var id = get(cI), name = get(cN);
+      function numAt(k) { var x = get(C[k]); if (x === null) return null; if (x === '') return 0; var cx = x.replace(/[^0-9.\-]/g, ''), n = Number(cx); if (cx === '' || isNaN(n) || n < 0) { warn.push('Row ' + line + ': ' + CT_HEAD[k] + ' "' + x + '" is not a number, used 0'); return 0; } return Math.round(n); }
+      var id = get(C.id), name = get(C.name);
       if (!name) { if (id || r.some(function (x) { return trim(x); })) warn.push('Row ' + line + ': no chore name, skipped'); return; }
       var c = id ? byId[id] : byName[lc(name)];
       if (id && !c) warn.push('Row ' + line + ' (' + name + '): ID not found, added as a new chore');
       if (c && seen[c.id]) { warn.push('Row ' + line + ' (' + name + '): ' + (id ? 'that ID' : 'that name') + ' is on more than one row, skipped'); return; }
       if (c) seen[c.id] = 1;
-      var b = c ? ctBase(c) : { name: '', cat: '', pts: 0, need: 'off', coins: 0, bounty: 0, active: true, who: '' }, v = { name: name };
-      if (cC >= 0) v.cat = get(cC);
-      var ps = get(cP);
-      if (ps !== null && ps !== '') { var pn = Math.round(Number(ps.replace(/[^0-9.\-]/g, ''))); if (pn > 0) v.pts = pn; else warn.push('Row ' + line + ' (' + name + '): points "' + ps + '" is not a number' + (c ? ', kept ' + b.pts : '')); }
-      var gs = get(cG);
-      if (gs !== null && gs !== '') {
-        var g = giveFrom(gs);
-        if (g === undefined) warn.push('Row ' + line + ' (' + name + '): Gives "' + gs + '" is not one of Food coins, Clean coins, Tuck-in, Play time, Needs most, Nothing');
-        else if (g && !(c && isAuto(c) && /\(auto\)/i.test(gs) && g === b.need)) v.need = g;
+      var b = c ? ctBase(c) : ctNewRow(''), v = { name: name };
+      if (C.cat >= 0) v.cat = get(C.cat);
+      CT_NUM.forEach(function (k) { var n = numAt(k); if (n !== null) v[k] = n; });
+      if (oldStyle) {
+        var gs = get(C.gives), g = giveFrom(gs);
+        if (gs && g === undefined) warn.push('Row ' + line + ' (' + name + '): Gives "' + gs + '" is not one of Food coins, Clean coins, Tuck-in, Play time, Needs most, Nothing');
+        else if (gs) { var lr = legacyRw(g, C.coins >= 0 ? Number(get(C.coins)) || 0 : 0); RW_KEYS.forEach(function (k) { v[k] = lr[k]; }); }
       }
-      if (cK >= 0) { var ks = get(cK); v.coins = ks === '' ? 0 : Math.max(0, Math.round(Number(ks.replace(/[^0-9.]/g, '')) || 0)); }
-      if (cB >= 0) { var bc = parseMoney(get(cB)); if (isNaN(bc)) warn.push('Row ' + line + ' (' + name + '): bounty "' + get(cB) + '" should look like 5.00'); else v.bounty = bc; }
-      if (cA >= 0) { var as = lc(get(cA)); v.active = !/^(n|no|false|0|off|archived?|retired?|x)$/.test(as); }
-      if (cW >= 0) {
-        var ws = get(cW);
+      if (C.lv >= 0) { var ls = get(C.lv); v.lv = levelsText(parseLevels(ls)); if (ls && !v.lv && !/^(none|no|-)$/i.test(ls)) warn.push('Row ' + line + ' (' + name + '): levels "' + ls + '" should look like Great 100, Good 75, OK 50, Bad 0'); }
+      if (C.freq >= 0) { var fs = get(C.freq), fk = freqKey(fs); if (fk === null) warn.push('Row ' + line + ' (' + name + '): how often "' + fs + '" should look like any time, once a day, 2 a day or once a week'); else v.freq = fk; }
+      if (C.review >= 0) v.review = /^(1(\.0+)?|y|yes|x|true|✓|✔)$/i.test(get(C.review));
+      if (C.bounty >= 0) { var bc = parseMoney(get(C.bounty)); if (isNaN(bc)) warn.push('Row ' + line + ' (' + name + '): bounty "' + get(C.bounty) + '" should look like 5.00'); else v.bounty = bc; }
+      if (C.active >= 0) { var as = lc(get(C.active)); v.active = !/^(n|no|false|0|off|archived?|retired?|x)$/.test(as); }
+      if (C.who >= 0) {
+        var ws = get(C.who);
         if (ws) {
           var ids = [], miss = [];
           if (/^(all|everyone|everybody)$/i.test(ws)) ids = activePeople().map(function (p) { return p.id; });
@@ -2102,34 +2370,36 @@
       }
       if (c) {
         var d = {};
-        Object.keys(v).forEach(function (k) { if (v[k] !== b[k] || (k === 'need' && isAuto(c))) d[k] = v[k]; });
-        if (coinable(v.need || b.need) === false) delete d.coins;
+        Object.keys(v).forEach(function (k) { if (v[k] !== b[k]) d[k] = v[k]; });
         if (Object.keys(d).length) { ct.d[c.id] = d; if (Object.keys(ctChanged(c)).length) changed++; else delete ct.d[c.id]; }
-      } else {
-        if (!(v.pts > 0)) { warn.push('Row ' + line + ' (' + name + '): a new chore needs points, skipped'); return; }
-        ct.n.push(assign({ cat: '', need: 'off', coins: 0, bounty: 0, active: true, who: '' }, v)); added++;
-      }
+      } else { ct.n.push(assign(ctNewRow(''), v)); added++; }
     });
     ct.give = ''; ct.cat = ''; ct.q = '';
     ct.msg = '<strong>Loaded ' + esc(fname || 'the spreadsheet') + ':</strong> ' + changed + ' chore' + (changed === 1 ? '' : 's') + ' changed' + (added ? ', ' + added + ' new' : '') +
-      '. Changed cells are highlighted; check them, then tap Save at the bottom.' +
+      '. Changed cells are highlighted; check them, then tap Save at the bottom.' + (oldStyle ? ' (This is an older spreadsheet with a Gives column; its rewards were converted.)' : '') +
       (warn.length ? '<br><small>' + warn.slice(0, 8).map(esc).join('<br>') + (warn.length > 8 ? '<br>...and ' + (warn.length - 8) + ' more' : '') + '</small>' : '');
     renderChoreTable();
   }
   function choreEditor(c, act) {
-    var who = c ? (c.who || []) : act.map(function (p) { return p.id; }), nd = c ? needOf(c) : '';
+    var who = c ? (c.who || []) : act.map(function (p) { return p.id; }), r = c ? rewardsOf(c) : cleanRw({}), lv = levelsOf(c), st = S.settings;
+    function nf(id, label, v, w) { return '<label class="field ' + (w || 'w-sm') + '" for="' + id + '"><span>' + label + '</span><input type="number" id="' + id + '" min="0" step="1" inputmode="numeric" placeholder="0" value="' + (v ? v : '') + '"></label>'; }
     var cats = catList(S.chores).filter(function (n) { return n !== 'Other'; });
     return '<li><form class="editor" data-form="chore" data-cid="' + (c ? esc(c.id) : '') + '">' +
       '<label class="field" for="ceName"><span>Chore</span><input type="text" id="ceName" maxlength="120" value="' + (c ? esc(c.name) : '') + '"></label>' +
-      '<div class="wrap end"><label class="field w-lg" for="ceCat"><span>Category</span><input type="text" id="ceCat" maxlength="40" list="catlist" value="' + (c && c.cat ? esc(c.cat) : '') + '"></label>' +
-      '<label class="field w-sm" for="cePts"><span>Points</span><input type="number" id="cePts" min="1" step="1" inputmode="numeric" value="' + (c ? c.pts : 4) + '"></label></div>' +
-      '<div class="wrap end"><label class="field w-md" for="ceNeed"><span>In the pet game it gives</span><select id="ceNeed">' + ['food', 'clean', 'rest', 'energy', 'any', 'off'].map(function (k) { return opt(k, NEED_LABEL[k], nd || 'off'); }).join('') + '</select></label>' +
-      '<label class="field w-sm" for="ceCoins"><span>Coins it gives</span><input type="number" id="ceCoins" min="0" step="1" inputmode="numeric" placeholder="' + coinDefault(nd) + '" value="' + (c && c.coins ? c.coins : '') + '"></label>' +
-      '<label class="field w-sm" for="ceBounty"><span>Bounty ($)</span><input type="text" id="ceBounty" inputmode="decimal" placeholder="0.00" value="' + (c && c.bountyCents ? dollars(c.bountyCents) : '') + '"></label></div>' +
+      '<div class="wrap end"><label class="field w-lg" for="ceCat"><span>Category</span><input type="text" id="ceCat" maxlength="40" list="catlist" value="' + (c && c.cat ? esc(c.cat) : '') + '"></label></div>' +
+      '<fieldset class="rw-edit"><legend>What it pays</legend><div class="wrap end">' + nf('cePts', 'Chore coins', c ? c.pts : 4) + nf('ceFood', 'Food coins', r.food) + nf('ceClean', 'Clean coins', r.clean) +
+        nf('ceTuck', 'Tuck-in %', r.tuck) + nf('cePlay', 'Play %', r.play) + nf('ceAny', 'Needs most %', r.any) + '</div>' +
+        '<p class="note">100% is a whole tuck-in or play; 50% means two of these chores earn one. Needs most gives a share of whatever the pet needs most when it is approved (' + (Number(st.foodCoins) || 10) + ' food or ' + (Number(st.careCoins) || 10) + ' clean coins, or a tuck-in or play).</p>' +
+        '<div class="checks"><label><input type="checkbox" id="ceRate"' + (lv ? ' checked' : '') + '>Rate how well it went (asks when it is logged)</label></div>' +
+        '<div id="ceLvBox"' + (lv ? '' : ' hidden') + '><label class="field" for="ceLevels"><span>Levels, and the percent of the pay each one gets</span><input type="text" id="ceLevels" maxlength="120" value="' + esc(levelsText(lv || DEFAULT_LEVELS)) + '"></label>' +
+        '<label class="field w-lg" for="ceHide"><span>Pet hides under the bed (no playing with it for ' + (Number(st.hideHours) || 24) + ' hours) when rated</span><select id="ceHide">' + hideOpts(lv || DEFAULT_LEVELS, c && c.hideLv) + '</select></label></div></fieldset>' +
+      '<div class="wrap end"><label class="field w-sm" for="ceBounty"><span>Bounty ($)</span><input type="text" id="ceBounty" inputmode="decimal" placeholder="0.00" value="' + (c && c.bountyCents ? dollars(c.bountyCents) : '') + '"></label></div>' +
       '<datalist id="catlist">' + cats.map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
       '<fieldset><legend>Who can do it</legend><div class="checks">' + act.map(function (p) {
         return '<label><input type="checkbox" name="who" value="' + esc(p.id) + '"' + (who.indexOf(p.id) >= 0 ? ' checked' : '') + '>' + esc(p.name) + '</label>';
       }).join('') + '</div></fieldset>' +
+      '<div class="wrap end"><label class="field w-md" for="ceFreq"><span>How often kids can log it</span><select id="ceFreq">' + freqOpts(freqOf(c) ? c.freq : '') + '</select></label></div>' +
+      '<div class="checks"><label><input type="checkbox" id="ceReview"' + (c && c.review ? ' checked' : '') + '>Show it in the daily review (parents rate it for every kid at the end of the day)</label></div>' +
       '<div class="checks"><label><input type="checkbox" id="ceTravel"' + (c && c.homeOnly ? '' : ' checked') + '>Works while traveling</label>' +
       '<label><input type="checkbox" id="ceMajor"' + (c && c.major ? ' checked' : '') + '>Big job (counts toward Adventure Passes)</label>' +
       '<label><input type="checkbox" id="ceEach"' + (c && c.majorEach ? ' checked' : '') + '>Everyone assigned must do it</label>' +
@@ -2222,13 +2492,27 @@
       case 'today': S.date = today(); S.dateAuto = true; schedule(); break;
       case 'inc':
         c = find(S.chores, function (x) { return x.id === d('cid'); }); pid = logTarget();
-        if (!c || !pid) break;
+        if (!c || !pid || !canLog(pid, c)) break;
         if (c.bountyCents > 0) {
           var sh = {}; sh[pid] = 100; S.quest = { cid: c.id, shares: sh };
           renderQuestBox();
           var qb = $('#questBox'); if (qb && qb.scrollIntoView) qb.scrollIntoView();
-        } else addEntry(pid, S.date, c);
+        } else if (levelsOf(c)) { S.lvPick = { cid: c.id, pid: pid }; updateLogList(); }
+        else addEntry(pid, S.date, c);
         break;
+      case 'lvPick':
+        c = find(S.chores, function (x) { return x.id === d('cid'); }); pid = logTarget();
+        S.lvPick = null;
+        if (c && pid && canLog(pid, c)) addEntry(pid, S.date, c, levelExtra(c, Number(d('i'))));
+        updateLogList(); break;
+      case 'lvCancel': S.lvPick = null; updateLogList(); break;
+      case 'rvPick': if (needAdmin()) { var rv = rvState(), rk = d('k'), ri = Number(d('i')), ex0 = rvEntry(rk.split('|')[0], rk.split('|')[1], rv.date), c0 = find(S.chores, function (x) { return x.id === rk.split('|')[1]; });
+        var cur0 = ex0 ? (levelsOf(c0) ? levelsOf(c0).map(function (x) { return x.n; }).indexOf(ex0.lv) : 0) : -1;
+        if (rv.picks[rk] === ri || (rv.picks[rk] === undefined && cur0 === ri && ex0 && ex0.status === 'approved')) delete rv.picks[rk]; else rv.picks[rk] = ri; renderReview(); } break;
+      case 'rvSave': if (needAdmin()) rvSave(); break;
+      case 'rvClear': rvState().picks = {}; renderReview(); break;
+      case 'rvToday': S.rvDate = today(); renderReview(); break;
+      case 'rvSetup': S.tab = 'setup'; S.ctable = true; go(); break;
       case 'qshare':
         if (!S.quest) break;
         var cur = S.quest.shares[d('pid')] || 0, tot = 0;
@@ -2261,6 +2545,23 @@
         if (gu.length) queueDecision(gu, 'approved', unitLabel(gu));
         break;
       case 'apUnit': if (needAdmin()) decide(d('key'), 'approved'); break;
+      case 'rjGroup':
+        if (!needAdmin()) break;
+        (function (key) { confirmTap('rjg' + key, function () { var ru = unitsFor(key).filter(function (u) { return !S.apSkip[u.key]; }); if (ru.length) queueDecision(ru, 'rejected', unitLabel(ru)); }); })(d('key'));
+        break;
+      case 'rjRest':
+        if (!needAdmin()) break;
+        confirmTap('rjRest', function () { var rr2 = pendingUnits(); if (rr2.length) queueDecision(rr2, 'rejected', 'all ' + rr2.length); });
+        break;
+      case 'dupAll': if (needAdmin()) confirmTap('dupAll', function () { dupRemove(dupGroups()); }); break;
+      case 'dupKeep': if (needAdmin()) { var dk = d('k'); dupRemove(dupGroups().filter(function (g) { return g.key === dk; })); } break;
+      case 'dupDeny':
+        if (!needAdmin()) break;
+        (function (k) { confirmTap('dupNo' + k, function () {
+          var g = dupGroups().filter(function (x) { return x.key === k; })[0]; if (!g) return;
+          queueDecision([{ key: 'dup' + k, quest: false, entries: g.entries }], 'rejected', g.entries.length + ' ' + g.entries[0].name);
+        }); })(d('k'));
+        break;
       case 'rjUnit': if (needAdmin()) decide(d('key'), 'rejected'); break;
       case 'apRest':
         if (!needAdmin()) break;
@@ -2356,10 +2657,12 @@
         S.armed = null; S.ctable = false; S.fromData = false; go(); window.scrollTo(0, 0); break;
       case 'ctSave': ctSave(); break;
       case 'ctDiscard': confirmTap('ctDiscard', function () { var ct = ctState(); ct.d = {}; ct.n = []; ct.msg = ''; renderChoreTable(); }); break;
-      case 'ctAdd': ctState().n.push({ name: '', cat: ctState().cat || '', pts: 4, need: 'off', coins: 0, bounty: 0, active: true, who: '' }); renderChoreTable();
+      case 'ctAdd': ctState().n.push(ctNewRow(ctState().cat)); renderChoreTable();
         var nr = $$('.ct-t tr.new input[data-f=name]'); if (nr.length) nr[nr.length - 1].focus(); break;
       case 'ctGive': ctState().give = d('k'); renderChoreTable(); break;
       case 'ctBulk': ctBulk(); break;
+      case 'ctBulkLv': ctBulkLv(false); break;
+      case 'ctBulkLvOff': ctBulkLv(true); break;
       case 'ctDown': ctDownload(); break;
       case 'ctUp': var cf = $('#ctFile'); if (cf) { cf.value = ''; cf.click(); } break;
       case 'editChore': S.edit = d('cid'); go(); break;
@@ -2394,6 +2697,7 @@
     else if (t.id === 'sort') { S.sort = t.value; updateLogList(); }
     else if (t.id === 'wzFile') wizImport(t.files && t.files[0]);
     else if (t.getAttribute('data-ct')) ctEdit(t);
+    else if (t.id === 'rvDate') { if (t.value) { S.rvDate = t.value > today() ? today() : t.value; renderReview(); } }
     else if (t.id === 'ctCat') { ctState().cat = t.value; renderChoreTable(); }
     else if (t.id === 'ctArch') { ctState().arch = t.checked; renderChoreTable(); }
     else if (t.id === 'ctFile' && t.files && t.files[0]) {
@@ -2408,6 +2712,9 @@
     else if (t.id === 'mtgNotes' && S.mtg) S.mtg.notes = t.value;
     else if (a === 'showArch') { S.showArchived = t.checked; updateChoreList(); }
     else if (a === 'chPick') { S.chPick[t.getAttribute('data-cid') + '|' + t.getAttribute('data-pid')] = !!t.checked; updateChoreBoard(); }
+    else if (t.id === 'ceRate') { var lb = $('#ceLvBox'); if (lb) lb.hidden = !t.checked; }
+    else if (a === 'chLv') { S.chLv[t.getAttribute('data-cid')] = Number(t.value); }
+    else if (a === 'apLevel') setLevel(t.getAttribute('data-id'), Number(t.value));
     else if (a === 'apSel') { var sk = t.getAttribute('data-key'); if (t.checked) delete S.apSkip[sk]; else S.apSkip[sk] = 1; go(); }
     else if (a === 'rename') {
       var nm = trim(t.value);
@@ -2420,6 +2727,7 @@
     var t = e.target;
     if (t.id === 'q') { S.q = t.value; updateLogList(); }
     else if (t.id === 'cq') { S.cq = t.value; updateChoreList(); }
+    else if (t.id === 'ceLevels') { var hs = $('#ceHide'); if (hs) { var keep = hs.value; hs.innerHTML = hideOpts(parseLevels(t.value), keep); } }
     else if (t.id === 'ctq') { ctState().q = t.value; clearTimeout(S.ctqT); S.ctqT = setTimeout(function () { renderChoreTable(); var q = $('#ctq'); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }, 250); }
     else if (t.getAttribute('data-ct') && t.type !== 'checkbox' && t.tagName !== 'SELECT') ctEdit(t);
   }
@@ -2477,13 +2785,16 @@
       if (copy) S.chores.forEach(function (c) { if ((c.who || []).indexOf(copy) >= 0) pops.push({ t: 'update', c: 'chores', id: c.id, d: { who: c.who.concat([id]) } }); });
       DB.commit(pops).then(function () { toast(name + ' added'); f.reset(); }, fail);
     } else if (kind === 'chore') {
-      var cid = f.getAttribute('data-cid'), cname = trim(val('ceName')), pts = Math.round(Number(val('cePts'))), cat = trim(val('ceCat'));
-      var bounty = parseMoney(val('ceBounty')), need = val('ceNeed'), ccoins = coinable(need) ? Math.max(0, Math.round(Number(val('ceCoins')) || 0)) : 0;
-      if (!cname || !(pts > 0)) { toast('Enter a name and a point value.', true); return; }
+      var cid = f.getAttribute('data-cid'), cname = trim(val('ceName')), pts = Math.max(0, Math.round(Number(val('cePts')) || 0)), cat = trim(val('ceCat'));
+      var bounty = parseMoney(val('ceBounty')), rw = cleanRw({ food: val('ceFood'), clean: val('ceClean'), tuck: val('ceTuck'), play: val('cePlay'), any: val('ceAny') });
+      var levels = $('#ceRate').checked ? parseLevels(val('ceLevels')) : [];
+      if ($('#ceRate').checked && !levels.length) levels = DEFAULT_LEVELS;
+      var hideLv = levels.length && levels.some(function (x) { return x.n === val('ceHide'); }) ? val('ceHide') : '';
+      if (!cname) { toast('Enter a name for the chore.', true); return; }
       if (isNaN(bounty)) { toast('Enter the bounty like 5.00, or leave it empty.', true); return; }
       var who = $$('input[name=who]', f).filter(function (x) { return x.checked; }).map(function (x) { return x.value; });
       var mdays = $$('input[name=mday]', f).filter(function (x) { return x.checked; }).map(function (x) { return Number(x.value); });
-      var data = { name: cname, pts: pts, who: who, cat: cat, need: need, coins: ccoins, bountyCents: bounty, major: $('#ceMajor').checked, majorEach: $('#ceEach').checked, majorDays: mdays, travel: $('#ceTrip').checked, homeOnly: !$('#ceTravel').checked };
+      var data = { name: cname, pts: pts, who: who, cat: cat, rw: rw, need: compatNeed(rw), coins: rw.food || rw.clean || 0, levels: levels, hideLv: hideLv, freq: val('ceFreq') || '', review: $('#ceReview').checked, bountyCents: bounty, major: $('#ceMajor').checked, majorEach: $('#ceEach').checked, majorDays: mdays, travel: $('#ceTrip').checked, homeOnly: !$('#ceTravel').checked };
       var op = cid ? { t: 'update', c: 'chores', id: cid, d: data }
         : { t: 'set', c: 'chores', id: DB.newId('chores'), d: assign(data, { active: true, order: S.chores.reduce(function (m, c) { return Math.max(m, c.order || 0); }, 0) + 1 }) };
       var eff = catList(S.chores).filter(function (x) { return x !== 'Other'; });
@@ -2500,7 +2811,10 @@
     } else if (kind === 'money2') {
       var rate = Number(S.settings.centsPerPoint) || 0, e1 = parseMoney(val('evo1')), e2 = parseMoney(val('evo2')), al = parseMoney(val('allow'));
       if (isNaN(e1) || isNaN(e2) || isNaN(al)) { toast('Check the numbers: use amounts like 5.00', true); return; }
-      var p2 = { foodCoins: Math.max(1, Math.round(Number(val('fcoins')) || 10)), mealPrice: Math.max(1, Math.round(Number(val('mprice')) || 10)), careCoins: Math.max(1, Math.round(Number(val('ccoins')) || 10)), kitPrice: Math.max(1, Math.round(Number(val('kprice')) || 10)),
+      var dn = function (id, d, mx) { var v = Math.round(Number(val(id))); return val(id) === '' || isNaN(v) ? d : Math.max(0, Math.min(mx || 200, v)); };
+      var p2 = { logCooldown: dn('lgWait', 60, 3600), logCap: dn('lgCap', 5, 100), hideHours: Math.max(1, dn('hHours', 24, 168)), nightOff: !$('#nOn').checked, nightStart: val('nFrom') || '20:00', nightEnd: val('nTo') || '06:30',
+        drainFood: dn('dFood', 50), drainClean: dn('dClean', 25), drainRest: dn('dRest', 50), drainEnergy: dn('dEnergy', 50),
+        foodCoins: Math.max(1, Math.round(Number(val('fcoins')) || 10)), mealPrice: Math.max(1, Math.round(Number(val('mprice')) || 10)), careCoins: Math.max(1, Math.round(Number(val('ccoins')) || 10)), kitPrice: Math.max(1, Math.round(Number(val('kprice')) || 10)),
         coinsPerDollar: Math.max(1, Math.round(Number(val('cpd')) || 100)), swapPrice: Math.max(1, Math.round(Number(val('ppc')) || 20)), toothPrice: Math.max(1, Math.round(Number(val('tprice')) || 20)), ballPrice: Math.max(1, Math.round(Number(val('bprice')) || 20)), bankName: trim(val('bname')) || 'Family Bank', requireApproval: $('#reqAppr').checked, centsPerPoint: rate, petEvolve1Cents: e1, petEvolve2Cents: e2, dadPid: val('dad'), allowanceCents: al, allowanceDay: Number(val('aday')), allowanceVacPause: $('#aVacPause').checked };
       if (p2.dadPid !== S.settings.dadPid || p2.allowanceDay !== Number(S.settings.allowanceDay) || !S.settings.allowanceLast) p2.allowanceLast = lastAllowanceDay(p2.allowanceDay);
       saveSettings(p2).then(function () { toast('Saved'); go(); }, fail);

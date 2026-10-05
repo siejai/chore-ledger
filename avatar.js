@@ -251,10 +251,11 @@
     s += '<path d="M53 ' + (a.face && a.face !== 'none' && a.face !== 'stubble' ? 76 : 72) + ' Q60 ' + (a.face && a.face !== 'none' && a.face !== 'stubble' ? 81 : 78) + ' 67 ' + (a.face && a.face !== 'none' && a.face !== 'stubble' ? 76 : 72) + '" fill="none" stroke="' + (a.face === 'beard' || a.face === 'shortbeard' ? '#fff' : ink) + '" stroke-width="2.5" stroke-linecap="round"/>';
     // accessories
     if (a.acc === 'glasses') s += '<circle cx="48" cy="59" r="8" fill="none" stroke="' + ink + '" stroke-width="2.2"/><circle cx="72" cy="59" r="8" fill="none" stroke="' + ink + '" stroke-width="2.2"/><path d="M56 59 L64 59" stroke="' + ink + '" stroke-width="2.2"/>';
-    if (a.acc === 'cap') s += '<path d="M28 44 Q30 16 60 16 Q90 16 92 44 Z" fill="' + tc + '" stroke="' + td + '" stroke-width="2"/><path d="M60 40 Q88 38 104 44 Q90 48 60 46 Z" fill="' + td + '"/>';
-    if (a.acc === 'bow') s += '<path d="M70 22 L84 14 L84 32 Z M70 22 L56 14 L56 32 Z" fill="' + tc + '" stroke="' + td + '" stroke-width="1.5" transform="translate(8 0)"/><circle cx="78" cy="23" r="4" fill="' + td + '"/>';
-    if (a.acc === 'visor') s += '<path d="M29 40 Q60 26 91 40" fill="none" stroke="#2f7a4a" stroke-width="4"/><path d="M34 40 Q60 30 86 40 Q78 52 60 52 Q42 52 34 40 Z" fill="#3fa65c" fill-opacity=".75" stroke="#2f7a4a" stroke-width="2"/>';
-    if (a.acc === 'headband') s += '<path d="M29 42 Q60 14 91 42" fill="none" stroke="' + tc + '" stroke-width="6" stroke-linecap="round"/>';
+    var hw = covers(a.top) ? tc : pc0, hwd = shade(hw, -40);   /* headwear matches the pants (the outfit under a dress) */
+    if (a.acc === 'cap') s += '<path d="M28 44 Q30 16 60 16 Q90 16 92 44 Z" fill="' + hw + '" stroke="' + hwd + '" stroke-width="2"/><path d="M60 40 Q88 38 104 44 Q90 48 60 46 Z" fill="' + hwd + '"/>';
+    if (a.acc === 'bow') s += '<path d="M70 22 L84 14 L84 32 Z M70 22 L56 14 L56 32 Z" fill="' + hw + '" stroke="' + hwd + '" stroke-width="1.5" transform="translate(8 0)"/><circle cx="78" cy="23" r="4" fill="' + hwd + '"/>';
+    if (a.acc === 'visor') s += '<path d="M29 40 Q60 26 91 40" fill="none" stroke="' + hwd + '" stroke-width="4"/><path d="M34 40 Q60 30 86 40 Q78 52 60 52 Q42 52 34 40 Z" fill="' + hw + '" fill-opacity=".8" stroke="' + hwd + '" stroke-width="2"/>';
+    if (a.acc === 'headband') s += '<path d="M29 42 Q60 14 91 42" fill="none" stroke="' + hw + '" stroke-width="6" stroke-linecap="round"/>';
     var outline = [sd, td, hd, pantsD, '#cfc6b4', '#2f7a4a', brow, shade(tc, -40)];
     function restyle(str) {
       if (style === 'sticker') {

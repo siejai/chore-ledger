@@ -3,11 +3,12 @@
  *
  * pets/{personId} = {
  *   avatar, intro, pet: {sp, pal, name, level, stage, hatched, leveledOn, final}, house: [retired pets],
- *   needs: {food, clean, rest, energy}, needsTs,       needs drain continuously (NEED_DRAIN per day)
+ *   needs: {food, clean, rest, energy}, needsTs,       needs drain over the waking hours (settings drainFood/Clean/Rest/Energy per day); tuckTs = last tuck-in
  *   coinsFood, coinsCare,                                earned from kitchen chores / self-care chores (capped when spent); "clean coins" on screen
  *   chorePts                                             chore coins: 1 per approved chore point; clothes, toothpaste, balls, 10 food/clean coins for 20, $1 per 100
  *   pantryFood, pantryCare,                              meals and bath kits bought at the store
- *   tokRest, tokEnergy                                   from bedtime / exercise chores, used at home (bed) and the park (any park game)
+ *   tokRest, tokEnergy  + pctRest, pctPlay               tuck-ins and play times: whole ones (tok*) plus percent earned from chores (pct*, 100 = one);
+ *                                                        used at home (bed) and the park (any park game)
  *   tokBall                                              balls bought at the Store: one game of ball toss each (no other games)
  * }
  * A good day: all four needs at GOOD or more at the same time -> +1 level (once per day). Level 5 and 15 evolve and pay the bank.
@@ -83,23 +84,61 @@
     var mp = Number(st.mealPrice) || 10, kp = Number(st.kitPrice) || 10;
     return { meal: mp, kit: kp, foodCap: mp * 2, careCap: kp * 2 };
   }
+  /* ----- night (cl-v30): settings nightStart/nightEnd (default 8:00 pm to 6:30 am). Pets sleep at home: in bed if they were
+     tucked in that evening (from 4 hours before night), otherwise under the bed. Needs don't drop at night, except sleep for a
+     pet under the bed (half speed); a day's drain happens over the awake hours. Town buildings close. ----- */
+  var TUCK_EARLY = 4 * 3600000;
+  function hm(v, dflt) { var m = /^(\d{1,2}):(\d{2})/.exec(v || ''); return m ? Number(m[1]) * 60 + Number(m[2]) : dflt; }
+  function nightCfg() { var st = S().settings; var c = { a: hm(st.nightStart, 1200), b: hm(st.nightEnd, 390), on: st.nightOff !== true }; c.len = ((c.b - c.a) + 1440) % 1440; if (!c.len) c.on = false; return c; }
+  /* every night overlapping [t0, t1]: {from, to} of the whole night, {a, b} of the overlap */
+  function nightsIn(t0, t1, c) {
+    var out = []; c = c || nightCfg(); if (!c.on || !(t1 > t0)) return out;
+    var d = new Date(t0); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - 1);
+    for (var i = 0; i < 64 && d.getTime() < t1; i++) {
+      var s0 = new Date(d); s0.setHours(0, c.a, 0, 0);
+      var from = s0.getTime(), to = from + c.len * 60000, a = Math.max(from, t0), b = Math.min(to, t1);
+      if (b > a) out.push({ from: from, to: to, a: a, b: b });
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  }
+  function nightNow(t) { t = t || Date.now(); var n = nightsIn(t - 1, t + 1); return n.length ? n[n.length - 1] : null; }
+  function tuckedFor(nt, d) { var tk = Number(d && d.tuckTs) || 0; return tk >= nt.from - TUCK_EARLY && tk <= nt.to; }
+  function clock(ms) { var x = new Date(ms), h = x.getHours(), m = x.getMinutes(); return ((h + 11) % 12 + 1) + ':' + (m < 10 ? '0' : '') + m + ' ' + (h < 12 ? 'am' : 'pm'); }
+  /* null in the daytime; at night: when it ends, and whether this pet sleeps in its bed or under it */
+  function night(pid) {
+    var nt = nightNow(); if (!nt) return null;
+    var tucked = pid ? tuckedFor(nt, doc(pid)) : false;
+    return { from: nt.from, to: nt.to, wake: clock(nt.to), sleep: clock(nt.from), tucked: tucked, under: !!pid && !tucked };
+  }
+  var DRAIN_KEY = { food: 'drainFood', clean: 'drainClean', rest: 'drainRest', energy: 'drainEnergy' }, DRAIN_DEF = { food: 50, clean: 25, rest: 50, energy: 50 };
+  function drainOf(k) { var v = Number(S().settings[DRAIN_KEY[k]]); return v >= 0 && S().settings[DRAIN_KEY[k]] !== '' && S().settings[DRAIN_KEY[k]] != null ? v : DRAIN_DEF[k]; }
   function needsNow(d) {
-    var n = d.needs || {}, ts = Number(d.needsTs) || Date.now(), days = S().settings.petPause ? 0 : Math.max(0, (Date.now() - ts) / 86400000), out = {};
+    var n = d.needs || {}, now = Date.now(), ts = Math.min(Number(d.needsTs) || now, now), out = {}, c = nightCfg();
+    var nights = S().settings.petPause ? [] : nightsIn(ts, now, c), nightMs = 0, underMs = 0;
+    nights.forEach(function (nt) { nightMs += nt.b - nt.a; if (!tuckedFor(nt, d)) underMs += nt.b - nt.a; });
+    var awake = c.on ? (1440 - c.len) / 1440 : 1;
+    var days = S().settings.petPause ? 0 : Math.max(0, (now - ts - nightMs) / 86400000 / awake), underDays = underMs / 86400000 / awake * 0.5;
     var vac = window.ADV && ADV.onVacation();
     NEEDS.forEach(function (x) {
-      var base = n[x.k] == null ? 70 : n[x.k], v = base - (vac ? NEED_DRAIN / 2 : NEED_DRAIN) * days;
+      var rate = drainOf(x.k), base = n[x.k] == null ? 70 : n[x.k], v = base - (vac ? rate / 2 : rate) * (days + (x.k === 'rest' ? underDays : 0));
       if (vac) v = Math.max(v, Math.min(base, 40));
       out[x.k] = clamp(v);
     });
     return out;
   }
+  /* tuck-ins and plays: whole ones plus percent toward the next (chores can pay part of one) */
+  function pool(tok, pct) { return Math.max(0, (Number(tok) || 0) * 100 + (Number(pct) || 0)); }
+  function useOne(up, d, tk, pk) { var all = Math.min(pool(d[tk], d[pk]), TOKEN_CAP * 100); up[tk] = 0; up[pk] = Math.max(0, all - 100); }
   function wallet(d) {
-    var pr = prices();
+    var pr = prices(), ra = pool(d.tokRest, d.pctRest), pa = pool(d.tokEnergy, d.pctPlay);
     return {
       food: Math.min(num(d.coinsFood), pr.foodCap), care: Math.min(num(d.coinsCare), pr.careCap),
       foodOver: num(d.coinsFood) > pr.foodCap, careOver: num(d.coinsCare) > pr.careCap,
       meals: Math.min(num(d.pantryFood), PANTRY_CAP), kits: Math.min(num(d.pantryCare), PANTRY_CAP),
-      rest: Math.min(num(d.tokRest), TOKEN_CAP), energy: Math.min(num(d.tokEnergy), TOKEN_CAP), balls: Math.min(num(d.tokBall), TOKEN_CAP), pts: num(d.chorePts)
+      rest: Math.min(Math.floor(ra / 100), TOKEN_CAP), restPart: ra >= TOKEN_CAP * 100 ? 0 : ra % 100,
+      energy: Math.min(Math.floor(pa / 100), TOKEN_CAP), playPart: pa >= TOKEN_CAP * 100 ? 0 : pa % 100,
+      balls: Math.min(num(d.tokBall), TOKEN_CAP), pts: num(d.chorePts)
     };
   }
   /* the Store trades chore coins for food or clean coins in packs of SWAP_COINS (settings.swapPrice chore coins a pack) */
@@ -125,6 +164,8 @@
   function act(pid, change) {
     var st = state(pid), d = st.doc, t = C().today(), w = st.wallet;
     if (!d.pet) return Promise.resolve(null);
+    var hd = hiding(pid); if (hd) { C().toast(d.pet.name + ' is hiding under the bed after a terrible bedtime. It comes out at ' + hd.back + '.', true); return Promise.resolve(null); }
+    var nt = night(pid); if (nt) { C().toast(d.pet.name + ' is asleep. Pets wake up at ' + nt.wake + '.', true); return Promise.resolve(null); }
     var needs = assign({}, st.needs);
     var up = { needsTs: Date.now() };
     var res = change(needs, w, up);
@@ -157,11 +198,11 @@
       var spend = 0;
       if (item === 'meal') {
         if (w.meals >= PANTRY_CAP) { C().toast('Your bag is full (' + PANTRY_CAP + ' meals). Tap Feed in town to use one.', true); return false; }
-        if (w.food < pr.meal) { C().toast('A meal costs ' + pr.meal + ' food coins and you have ' + w.food + '. Kitchen chores earn food coins, or trade ' + swapPrice() + ' chore coins for ' + SWAP_COINS + ' food coins here.', true); return false; }
+        if (w.food < pr.meal) { C().toast('A meal costs ' + pr.meal + ' food coins and you have ' + w.food + '. Chores tagged “food” earn food coins, or trade ' + swapPrice() + ' chore coins for ' + SWAP_COINS + ' food coins here.', true); return false; }
         up.coinsFood = w.food - pr.meal; up.pantryFood = w.meals + 1;
       } else if (item === 'kit') {
         if (w.kits >= PANTRY_CAP) { C().toast('Your bag is full (' + PANTRY_CAP + ' bath kits). Give a bath at home first.', true); return false; }
-        if (w.care < pr.kit) { C().toast('A bath kit costs ' + pr.kit + ' clean coins and you have ' + w.care + '. Showers, teeth and hair earn clean coins, or trade ' + swapPrice() + ' chore coins for ' + SWAP_COINS + ' clean coins here.', true); return false; }
+        if (w.care < pr.kit) { C().toast('A bath kit costs ' + pr.kit + ' clean coins and you have ' + w.care + '. Chores tagged “clean” earn clean coins, or trade ' + swapPrice() + ' chore coins for ' + SWAP_COINS + ' clean coins here.', true); return false; }
         up.coinsCare = w.care - pr.kit; up.pantryCare = w.kits + 1;
       } else if (item === 'food10' || item === 'care10') {   /* a pack of food or clean coins, for chore coins */
         var fd = item === 'food10', hv = fd ? w.food : w.care, cap = fd ? pr.foodCap : pr.careCap, kn = fd ? 'food' : 'clean';
@@ -174,20 +215,27 @@
         spend = Number(tooth ? st.toothPrice : st.ballPrice) || 20;
         if (have >= TOKEN_CAP) { C().toast(tooth ? 'You already have ' + TOKEN_CAP + ' tuck-ins. Use one at bedtime first.' : 'You already have ' + TOKEN_CAP + ' balls. Go play ball toss at the Park first.', true); return false; }
         if (w.pts < spend) { C().toast((tooth ? 'Toothpaste' : 'A ball') + ' costs ' + spend + ' chore coins and you have ' + w.pts + '.', true); return false; }
-        if (tooth) up.tokRest = w.rest + 1; else up.tokBall = w.balls + 1;
+        if (tooth) up.tokRest = num(doc(pid).tokRest) + 1; else up.tokBall = w.balls + 1;
       }
       if (spend) up.chorePts = DB.inc(-spend);
     });
   }
   function bath(pid) { return act(pid, function (n, w, up) { if (w.kits < 1) return false; n.clean += BATH_GAIN; up.pantryCare = w.kits - 1; }); }
   var SLEEP_MS = 5 * 60 * 1000;   /* after a tuck-in the pet stays in bed at home for 5 minutes */
-  function sleep(pid) { return act(pid, function (n, w, up) { if (w.rest < 1) return false; n.rest += SLEEP_GAIN; up.tokRest = w.rest - 1; up.sleepUntil = Date.now() + SLEEP_MS; }); }
-  function asleep(pid) { var u = Number(doc(pid).sleepUntil) || 0; return u > Date.now() ? u : 0; }
+  function sleep(pid) { return act(pid, function (n, w, up) { if (w.rest < 1) return false; n.rest += SLEEP_GAIN; useOne(up, doc(pid), 'tokRest', 'pctRest'); up.sleepUntil = Date.now() + SLEEP_MS; up.tuckTs = Date.now(); }); }
+  /* hiding (cl-v32): after a "pet hides" rating (a terrible bedtime) the pet hides under the bed at home until pets.hideUntil;
+     nothing can be done with it, it can't go to the park, café or on adventures. A parent can let it out early. */
+  function hiding(pid) {
+    var u = Number(doc(pid).hideUntil) || 0; if (u <= Date.now()) return null;
+    var d = new Date(u), n = new Date(), tm = new Date(); tm.setDate(tm.getDate() + 1);
+    return { until: u, back: clock(u) + (d.toDateString() === n.toDateString() ? ' today' : d.toDateString() === tm.toDateString() ? ' tomorrow' : ' on ' + ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()]) };
+  }
+  function asleep(pid) { var hd = hiding(pid); if (hd) return hd.until; var nt = nightNow(); if (nt) return nt.to; var u = Number(doc(pid).sleepUntil) || 0; return u > Date.now() ? u : 0; }
   /* src 'ball': a ball bought at the Store (ball toss only); otherwise a play time from exercise chores (any game) */
   function play(pid, res, src) {
     return act(pid, function (n, w, up) {
       if (src === 'ball') { if (w.balls < 1) return false; up.tokBall = w.balls - 1; }
-      else { if (w.energy < 1) return false; up.tokEnergy = w.energy - 1; }
+      else { if (w.energy < 1) return false; useOne(up, doc(pid), 'tokEnergy', 'pctPlay'); }
       n.energy += PLAY_GAIN;
       if (res && res.combo > (Number(doc(pid).seesawBest) || 0)) up.seesawBest = res.combo;   /* best see-saw streak */
     });
@@ -234,10 +282,11 @@
     var bad = NEEDS.filter(function (x) { return st.needs[x.k] < LOW; }).map(function (x) { return x.sad; });
     return '<div class="friend p' + C().pIndex(p) + '"><div class="friend-art">' + petSvg(d.pet, st.mood.key, st.flags) + '</div>' +
       '<div class="friend-who"><span class="friend-av">' + avatarSvg(d.avatar) + '</span><div><strong>' + esc(d.pet.name) + '</strong><br><small>' + esc(p.name) + '’s ' + esc(speciesName(d.pet)) + ' &middot; Lv ' + (d.pet.level || 0) + '</small></div></div>' +
-      '<div>' + (bad.length ? bad.map(function (b) { return '<span class="tag pend">' + b + '</span>'; }).join('') : '<span class="tag ok">' + esc(st.mood.label) + '</span>') + '</div>' +
+      '<div>' + (hiding(pid) ? '<span class="tag no">Hiding under the bed until ' + esc(hiding(pid).back) + '</span>' : '') + (night(pid) ? '<span class="tag plain">' + (night(pid).tucked ? 'Asleep in bed' : 'Asleep under the bed') + '</span>' : '') + (bad.length ? bad.map(function (b) { return '<span class="tag pend">' + b + '</span>'; }).join('') : '<span class="tag ok">' + esc(st.mood.label) + '</span>') + '</div>' +
       (d.egg ? '<div class="egg-note small"><span class="egg-mini">' + CRE.egg() + '</span><strong>Has a rare egg!</strong></div>' : '') +
       miniBars(st.needs) + ((d.house || []).length ? '<small class="note">' + d.house.length + ' grown pet' + (d.house.length > 1 ? 's' : '') + ' at home</small>' : '') +
-      (S().admin ? '<div class="wrap"><button class="btn small" type="button" data-pact="petReset" data-pid="' + esc(pid) + '">Refill needs</button></div>' : '') + '</div>';
+      (S().admin ? '<div class="wrap"><button class="btn small" type="button" data-pact="petReset" data-pid="' + esc(pid) + '">Refill needs</button>' +
+        (hiding(pid) ? '<button class="btn small" type="button" data-pact="petUnhide" data-pid="' + esc(pid) + '">Let ' + esc(d.pet.name) + ' come out</button>' : '') + '</div>' : '') + '</div>';
   }
   /* parent tools: refill a pet's needs (food, clean, sleep, energy to 90), or pause the drain while testing */
   function refillOps(pid) { return [{ t: 'update', c: 'pets', id: pid, d: { needs: { food: 90, clean: 90, rest: 90, energy: 90 }, needsTs: Date.now(), sleepUntil: 0 } }]; }
@@ -308,7 +357,8 @@
         return '<button type="button" class="cat" data-pact="av" data-k="shoes" data-v="' + v + '" aria-pressed="' + ((a.shoes || 'sneakers') === v) + '">' + L.shoes[v] + '</button>'; }).join('') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Shoe color</span><div class="wrap">' + AV.shoeColor.map(function (c, i) { return sw('shoeColor', i, c); }).join('') + '</div></div>' +
       (adult ? '<div class="av-row"><span class="av-l">Face</span><div class="wrap">' + word('face') + '</div></div>' : '') +
-      '<div class="av-row"><span class="av-l">Extra</span><div class="wrap">' + word('acc') + '</div></div>' +
+      '<div class="av-row"><span class="av-l">Extra</span><div class="wrap">' + word('acc') + '</div>' +
+        (/^(cap|bow|headband|visor)$/.test(a.acc || '') ? '<span class="note av-more">' + (L.acc[a.acc] || 'It') + ' matches the ' + (dress ? 'outfit' : L.bottom[bot].toLowerCase()) + ' color</span>' : '') + '</div>' +
       '<div class="wrap"><button class="btn primary" type="button" data-pact="avSave">That’s me!</button><button class="btn" type="button" data-pact="avRandom">Surprise me</button>' +
       (d.avatar || adult ? '<button class="btn" type="button" data-pact="avCancel">Cancel</button>' : '') + '</div></section>';
   }
@@ -319,8 +369,8 @@
     var lines = first ? [
       'Hello, ' + name + '! I’m ' + PROF + '. I study the little creatures that live in busy, helpful towns like this one.',
       'These three need a partner. Yours will follow you all over town, and everything it needs comes from your real chores.',
-      'Kitchen chores like dishes, sweeping and wiping the table earn food coins. A meal at the Store costs ' + pr.meal + ', and your pet needs about two a day, so keep up with them!',
-      'Showers, brushing teeth and hair earn clean coins for soap and shampoo. Bedtime chores let you tuck it into bed at home, and exercise lets you play with it in the park.',
+      'Your chores pay coins. Food coins buy meals: a meal at the Store costs ' + pr.meal + ', and your pet needs about two a day, so keep up with them!',
+      'Clean coins buy soap and shampoo, and some chores earn tuck-ins for bedtime at home or play time at the park. Look at the little tags on each chore to see what it pays. Chore coins buy almost anything, so save them up!',
       'Take care of all four needs in one day and it goes up a level. At level ' + EVO1 + ' it evolves, and at level ' + EVO2 + ' it evolves again and moves into your house. Then I’ll bring you a new friend!'
     ] : [d.egg ? 'Welcome back, ' + name + '! Your rare egg is wiggling. It is ready to hatch, or you can pick a regular partner and save the egg.' : 'Welcome back, ' + name + '! Your house is looking lively. Ready for a new partner?'];
     var step = Math.min(G.talk, lines.length - 1);
@@ -402,7 +452,7 @@
         (c ? '' : ' <b class="why">Need ' + (pr - w.food) + ' more food coin' + (pr - w.food === 1 ? '' : 's') + '</b>') + '</small></div>' +
         '<button class="btn primary' + (c ? '' : ' wait') + '" type="button" data-pact="eatOut" data-item="' + it.id + '">' + coin('food') + ' ' + pr + '</button></div>';
     });
-    return h + '</div><p class="note">Kitchen chores earn food coins, and the Store trades ' + swapPrice() + ' chore coins for ' + SWAP_COINS + ' food coins. Meals from the Store go in your bag so you can feed your pet anywhere, or at the kitchen table at home.</p>';
+    return h + '</div><p class="note">Chores tagged “food” earn food coins, and the Store trades ' + swapPrice() + ' chore coins for ' + SWAP_COINS + ' food coins. Meals from the Store go in your bag so you can feed your pet anywhere, or at the kitchen table at home.</p>';
   }
   function eatOut(pid, id) {
     var it = null; CAFE.forEach(function (x) { if (x.id === id) it = x; }); if (!it) return;
@@ -458,7 +508,7 @@
       (owns(pid, sel.id) ? (wearing ? '<span class="tag ok">Wearing it</span>' : '<button class="btn primary" type="button" data-pact="wearCloth" data-id="' + sel.id + '">Wear it</button>') :
         '<button class="btn primary' + (w.pts >= sel.price ? '' : ' wait') + '" type="button" data-pact="buyCloth" data-id="' + sel.id + '">' + (G.armed === 'buy' + sel.id ? 'Tap again to buy' : coin('pts') + ' ' + sel.price) + '</button>' +
         (w.pts < sel.price ? ' <b class="why">Need ' + (sel.price - w.pts) + ' more chore coins</b>' : '')) + '</div></div>' +
-      '<div class="wallet-row"><span>' + coin('pts') + ' <b class="mono">' + w.pts + '</b>&nbsp;chore coins</span><span class="note">Every approved chore point is a chore coin</span></div>';
+      '<div class="wallet-row"><span>' + coin('pts') + ' <b class="mono">' + w.pts + '</b>&nbsp;chore coins</span><span class="note">Chores pay chore coins (look for the purple star)</span></div>';
     [['top', 'Outfits'], ['shoes', 'Shoes']].forEach(function (grp) {
       h += '<h3 class="shop-h">' + grp[1] + '</h3><div class="cloth-grid">' + CLOTHES.filter(function (it) { return it.kind === grp[0]; }).map(function (it) {
         var own = owns(pid, it.id);
@@ -519,7 +569,7 @@
       tokenItem('ball', 'Ball', 'A fetch ball: one game of ball toss with your pet at the Park.', w.balls, Number(S().settings.ballPrice) || 20, w.pts,
         '<svg viewBox="0 0 60 50"><circle cx="30" cy="26" r="16" fill="#e8453c" stroke="#a82a24" stroke-width="2"/><path d="M15 21 Q30 30 45 21 M17 34 Q30 26 43 34" stroke="#fff" stroke-width="3" fill="none"/></svg>') +
       '</div>' +
-      '<p class="note">In your bag: ' + w.meals + ' meal' + (w.meals === 1 ? '' : 's') + ', ' + w.kits + ' bath kit' + (w.kits === 1 ? '' : 's') + ', ' + w.rest + ' tuck-in' + (w.rest === 1 ? '' : 's') + ', ' + w.balls + ' ball' + (w.balls === 1 ? '' : 's') + ', ' + w.energy + ' play. Kitchen chores earn food coins; showers, teeth and hair earn clean coins; every chore earns chore coins, and ' + swapPrice() + ' chore coins buy ' + SWAP_COINS + ' food or clean coins.</p></div>';
+      '<p class="note">In your bag: ' + w.meals + ' meal' + (w.meals === 1 ? '' : 's') + ', ' + w.kits + ' bath kit' + (w.kits === 1 ? '' : 's') + ', ' + w.rest + ' tuck-in' + (w.rest === 1 ? '' : 's') + ', ' + w.balls + ' ball' + (w.balls === 1 ? '' : 's') + ', ' + w.energy + ' play. Look at each chore’s tags to see which coins it earns, and ' + swapPrice() + ' chore coins buy ' + SWAP_COINS + ' food or clean coins.</p></div>';
   }
   function tokenItem(id, name, blurb, have, price, pts, art) {
     var why = have >= TOKEN_CAP ? ' <b class="why">You have ' + TOKEN_CAP + ' already</b>' : pts < price ? ' <b class="why">Need ' + (price - pts) + ' more chore coins</b>' : '';
@@ -531,11 +581,11 @@
     if (G.game && G.game.kind === 'play') return window.Games ? '<div class="mg-host" id="gameHost"></div>' : '<div class="scene park-scene" id="scene"><div class="scene-pet" id="scenePet">' + petSvg(st.pet, 'happy', st.flags) + '</div><div id="gameLayer" class="g-layer"></div></div>';
     function gb(game, label, src, on) { return '<button class="btn primary" type="button" data-pact="startPlay" data-game="' + game + '" data-src="' + src + '"' + (on ? '' : ' disabled') + '>' + label + '</button>'; }
     var h = '<div class="scene park-scene"><div class="scene-pet">' + petSvg(st.pet, st.mood.key, st.flags) + '</div></div>';
-    if (w.energy) h += '<p>You have ' + w.energy + ' play time' + (w.energy > 1 ? 's' : '') + ' from exercise chores. Pick a game to play with ' + nm + ':</p>' +
+    if (w.energy) h += '<p>You have ' + w.energy + ' play time' + (w.energy > 1 ? 's' : '') + (w.playPart ? ' (and ' + w.playPart + '% toward the next)' : '') + ' from chores. Pick a game to play with ' + nm + ':</p>' +
       '<div class="park-games">' + gb('toss', 'Ball toss', 'play', true) + gb('seesaw', 'See-saw', 'play', true) + gb('swing', 'Swing', 'play', true) + '</div>';
     if (w.balls) h += '<p>' + (w.energy ? 'Or use' : 'You have') + ' ' + w.balls + ' ball' + (w.balls > 1 ? 's' : '') + ' from the Store. Store balls are for ball toss.</p>' +
       '<div class="park-games">' + gb('toss', 'Ball toss with a Store ball', 'ball', true) + '</div>';
-    if (!w.energy && !w.balls) h += '<p>No play time left. Exercise chores earn play time for any game here, or buy a ball at the Store with chore coins for a game of ball toss.</p>' +
+    if (!w.energy && !w.balls) h += '<p>No play time left' + (w.playPart ? ' (you are ' + w.playPart + '% of the way to the next one)' : '') + '. Chores tagged “play” earn play time for any game here, or buy a ball at the Store with chore coins for a game of ball toss.</p>' +
       '<div class="park-games">' + gb('toss', 'Ball toss', 'play', false) + gb('seesaw', 'See-saw', 'play', false) + gb('swing', 'Swing', 'play', false) + '</div>';
     return h + (best ? '<p class="note">Best see-saw streak: ' + best + ' great hops in a row</p>' : '');
   }
@@ -606,8 +656,8 @@
     if (d.pet && d.pet.final) h += '<div class="card attn"><h2>Fully grown!</h2><p>' + esc(d.pet.name) + ' can move in for good. ' + window.CHAR.PROF + ' will bring you a new partner.</p><button class="btn primary" type="button" data-pact="retire">Move ' + esc(d.pet.name) + ' in</button></div>';
     h += '<div class="care">' +
       '<button type="button" class="care-btn" data-pact="startBath"' + (w.kits ? '' : ' disabled') + '><span class="care-v">Bath</span><span class="care-n mono">' + w.kits + ' kit</span></button>' +
-      '<button type="button" class="care-btn" data-pact="startSleep"' + (w.rest ? '' : ' disabled') + '><span class="care-v">Tuck in</span><span class="care-n mono">' + w.rest + ' left</span></button></div>' +
-      '<p class="note">Bath kits come from the Store. Tuck-ins come from bedtime chores.</p>' +
+      '<button type="button" class="care-btn" data-pact="startSleep"' + (w.rest ? '' : ' disabled') + '><span class="care-v">Tuck in</span><span class="care-n mono">' + w.rest + ' left' + (w.restPart ? ' +' + w.restPart + '%' : '') + '</span></button></div>' +
+      '<p class="note">Bath kits come from the Store. Tuck-ins come from chores tagged “tuck-in” (some pay part of one), or toothpaste from the Store.</p>' +
       '<div class="wrap"><button class="btn small" type="button" data-pact="avEdit">Change my look</button></div>' + (shelf.length ? houseList(shelf) : '');
     return h;
   }
@@ -617,8 +667,9 @@
   function careTip(st) {
     var n = st.needs, w = st.wallet, low = NEEDS.slice().sort(function (a, b) { return n[a.k] - n[b.k]; })[0];
     if (n[low.k] >= GOOD) return 'All four needs are good!';
-    return { food: w.meals ? 'Tap Feed to give a meal.' : 'Buy a meal at the Store. Kitchen chores earn food coins.', clean: w.kits ? 'Walk to the tub at home for a bath.' : 'Buy a bath kit at the Store.',
-      rest: w.rest ? 'Tuck it in: walk to the bed at home.' : 'Bedtime chores earn tuck-ins.', energy: w.energy ? 'Play a game at the Park.' : w.balls ? 'Play ball toss at the Park with a Store ball.' : 'Exercise chores earn play time, or buy a ball at the Store.' }[low.k];
+    return { food: w.meals ? 'Tap Feed to give a meal.' : 'Buy a meal at the Store. Chores tagged “food” earn food coins.', clean: w.kits ? 'Walk to the tub at home for a bath.' : 'Buy a bath kit at the Store.',
+      rest: w.rest ? 'Tuck it in: walk to the bed at home.' : 'Chores tagged “tuck-in” earn tuck-ins' + (w.restPart ? ' (' + w.restPart + '% of the way to the next)' : '') + ', or buy toothpaste at the Store.',
+      energy: w.energy ? 'Play a game at the Park.' : w.balls ? 'Play ball toss at the Park with a Store ball.' : 'Chores tagged “play” earn play time' + (w.playPart ? ' (' + w.playPart + '% of the way)' : '') + ', or buy a ball at the Store.' }[low.k];
   }
   function petCardHtml(o) {
     var st = state(o.owner), d = st.doc, mine = o.owner === me(), p = o.grown || d.pet; if (!p) return '';
@@ -769,6 +820,7 @@
           C().toast(d.pet.name + ' moved into your house!'); C().go();
         }, C().fail);
         break;
+      case 'petUnhide': if (!S().admin) break; var uh = b.getAttribute('data-pid'); DB.commit([{ t: 'update', c: 'pets', id: uh, d: { hideUntil: 0 } }]).then(function () { C().toast((doc(uh).pet || {}).name + ' came out from under the bed.'); C().schedule(); }, C().fail); break;
       case 'petReset': if (!S().admin) break; var rp = b.getAttribute('data-pid'); DB.commit(refillOps(rp)).then(function () { C().toast((doc(rp).pet || {}).name + ' is all filled up.'); C().schedule(); }, C().fail); break;
       case 'petResetAll':
         if (!S().admin) break;
@@ -809,9 +861,11 @@
     return '<span class="pick-art">' + (d.avatar ? '<span class="pick-av">' + avatarSvg(d.avatar) + '</span>' : '') + (d.pet ? '<span class="pick-pet">' + petSvg(d.pet, st.mood.key, st.flags) + '</span>' : '') + '</span>';
   }
   function reset() { G.game = null; G.talk = 0; G.pick = null; G.dirtyAvatar = null; G.room = null; G.creator = false; if (window.World) window.World.unmount(); }
+  var wasNight = null;
+  setInterval(function () { var n = !!nightNow(); if (wasNight !== null && n !== wasNight && C()) C().schedule(); wasNight = n; }, 20000);
   window.Pets = {
     render: render, onClick: onClick, onSubmit: onSubmit, reset: reset, miniHtml: miniHtml,
-    state: state, prices: prices, feed: feed, asleep: asleep, wake: function (pid) { if (asleep(pid)) DB.commit([{ t: 'update', c: 'pets', id: pid, d: { sleepUntil: 0 } }]).catch(function () {}); }, petSvg: petSvg, avatarSvg: avatarSvg, speciesName: speciesName, doc: doc,
+    state: state, prices: prices, feed: feed, asleep: asleep, night: night, hiding: hiding, needsNow: needsNow, wake: function (pid) { if (asleep(pid)) DB.commit([{ t: 'update', c: 'pets', id: pid, d: { sleepUntil: 0 } }]).catch(function () {}); }, petSvg: petSvg, avatarSvg: avatarSvg, speciesName: speciesName, doc: doc,
     roomHtml: roomHtml, mountGame: mountGame, petCardHtml: petCardHtml, hosts: hosts, adultAv: adultAv, kidAv: kidAv, SPOTS: SPOTS, HOST_LINE: HOST_LINE, adultCreatorHtml: adultCreatorHtml, G: G, NEEDS: NEEDS, GOOD: GOOD, LOW: LOW, coin: coin, friendCard: friendCard
   };
 })();
