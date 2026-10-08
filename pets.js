@@ -141,6 +141,20 @@
       balls: Math.min(num(d.tokBall), TOKEN_CAP), pts: num(d.chorePts)
     };
   }
+  /* progress toward the next tuck-in and play (chores can pay part of one): little bars for the town HUD and the Chores tab */
+  function partBar(w, k, big) {
+    var have = k === 'rest' ? w.rest : w.energy, part = k === 'rest' ? w.restPart : w.playPart, full = have >= TOKEN_CAP;
+    return '<span class="pbar ' + (k === 'rest' ? 'pb-rest' : 'pb-play') + (big ? ' big' : '') + '" title="' + (full ? 'Full' : part + '% of the way to the next ' + (k === 'rest' ? 'tuck-in' : 'play')) + '"><i style="width:' + (full ? 100 : part) + '%"></i></span>';
+  }
+  function progressHtml(pid) {
+    var st = state(pid); if (!st.pet) return '';
+    var w = st.wallet;
+    function one(k, label) {
+      var have = k === 'rest' ? w.rest : w.energy, part = k === 'rest' ? w.restPart : w.playPart, full = have >= TOKEN_CAP;
+      return '<div class="pprog"><span class="pprog-l">' + label + ' <b class="mono">' + have + '</b></span>' + partBar(w, k, true) + '<small>' + (full ? 'full' : part + '% to the next') + '</small></div>';
+    }
+    return '<div class="pet-prog">' + one('rest', 'Tuck-ins') + one('energy', 'Plays') + '</div>';
+  }
   /* the Store trades chore coins for food or clean coins in packs of SWAP_COINS (settings.swapPrice chore coins a pack) */
   var SWAP_COINS = 10;
   function swapPrice() { return Math.max(1, Math.round(Number(S().settings.swapPrice) || 20)); }
@@ -263,6 +277,8 @@
     if (!d.pet) { if (window.World) window.World.unmount(); view.innerHTML = professorHtml(pid, d); return; }
     if (window.Defense && window.Defense.active()) { window.Defense.render(view); return; }
     if (window.BedDefense && window.BedDefense.active()) { window.BedDefense.render(view); return; }
+    if (window.IceCream && window.IceCream.active()) { window.IceCream.render(view); return; }
+    if (window.Caverns && window.Caverns.active()) { window.Caverns.render(view); return; }
     if (!window.World) { view.innerHTML = '<p class="note">The town did not load.</p>'; return; }
     window.World.show(view, pid);
   }
@@ -401,7 +417,8 @@
   function roomHtml(room, pid) {
     var owner = room.owner, head = '<div class="room-top"><strong>' + esc(room.walk ? walkTitle(room) : room.title) + '</strong><button class="btn small" type="button" data-pact="leave">' + (room.walk ? 'Back' : 'Leave') + '</button></div>';
     if (room.kind === 'store') return head + storeHtml(pid);
-    if (room.kind === 'cafe') return head + cafeHtml(pid);
+    if (room.kind === 'cafe') return head + (G.game && G.game.kind === 'feed' && window.Games ? '<div class="mg-host" id="gameHost"></div>' : cafeHtml(pid));
+    if (room.kind === 'meal') return head + '<div class="mg-host" id="gameHost"></div>';
     if (room.kind === 'clothes') return head + clothesHtml(pid);
     if (room.kind === 'bank') { S().bankPid = pid; return head + hostScene('bank') + '<div class="game-bank">' + C().accountHtml(G.D, pid, false) + '</div>'; }
     if (room.kind === 'park') return head + (G.game ? '' : hostScene('park')) + parkHtml(pid);
@@ -460,7 +477,11 @@
     act(pid, function (n, w, up) {
       if (w.food < pr) { C().toast(it.name + ' costs ' + pr + ' food coins and you have ' + w.food + '. The Store trades chore coins for food coins.', true); return false; }
       n.food += it.food; n.energy += it.energy; up.coinsFood = w.food - pr; ok = true;
-    }).then(function () { if (ok) { G.cafe = { pid: pid, id: id, t: Date.now() }; C().schedule(); setTimeout(C().schedule, 8100); } }, function () {});
+    }).then(function () {
+      if (!ok) return;
+      if (window.Games) { G.game = { kind: 'feed', food: id, place: 'cafe', paid: true, id: Date.now() }; C().schedule(); }   /* paid: now feed it by hand */
+      else { G.cafe = { pid: pid, id: id, t: Date.now() }; C().schedule(); setTimeout(C().schedule, 8100); }
+    }, function () {});
   }
   /* ----- the Clothes Shop: special outfits and shoes for chore coins. Bought items live in pets/{id}.closet ----- */
   var CLOTHES = [
@@ -589,7 +610,7 @@
       '<div class="park-games">' + gb('toss', 'Ball toss', 'play', false) + gb('seesaw', 'See-saw', 'play', false) + gb('swing', 'Swing', 'play', false) + '</div>';
     return h + (best ? '<p class="note">Best see-saw streak: ' + best + ' great hops in a row</p>' : '');
   }
-  function walkTitle(room) { return G.game ? (G.game.kind === 'bath' ? 'Bath time' : 'Bedtime') : ({ wardrobe: 'Wardrobe', book: 'Collection', final: 'Fully grown!' })[room.panel] || room.title; }
+  function walkTitle(room) { return G.game ? (G.game.kind === 'bath' ? 'Bath time' : G.game.kind === 'feed' ? 'Mealtime' : 'Bedtime') : ({ wardrobe: 'Wardrobe', book: 'Collection', final: 'Fully grown!' })[room.panel] || room.title; }
   /* bath and bedtime scenes: drawn as one picture (fixed shape, so the mud and stars line up with the pet) */
   function sceneSvg(inner) { return '<svg class="sc-layer" viewBox="0 0 400 260" preserveAspectRatio="none" aria-hidden="true">' + inner + '</svg>'; }
   function bathScene(owner) {
@@ -625,6 +646,7 @@
   function houseHtml(owner, mine, room) {
     var st = state(owner), d = st.doc, p = C().person(owner), w = st.wallet;
     if (room && room.walk) {
+      if (G.game && G.game.kind === 'feed') return '<div class="mg-host" id="gameHost"></div>';
       if (G.game && (G.game.kind === 'bath' || G.game.kind === 'sleep')) return window.Games ? '<div class="mg-host" id="gameHost"></div>' : (G.game.kind === 'bath' ? bathScene(owner) : bedScene(owner));
       if (room.panel === 'wardrobe') return ADV.wardrobeHtml(owner);
       if (room.panel === 'book') return ADV.collectionHtml(owner);
@@ -709,6 +731,7 @@
       if (host.getAttribute('data-id') === String(g.id)) return;
       host.setAttribute('data-id', String(g.id));
       var pid = me(), st = state(pid), p = st.pet, d = st.doc, kind = g.kind === 'play' ? (g.src !== 'ball' && (g.game === 'seesaw' || g.game === 'swing') ? g.game : 'toss') : g.kind, who = C().person(pid);
+      var cube = p && (p.sp === 'gloop' || p.sp === 'icecube') ? p.sp : '';   /* no chewing for these two: the food soaks in */
       if (!p) return;
       var fl = kind === 'bath' ? assign(assign({}, st.flags), { dirty: false }) : st.flags;
       window.Games.mount(kind, host, {
@@ -716,7 +739,8 @@
         petImg: function (mood) { return petSvg(p, mood, fl, { view: 'three', noStink: true }); },
         kidImg: function () { return avatarSvg(d.avatar, false, { view: 'three', flip: true }); },
         head: CRE.headSpot ? CRE.headSpot(p.sp, p.stage || 0, 'three') : null, best: Number(d.seesawBest) || 0,
-        done: function (res) { endGame(kind === 'bath' ? bath : kind === 'sleep' ? sleep : play, res); }
+        mouth: CRE.mouthSpot ? CRE.mouthSpot(p.sp, p.stage || 0, 'three') : null, cube: cube, food: g.food, place: g.place,
+        done: function (res) { endGame(kind === 'bath' ? bath : kind === 'sleep' ? sleep : kind === 'feed' ? (g.paid ? fedPaid : fedMeal) : play, res); }
       });
       return;
     }
@@ -744,7 +768,21 @@
   }
   function endGame(fn, res) {
     var pid = me(), src = G.game && G.game.src;
-    fn(pid, res, src).then(function () { G.game = null; C().schedule(); }, function () { G.game = null; C().schedule(); });
+    function out() { G.game = null; if (G.room && G.room.kind === 'meal') G.room = null; C().schedule(); }
+    fn(pid, res, src).then(out, out);
+  }
+  /* feeding by hand: a meal from the bag is used up when the last bite is eaten; a café dish was paid for when ordered */
+  function fedMeal(pid) { return feed(pid); }
+  function fedPaid() { return Promise.resolve(); }
+  function startFeed(pid) {
+    var st = state(pid), d = st.doc, w = st.wallet;
+    if (!d.pet) return false;
+    var hd = hiding(pid); if (hd) { C().toast(d.pet.name + ' is hiding under the bed after a terrible bedtime. It comes out at ' + hd.back + '.', true); return false; }
+    var nt = night(pid); if (nt) { C().toast(d.pet.name + ' is asleep. Pets wake up at ' + nt.wake + '.', true); return false; }
+    if (w.meals < 1) { C().toast('No food in your bag. Buy a meal at the Store, or eat out at the Pet Café.', true); return false; }
+    if (!(G.room && G.room.walk)) G.room = { kind: 'meal', walk: true, title: 'Mealtime' };   /* in town: a close-up just for the meal */
+    G.game = { kind: 'feed', food: 'meal', place: G.room.kind === 'house' ? 'home' : 'town', id: Date.now() };
+    return true;
   }
   function scrub(i) {
     var g = G.game; if (!g || !g.spots || !g.spots[i] || !g.spots[i].on) return;
@@ -790,13 +828,13 @@
         var np = assign({}, doc(pid).pet); np[a] = up[a];
         DB.commit([{ t: 'update', c: 'pets', id: pid, d: { pet: np } }]).then(function () { C().schedule(); }, C().fail);
         break;
-      case 'goRegion': G.room = null; if (b.getAttribute('data-r') === 'defense' && window.Defense) window.Defense.open(pid); else if (b.getAttribute('data-r') === 'bed' && window.BedDefense) window.BedDefense.open(pid); else if (window.World) window.World.enterRegion(b.getAttribute('data-r')); break;
+      case 'goRegion': G.room = null; if (b.getAttribute('data-r') === 'caverns' && window.Caverns) window.Caverns.open(pid); else if (b.getAttribute('data-r') === 'icecream' && window.IceCream) window.IceCream.open(pid); else if (b.getAttribute('data-r') === 'defense' && window.Defense) window.Defense.open(pid); else if (b.getAttribute('data-r') === 'bed' && window.BedDefense) window.BedDefense.open(pid); else if (window.World) window.World.enterRegion(b.getAttribute('data-r')); break;
       case 'buy': buy(pid, b.getAttribute('data-item')).then(function (r) { if (r !== null || true) C().schedule(); }); break;
       case 'eatOut': eatOut(pid, b.getAttribute('data-item')); break;
       case 'tryOn': G.tryOn = b.getAttribute('data-id'); G.armed = null; C().schedule(); break;
       case 'buyCloth': buyCloth(pid, b.getAttribute('data-id')); break;
       case 'wearCloth': wearCloth(pid, b.getAttribute('data-id')); break;
-      case 'feed': feed(pid).then(function () { if (window.World) window.World.petEats(); C().schedule(); }); break;
+      case 'feed': if (window.Games) { if (startFeed(pid)) C().schedule(); } else feed(pid).then(function () { if (window.World) window.World.petEats(); C().schedule(); }); break;
       case 'startBath': G.game = { kind: 'bath', mood: 'ok', id: Date.now() }; C().schedule(); break;
       case 'startSleep': G.game = { kind: 'sleep', mood: 'lazy', id: Date.now() }; C().schedule(); break;
       case 'startPlay':   /* a Store ball only ever plays ball toss */
@@ -865,7 +903,7 @@
   setInterval(function () { var n = !!nightNow(); if (wasNight !== null && n !== wasNight && C()) C().schedule(); wasNight = n; }, 20000);
   window.Pets = {
     render: render, onClick: onClick, onSubmit: onSubmit, reset: reset, miniHtml: miniHtml,
-    state: state, prices: prices, feed: feed, asleep: asleep, night: night, hiding: hiding, needsNow: needsNow, wake: function (pid) { if (asleep(pid)) DB.commit([{ t: 'update', c: 'pets', id: pid, d: { sleepUntil: 0 } }]).catch(function () {}); }, petSvg: petSvg, avatarSvg: avatarSvg, speciesName: speciesName, doc: doc,
+    state: state, prices: prices, feed: feed, startFeed: startFeed, partBar: partBar, progressHtml: progressHtml, asleep: asleep, night: night, hiding: hiding, needsNow: needsNow, wake: function (pid) { if (asleep(pid)) DB.commit([{ t: 'update', c: 'pets', id: pid, d: { sleepUntil: 0 } }]).catch(function () {}); }, petSvg: petSvg, avatarSvg: avatarSvg, speciesName: speciesName, doc: doc,
     roomHtml: roomHtml, mountGame: mountGame, petCardHtml: petCardHtml, hosts: hosts, adultAv: adultAv, kidAv: kidAv, SPOTS: SPOTS, HOST_LINE: HOST_LINE, adultCreatorHtml: adultCreatorHtml, G: G, NEEDS: NEEDS, GOOD: GOOD, LOW: LOW, coin: coin, friendCard: friendCard
   };
 })();
