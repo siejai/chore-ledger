@@ -1,6 +1,6 @@
 /* Offline shell: network first, cached copy when offline. Bump VERSION when files change. */
-var VERSION = 'cl-v34';
-var SHELL = ['./', 'index.html', 'styles.css', 'config.js', 'bank.html', 'starter.js', 'c3dmeta.js', 'c3d.js', 'creatures.js', 'avatar.js', 'pets.js', 'games.js', 'adventure.js', 'defense.js', 'bed.js', 'world.js', 'store.js', 'app.js',
+var VERSION = 'cl-v37';
+var SHELL = ['./', 'index.html', 'styles.css', 'config.js', 'bank.html', 'starter.js', 'c3dmeta.js', 'c3d.js', 'creatures.js', 'avatar.js', 'pets.js', 'games.js', 'adventure.js', 'defense.js', 'icecream.js', 'caverns.js', 'bed.js', 'world.js', 'store.js', 'app.js',
   'firebase-app.js', 'firebase-auth.js', 'firebase-firestore.js', 'firebase-messaging.js', 'icon-192.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

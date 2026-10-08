@@ -180,10 +180,11 @@
     h += '<h2>Where to?</h2><div class="regions">' +
       '<button type="button" class="region beach" data-pact="goRegion" data-r="beach"' + (can ? '' : ' disabled') + '><strong>Sunny Beach</strong><small>Dig for treasure, fish off the pier, and find chests only some pets can reach.</small></button>' +
       '<button type="button" class="region cruise" data-pact="goRegion" data-r="ship"' + (can ? '' : ' disabled') + '><strong>Cruise Ship</strong><small>Work on the Lido Deck: clear plates, return glasses to the bar, mop pool puddles and collect towels for deck tickets.</small></button>' +
+      '<button type="button" class="region icecream" data-pact="goRegion" data-r="icecream"' + (can ? '' : ' disabled') + '><strong>Ice Cream Shop</strong><small>Make cones and sundaes for the customers, one at a time. Every happy customer earns a deck ticket.</small></button>' +
       '<button type="button" class="region defense" data-pact="goRegion" data-r="defense"' + (can ? '' : ' disabled') + '><strong>Mess Defense</strong><small>Mess monsters are invading the house! Place your pets and combine Fire, Water and Leaf to stop them.' + (Pets.doc(pid).defLevel ? ' Next: Round ' + (Number(Pets.doc(pid).defLevel) + 1) + '.' : '') + '</small></button>' +
       '<button type="button" class="region bed" data-pact="goRegion" data-r="bed"' + (can ? '' : ' disabled') + '><strong>Bedtime Defense</strong><small>Dirty laundry, toys and trash are sneaking toward your bed! Line the rug with your pets and power them up.' + (Pets.doc(pid).bedLevel ? ' Next: Night ' + (Number(Pets.doc(pid).bedLevel) + 1) + '.' : '') + '</small></button>' +
       '<div class="region locked"><strong>Whispering Forest</strong><small>Coming soon</small></div>' +
-      '<div class="region locked"><strong>Crystal Caves</strong><small>Coming soon</small></div></div>';
+      '<button type="button" class="region caverns" data-pact="goRegion" data-r="caverns"' + (can ? '' : ' disabled') + '><strong>Crystal Caverns</strong><small>Your pet runs through a glowing cave: jump for tickets and crystal blocks, and dodge the bats and slimes.</small></button></div>';
     if (!can) h += '<p class="note">' + (!Pets.doc(pid).pet ? 'You need a pet to go on an adventure.' : !p.has ? 'Earn a pass first.' : !p.open ? 'The gate is closed right now. Come back during adventure hours.' : 'You used all your adventure time today.') + '</p>';
     return h + '</div>';
   }

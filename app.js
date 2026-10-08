@@ -287,13 +287,47 @@
     var n = /(\d+)/.exec(t), k = n ? Number(n[1]) : /twice/.test(t) ? 2 : /three|thrice/.test(t) ? 3 : 1;
     return k > 0 && k < 100 ? k + per : null;
   }
-  function freqUsed(pid, c, date) {   /* times logged (not denied) in the day or week of that date */
-    var f = freqOf(c); if (!f) return 0;
+  /* the limit actually enforced: the chore's How often, or once a day for a shared chore with none set (cl-v35) */
+  function limOf(c) { return freqOf(c) || (c && c.shared ? { n: 1, per: 'd' } : null); }
+  function freqUsed(pid, c, date) {   /* times logged (not denied) in the day or week of that date; a shared chore counts everyone's */
+    var f = limOf(c); if (!f) return 0;
     var from = f.per === 'd' ? date : weekStart(date), to = f.per === 'd' ? date : addDays(from, 6), n = 0;
-    S.entries.forEach(function (e) { if (e.pid === pid && e.cid === c.id && e.status !== 'rejected' && e.date >= from && e.date <= to) n++; });
+    S.entries.forEach(function (e) { if ((c.shared || e.pid === pid) && e.cid === c.id && e.status !== 'rejected' && e.date >= from && e.date <= to) n++; });
     return n;
   }
-  function freqFull(pid, c, date) { var f = freqOf(c); return !!f && freqUsed(pid, c, date) >= f.n; }
+  function freqFull(pid, c, date) { var f = limOf(c); return !!f && freqUsed(pid, c, date) >= f.n; }
+  function sharedBy(c, date) {   /* who logged a shared chore in its current day or week */
+    var f = limOf(c); if (!c.shared || !f) return [];
+    var from = f.per === 'd' ? date : weekStart(date), to = f.per === 'd' ? date : addDays(from, 6), who = [];
+    S.entries.forEach(function (e) { if (e.cid === c.id && e.status !== 'rejected' && e.date >= from && e.date <= to && who.indexOf(e.pid) < 0) who.push(e.pid); });
+    return who;
+  }
+  /* the days of the week a chore is offered (0 = Sunday); none or all seven = every day */
+  var DAYN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function daysOf(c) { var d = c && c.days; if (!d || !d.length) return null; d = d.map(Number).filter(function (x) { return x >= 0 && x < 7; }); return d.length && d.length < 7 ? d : null; }
+  function dow(date) { var q = String(date).split('-'); return new Date(Number(q[0]), Number(q[1]) - 1, Number(q[2])).getDay(); }
+  function dayOk(c, date) { var d = daysOf(c); return !d || d.indexOf(dow(date)) >= 0; }
+  function daysText(d) {
+    if (!d || !d.length || d.length >= 7) return 'Every day';
+    var k = d.slice().sort().join('');
+    if (k === '12345') return 'Weekdays'; if (k === '06') return 'Weekends';
+    return d.slice().sort(function (a, b) { return ((a + 6) % 7) - ((b + 6) % 7); }).map(function (i) { return DAYN[i]; }).join(', ');
+  }
+  function daysKey(str) {   /* "Mon, Thu", "M Th", "weekdays", "Mon-Fri", "every day" -> [1, 4] etc.; null if it can't tell */
+    var t = lc(String(str || '')).replace(/[^a-z\-, ]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!t || /^(every ?day|daily|all|any|any ?day|all days)$/.test(t)) return [];
+    if (/^week ?days?$/.test(t)) return [1, 2, 3, 4, 5];
+    if (/^week ?ends?$/.test(t)) return [0, 6];
+    function one(w) { w = w.trim(); var m = [['su', 0], ['m', 1], ['tu', 2], ['w', 3], ['th', 4], ['f', 5], ['sa', 6]]; for (var i = 0; i < m.length; i++) if (w.indexOf(m[i][0]) === 0) return m[i][1]; return -1; }
+    var out = [], bad = false;
+    t.split(/[ ,]+/).forEach(function (w) {
+      if (!w || w === 'and') return;
+      var r = w.split('-');
+      if (r.length === 2 && r[0] && r[1]) { var a = one(r[0]), b = one(r[1]); if (a < 0 || b < 0) { bad = true; return; } for (var i = a; ; i = (i + 1) % 7) { if (out.indexOf(i) < 0) out.push(i); if (i === b) break; } }
+      else { var d = one(w); if (d < 0) bad = true; else if (out.indexOf(d) < 0) out.push(d); }
+    });
+    return bad || !out.length ? null : out.length === 7 ? [] : out.sort();
+  }
   function hideOpts(lv, cur) { return '<option value="">never</option>' + (lv || []).map(function (x) { return '<option value="' + esc(x.n) + '"' + (cur === x.n ? ' selected' : '') + '>' + esc(x.n) + '</option>'; }).join(''); }
   function levelExtra(c, i) { var lv = levelsOf(c), x = lv && lv[i]; return x ? { lv: x.n, lvPct: x.p } : null; }
   var STAR_SVG = '<svg class="rw-i" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="#b58cff" stroke="#6a4bc4" stroke-width="1.5"/><path d="M10 4.2 L11.7 8 L15.8 8.3 L12.7 11 L13.6 15 L10 12.9 L6.4 15 L7.3 11 L4.2 8.3 L8.3 8 Z" fill="#fff"/></svg>';
@@ -406,20 +440,24 @@
   function addEntry(pid, date, chore, extra) { S.lastLog[pid + '|' + chore.id] = Date.now(); return saveEntries([newEntry(pid, date, chore, extra)]).catch(fail); }
   /* kids can't flood the approvals: a short wait between logs of the same chore, and a daily limit (parents are never limited) */
   /* ----- the daily review (cl-v33): chores marked review, rated for every kid in one place; saving logs them as approved ----- */
-  function reviewItems() { var cats = catList(S.chores); return S.chores.filter(function (c) { return c.active !== false && c.review; }).sort(function (a, b) { return (cats.indexOf(catName(a)) - cats.indexOf(catName(b))) || ((a.order || 0) - (b.order || 0)); }); }
+  function reviewItems(date) { var cats = catList(S.chores); return S.chores.filter(function (c) { return c.active !== false && c.review && (!date || dayOk(c, date)); }).sort(function (a, b) { return (cats.indexOf(catName(a)) - cats.indexOf(catName(b))) || ((a.order || 0) - (b.order || 0)); }); }
   function reviewKids() { return kids().filter(function (p) { return p.active !== false; }); }
   function rvEntry(pid, cid, date) { var best = null; S.entries.forEach(function (e) { if (e.pid === pid && e.cid === cid && e.date === date && e.status !== 'rejected' && (!best || (e.ts || 0) > (best.ts || 0))) best = e; }); return best; }
   function reviewLeft(date) {
-    var n = 0, items = reviewItems();
+    var n = 0, items = reviewItems(date);
     reviewKids().forEach(function (p) { if (items.some(function (c) { return (c.who || []).indexOf(p.id) >= 0 && !rvEntry(p.id, c.id, date); })) n++; });
     return n;
   }
   function rvState() { var d = S.rvDate || today(); if (!S.rv || S.rv.date !== d) S.rv = { date: d, picks: {} }; return S.rv; }
   function renderReview() {
     if (!S.admin) { view.innerHTML = locked('The daily review'); return; }
-    var rv = rvState(), date = rv.date, items = reviewItems(), kidsL = reviewKids(), changes = Object.keys(rv.picks).length;
+    var rv = rvState(), date = rv.date, items = reviewItems(date), kidsL = reviewKids(), changes = Object.keys(rv.picks).length;
     var h = '<section class="stack review"><div class="wrap end"><label class="field w-md" for="rvDate"><span>Day</span><input type="date" id="rvDate" value="' + esc(date) + '" max="' + today() + '"></label>' +
       (date !== today() ? '<button class="btn" type="button" data-act="rvToday">Today</button>' : '') + '</div>';
+    if (!items.length && S.chores.some(function (c) { return c.active !== false && c.review; })) {
+      view.innerHTML = h + '<div class="card stack tight"><h2>Daily review</h2><p class="note">None of the review chores are set for ' + esc(DAYN[dow(date)]) + '. Pick another day above.</p></div></section>';
+      return;
+    }
     if (!items.length) {
       view.innerHTML = h + '<div class="card stack tight"><h2>Daily review</h2><p class="note">Pick the chores you want to rate for every kid at the end of the day, like bedtime, attitude or cursing. ' +
         'Tick <b>Daily review</b> on them in Setup → Chores → Edit all in a table (or in the spreadsheet), or tick <b>Show it in the daily review</b> in a chore’s editor. Rated chores show their levels here; the rest just get a Done.</p>' +
@@ -470,8 +508,13 @@
     var wait = cd - (Date.now() - last);
     if (wait > 0) { var sec = Math.ceil(wait / 1000); toast('You just logged ' + c.name + '. Wait ' + sec + ' more second' + (sec === 1 ? '' : 's') + ' to log it again.', true); return false; }
     if (cap && n >= cap) { toast(c.name + ' can be logged ' + cap + ' time' + (cap === 1 ? '' : 's') + ' a day, and that’s done for today. Ask a parent if you did it again.', true); return false; }
-    var f = freqOf(c);
-    if (f && freqUsed(pid, c, S.date) >= f.n) { toast(c.name + ' can be logged ' + freqText(f).toLowerCase() + ', and that’s done ' + (f.per === 'd' ? 'for today' : 'for this week') + '.', true); return false; }
+    if (!dayOk(c, S.date)) { toast(c.name + ' is only on ' + daysText(daysOf(c)) + '.', true); return false; }
+    var f = limOf(c);
+    if (f && freqUsed(pid, c, S.date) >= f.n) {
+      var by = sharedBy(c, S.date).filter(function (x) { return x !== pid; });
+      toast(c.shared && by.length ? by.map(pname).join(' and ') + ' already did ' + c.name + ' ' + (f.per === 'd' ? 'today' : 'this week') + '.' : c.name + ' can be logged ' + freqText(f).toLowerCase() + ', and that’s done ' + (f.per === 'd' ? 'for today' : 'for this week') + '.', true);
+      return false;
+    }
     return true;
   }
   /* a parent changes how well a waiting graded chore went: the rewards are worked out again from the full amounts */
@@ -1037,7 +1080,7 @@
   /* ----- Chores tab, by chore (parent mode): tap a chore to see everyone assigned and mark or approve them together ----- */
   function boardChores() {
     var vac = window.ADV && ADV.onVacation();
-    return S.chores.filter(function (c) { return c.active !== false && (c.who || []).length && (!vac || !c.homeOnly); });
+    return S.chores.filter(function (c) { return c.active !== false && (c.who || []).length && vacShow(c, vac) && dayOk(c, S.date); });
   }
   function choreStatus(cid, pid) {
     var es = S.entries.filter(function (e) { return e.cid === cid && e.pid === pid && e.date === S.date; }), qd = queuedIds();
@@ -1135,9 +1178,9 @@
   function renderPassBox(pid) {
     var box = $('#passBox'); if (!box || !window.ADV) return;
     if (isAdult(pid)) { box.innerHTML = ''; return; }
-    var p = ADV.passInfo(pid), hs = p.house, vac = p.vacation;
-    if (!hs.total && !vac) { box.innerHTML = ''; return; }
-    box.innerHTML = '<div class="passline' + (p.has ? ' ok' : '') + (hs.clean ? ' shine' : '') + '">' +
+    var p = ADV.passInfo(pid), hs = p.house, vac = p.vacation, prog = window.Pets && Pets.progressHtml ? Pets.progressHtml(pid) : '';
+    if (!hs.total && !vac) { box.innerHTML = prog; return; }
+    box.innerHTML = prog + '<div class="passline' + (p.has ? ' ok' : '') + (hs.clean ? ' shine' : '') + '">' +
       (vac ? '<strong>Vacation mode.</strong> Travel chores only, and adventures are open all day.' :
         (p.has ? '<strong>' + (p.golden ? 'Golden Adventure Pass!' : 'Adventure Pass earned!') + '</strong> ' + p.left + ' minutes today.' :
           '<strong>Adventure Pass:</strong> ' + p.done + ' of ' + p.need + ' big jobs approved.') +
@@ -1199,8 +1242,10 @@
     var n = x ? x.a + x.p : 0, tags = giveTag(c);
     if (c.bountyCents > 0) tags += '<span class="tag bounty">' + money(c.bountyCents) + ' bounty</span>';
     if (c.major && window.ADV && ADV.bigJobsToday().indexOf(c) >= 0) tags += '<span class="tag big">Big job</span>';
-    var full = pid && !S.admin && freqFull(pid, c, S.date), fq = freqOf(c);
-    if (full) tags += '<span class="tag ok">Done ' + (fq.per === 'd' ? 'for today' : 'this week') + '</span>';
+    var full = pid && !S.admin && freqFull(pid, c, S.date), fq = limOf(c);
+    if (full) { var by = c.shared ? sharedBy(c, S.date).filter(function (x) { return x !== pid; }) : []; tags += '<span class="tag ok">' + (by.length ? 'Done by ' + esc(by.map(pname).join(' & ')) : 'Done ' + (fq.per === 'd' ? 'for today' : 'this week')) + '</span>'; }
+    if (S.admin && daysOf(c)) tags += '<span class="tag plain">' + esc(daysText(daysOf(c))) + '</span>';
+    if (S.admin && c.shared) tags += '<span class="tag plain">Shared</span>';
     if (x) {
       if (x.p) tags += '<span class="tag pend">' + x.p + ' waiting</span>';
       if (x.a) tags += '<span class="tag ok">' + x.a + ' approved</span>';
@@ -1229,7 +1274,10 @@
       }
     });
     var vac = window.ADV && ADV.onVacation();
-    var mine = S.chores.filter(function (c) { return c.active !== false && (c.who || []).indexOf(pid) >= 0 && (!vac || !c.homeOnly); });
+    var mine = S.chores.filter(function (c) { return c.active !== false && (c.who || []).indexOf(pid) >= 0 && vacShow(c, vac) && dayOk(c, S.date); });
+    /* kids: chores already done as many times as allowed drop out of the list (a "Done" link brings them back) */
+    var doneHid = S.admin ? [] : mine.filter(function (c) { return freqFull(pid, c, S.date); });
+    if (doneHid.length && !S.showDone) mine = mine.filter(function (c) { return doneHid.indexOf(c) < 0; });
     var cats = catList(mine);
     if (S.cat !== 'all' && S.cat !== '$' && cats.indexOf(S.cat) < 0) S.cat = 'all';
     var per = {}; mine.forEach(function (c) { var n = catName(c); per[n] = (per[n] || 0) + 1; });
@@ -1242,14 +1290,15 @@
     else if (S.cat !== 'all') list = list.filter(function (c) { return catName(c) === S.cat; });
     var q = trim(S.q).toLowerCase();
     if (q) list = list.filter(function (c) { return c.name.toLowerCase().indexOf(q) >= 0 || catName(c).toLowerCase().indexOf(q) >= 0; });
-    if (!mine.length) { ul.innerHTML = '<li class="empty">No chores are assigned to ' + esc(pname(pid)) + ' yet. A parent can add them in Setup.</li>'; return; }
-    if (!list.length) { ul.innerHTML = '<li class="empty">No chores match.</li>'; return; }
+    var doneLink = doneHid.length ? '<li class="done-link"><button type="button" class="btn small" data-act="showDone">' + (S.showDone ? 'Hide' : 'Show') + ' done (' + doneHid.length + ')</button></li>' : '';
+    if (!mine.length) { ul.innerHTML = doneHid.length ? '<li class="empty">All done for now. Nice work!</li>' + doneLink : '<li class="empty">No chores are assigned to ' + esc(pname(pid)) + ' yet. A parent can add them in Setup.</li>'; return; }
+    if (!list.length) { ul.innerHTML = '<li class="empty">No chores match.</li>' + doneLink; return; }
     function ord(c) { return typeof c.order === 'number' ? c.order : 0; }
     if (S.sort === 'points') list.sort(function (a, b) { return b.pts - a.pts || ord(a) - ord(b); });
     else if (S.sort === 'name') list.sort(function (a, b) { return a.name.localeCompare(b.name); });
     else if (S.sort === 'used') list.sort(function (a, b) { return (used[b.id] || 0) - (used[a.id] || 0) || ord(a) - ord(b); });
     else list.sort(function (a, b) { return ord(a) - ord(b); });
-    if (!(S.sort === 'cat' && S.cat === 'all')) { ul.innerHTML = list.map(function (c) { return rowHtml(c, cnt[c.id], pid); }).join(''); return; }
+    if (!(S.sort === 'cat' && S.cat === 'all')) { ul.innerHTML = list.map(function (c) { return rowHtml(c, cnt[c.id], pid); }).join('') + doneLink; return; }
     var html = '';
     catList(list).forEach(function (n) {
       var items = list.filter(function (c) { return catName(c) === n; });
@@ -1257,7 +1306,7 @@
       html += '<li class="grp"><span>' + esc(n) + '</span><span class="mono">' + done + ' / ' + items.length + '</span></li>' +
         items.map(function (c) { return rowHtml(c, cnt[c.id], pid); }).join('');
     });
-    ul.innerHTML = html;
+    ul.innerHTML = html + doneLink;
   }
 
   /* ----- Approvals: swipe right to approve, left to deny, grouped by chore or by person ----- */
@@ -2093,7 +2142,7 @@
         var who = (c.who || []).map(pname);
         html += '<li class="srow' + (c.active === false ? ' off' : '') + '"><div class="grow">' + esc(c.name) + (c.active === false ? ' (archived)' : '') +
           ' ' + giveTag(c) + (c.bountyCents > 0 ? ' <span class="tag bounty">' + money(c.bountyCents) + '</span>' : '') +
-          (c.major ? ' <span class="tag big">Big job' + (c.majorEach ? ', everyone' : '') + '</span>' : '') + (c.travel && c.major ? ' <span class="tag plain">Trip big job</span>' : '') + (c.homeOnly ? ' <span class="tag plain">Home only</span>' : '') + (freqOf(c) ? ' <span class="tag plain">' + freqText(freqOf(c)) + '</span>' : '') + (c.review ? ' <span class="tag plain">Daily review</span>' : '') +
+          (c.major ? ' <span class="tag big">Big job' + (c.majorEach ? ', everyone' : '') + '</span>' : '') + (c.travel && c.major ? ' <span class="tag plain">Trip big job</span>' : '') + (c.tripOnly ? ' <span class="tag plain">Only on vacation</span>' : c.homeOnly ? ' <span class="tag plain">Hidden on vacation</span>' : '') + (daysOf(c) ? ' <span class="tag plain">' + esc(daysText(daysOf(c))) + '</span>' : '') + (c.shared ? ' <span class="tag plain">Shared</span>' : '') + (freqOf(c) ? ' <span class="tag plain">' + freqText(freqOf(c)) + '</span>' : '') + (c.review ? ' <span class="tag plain">Daily review</span>' : '') +
           '<br><small>' + (who.length ? esc(who.join(', ')) : 'Nobody assigned') + '</small></div>' +
           ptsBadge(c.pts, !!levelsOf(c)) + '<button class="btn small" type="button" data-act="editChore" data-cid="' + esc(c.id) + '">Edit</button></li>';
       });
@@ -2105,21 +2154,29 @@
      Columns: chore coins (pts), food and clean coins, tuck-in %, play %, needs most %, levels (graded chores), bounty, on. ----- */
   var CT_NUM = ['pts', 'food', 'clean', 'tuck', 'play', 'any'];
   var CT_HEAD = { pts: 'Chore coins', food: 'Food coins', clean: 'Clean coins', tuck: 'Tuck-in %', play: 'Play %', any: 'Needs most %' };
-  var CT_FILTER = [['', 'All'], ['food', 'Food coins'], ['clean', 'Clean coins'], ['tuck', 'Tuck-ins'], ['play', 'Play'], ['any', 'Needs most'], ['rated', 'Rated'], ['review', 'Daily review'], ['only', 'Chore coins only']];
+  var CT_FILTER = [['', 'All'], ['food', 'Food coins'], ['clean', 'Clean coins'], ['tuck', 'Tuck-ins'], ['play', 'Play'], ['any', 'Needs most'], ['rated', 'Rated'], ['review', 'Daily review'], ['days', 'Set days'], ['shared', 'Shared'], ['vac', 'Vacation'], ['big', 'Big jobs'], ['only', 'Chore coins only']];
   function ctState() { if (!S.ct) S.ct = { d: {}, n: [], q: '', cat: '', give: '', arch: false, msg: '' }; return S.ct; }
   function whoKey(ids) { return (ids || []).slice().sort().join(','); }
   function ctBase(c) {
     var r = rewardsOf(c);
     return { name: c.name || '', cat: c.cat || '', pts: Number(c.pts) || 0, food: r.food, clean: r.clean, tuck: r.tuck, play: r.play, any: r.any,
-      lv: levelsText(levelsOf(c)), freq: (freqOf(c) ? c.freq : ''), review: !!c.review, bounty: Number(c.bountyCents) || 0, active: c.active !== false, who: whoKey(c.who) };
+      lv: levelsText(levelsOf(c)), freq: (freqOf(c) ? c.freq : ''), review: !!c.review, days: daysOf(c) ? daysText(daysOf(c)) : '', shared: !!c.shared, vac: vacOf(c), big: !!c.major,
+      bounty: Number(c.bountyCents) || 0, active: c.active !== false, who: whoKey(c.who) };
   }
-  function ctNewRow(cat) { return { name: '', cat: cat || '', pts: 4, food: 0, clean: 0, tuck: 0, play: 0, any: 0, lv: '', freq: '', review: false, bounty: 0, active: true, who: '' }; }
+  function ctNewRow(cat) { return { name: '', cat: cat || '', pts: 4, food: 0, clean: 0, tuck: 0, play: 0, any: 0, lv: '', freq: '', review: false, days: '', shared: false, vac: '', big: false, bounty: 0, active: true, who: '' }; }
+  /* vacation: '' shows it always, 'hide' hides it on vacation (homeOnly), 'only' shows it only on vacation (tripOnly) */
+  var VACS = [['', 'Always'], ['hide', 'Hide on vacation'], ['only', 'Only on vacation']];
+  function vacOf(c) { return c && c.tripOnly ? 'only' : c && c.homeOnly ? 'hide' : ''; }
+  function vacShow(c, vac) { return vac ? !c.homeOnly : !c.tripOnly; }
+  function vacKey(str) { var t = lc(String(str || '')).trim(); if (!t || /^(always|show|both|no|n|0|false|-)$/.test(t)) return ''; if (/^(hide|home)/.test(t) || /^(yes|y|1|x|true|✓|✔)$/.test(t)) return 'hide'; if (/only|trip|travel|away/.test(t)) return 'only'; return null; }
+  function normDays(v) { var k = daysKey(v); return k === null ? v : k.length ? daysText(k) : ''; }   /* "mon thu" reads as "Mon, Thu"; unreadable text stays as typed */
   function ctRow(c) { var d = ctState().d[c.id]; return d ? assign(ctBase(c), d) : ctBase(c); }
   function ctChanged(c) {
     var b = ctBase(c), d = ctState().d[c.id] || {}, out = {};
     Object.keys(d).forEach(function (k) {
       var v = typeof d[k] === 'string' && k !== 'who' ? trim(d[k]) : d[k];
       if (k === 'lv') v = levelsText(parseLevels(v));
+      if (k === 'days') v = normDays(v);
       if (v !== b[k]) out[k] = v;
     });
     return out;
@@ -2136,7 +2193,7 @@
       var r = ctRow(c);
       if (!ct.arch && c.active === false && !ct.d[c.id]) return false;
       if (ct.cat && catName(c) !== ct.cat) return false;
-      if (ct.give === 'review' ? !r.review : ct.give === 'rated' ? !trim(r.lv) : ct.give === 'only' ? (r.food || r.clean || r.tuck || r.play || r.any) : ct.give && !(r[ct.give] > 0)) return false;
+      if (ct.give === 'review' ? !r.review : ct.give === 'days' ? !r.days : ct.give === 'shared' ? !r.shared : ct.give === 'big' ? !r.big : ct.give === 'vac' ? !r.vac : ct.give === 'rated' ? !trim(r.lv) : ct.give === 'only' ? (r.food || r.clean || r.tuck || r.play || r.any) : ct.give && !(r[ct.give] > 0)) return false;
       return !q || lc(r.name).indexOf(q) >= 0 || lc(r.cat).indexOf(q) >= 0;
     });
   }
@@ -2149,6 +2206,10 @@
       td('lv', '<input type="text"' + at + ' data-f="lv" maxlength="120" aria-label="Levels" placeholder="none" value="' + esc(r.lv) + '">') +
       td('freq', '<select' + at + ' data-f="freq" aria-label="How often">' + freqOpts(r.freq) + '</select>') +
       td('review', '<input type="checkbox"' + at + ' data-f="review" aria-label="Daily review"' + (r.review ? ' checked' : '') + '>') +
+      td('days', '<input type="text"' + at + ' data-f="days" maxlength="40" aria-label="Days" placeholder="every day"' + (r.days && daysKey(r.days) === null ? ' class="bad"' : '') + ' value="' + esc(r.days) + '">') +
+      td('shared', '<input type="checkbox"' + at + ' data-f="shared" aria-label="Shared"' + (r.shared ? ' checked' : '') + '>') +
+      td('vac', '<select' + at + ' data-f="vac" aria-label="On vacation">' + VACS.map(function (x) { return '<option value="' + x[0] + '"' + (r.vac === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select>') +
+      td('big', '<input type="checkbox"' + at + ' data-f="big" aria-label="Big job"' + (r.big ? ' checked' : '') + '>') +
       td('bounty', '<input type="text"' + at + ' data-f="bounty" inputmode="decimal" placeholder="0.00" aria-label="Bounty" value="' + (r.bounty ? dollars(r.bounty) : '') + '">') +
       td('active', '<input type="checkbox"' + at + ' data-f="active" aria-label="Active"' + (r.active ? ' checked' : '') + '>');
   }
@@ -2167,13 +2228,13 @@
     un.disabled = !n; sv.disabled = !n;
   }
   function renderChoreTable() {
-    var ct = ctState(), list = ctList(), cats = catList(S.chores), st = S.settings, cur = '', NC = 13;
+    var ct = ctState(), list = ctList(), cats = catList(S.chores), st = S.settings, cur = '', NC = 17;
     var rows = list.map(function (c) {
       var head = '';
       if (catName(c) !== cur) { cur = catName(c); head = '<tr class="grp"><td colspan="' + NC + '"><span>' + esc(cur) + '</span></td></tr>'; }
       return head + '<tr' + (c.active === false ? ' class="off"' : '') + '>' + ctCells(c.id, ctRow(c), ctChanged(c)) + '</tr>';
     }).join('');
-    var all = { name: 1, cat: 1, pts: 1, food: 1, clean: 1, tuck: 1, play: 1, any: 1, lv: 1, freq: 1, review: 1, bounty: 1, active: 1 };
+    var all = { name: 1, cat: 1, pts: 1, food: 1, clean: 1, tuck: 1, play: 1, any: 1, lv: 1, freq: 1, review: 1, days: 1, shared: 1, vac: 1, big: 1, bounty: 1, active: 1 };
     var news = ct.n.map(function (r, i) { return '<tr class="new">' + ctCells('+' + i, r, all) + '</tr>'; }).join('');
     view.innerHTML = '<section class="stack tight ct">' +
       '<div class="wrap"><button class="btn" type="button" data-act="ctClose">&lsaquo; Setup</button><h2 class="grow">All chores</h2></div>' +
@@ -2196,7 +2257,9 @@
       '<button class="btn" type="button" data-act="ctBulk"' + (list.length ? '' : ' disabled') + '>Apply</button></div>' +
       '<div class="wrap end ct-bulk"><span class="note">Levels for all shown:</span><div class="field w-lg"><input type="text" id="ctBL" maxlength="120" value="' + esc(levelsText(DEFAULT_LEVELS)) + '" aria-label="Levels for all shown"></div>' +
       '<button class="btn" type="button" data-act="ctBulkLv"' + (list.length ? '' : ' disabled') + '>Rate them</button><button class="btn" type="button" data-act="ctBulkLvOff"' + (list.length ? '' : ' disabled') + '>No levels</button></div>' +
-      '<div class="ct-wrap"><table class="ct-t"><thead><tr><th>Chore</th><th>Category</th>' + CT_NUM.map(function (k) { return '<th>' + CT_HEAD[k] + '</th>'; }).join('') + '<th>Levels</th><th>How often</th><th>Daily review</th><th>Bounty $</th><th>On</th></tr></thead><tbody>' +
+      '<div class="wrap end ct-bulk"><span class="note">On vacation, for all shown:</span><div class="field w-md"><select id="ctBVac" aria-label="On vacation for all shown">' + VACS.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + '</option>'; }).join('') + '</select></div>' +
+      '<button class="btn" type="button" data-act="ctBulkVac"' + (list.length ? '' : ' disabled') + '>Apply</button></div>' +
+      '<div class="ct-wrap"><table class="ct-t"><thead><tr><th>Chore</th><th>Category</th>' + CT_NUM.map(function (k) { return '<th>' + CT_HEAD[k] + '</th>'; }).join('') + '<th>Levels</th><th>How often</th><th>Daily review</th><th>Days</th><th>Shared</th><th>On vacation</th><th>Big job</th><th>Bounty $</th><th>On</th></tr></thead><tbody>' +
       (rows || '<tr><td colspan="' + NC + '" class="empty">No chores match.</td></tr>') + (news ? '<tr class="grp"><td colspan="' + NC + '"><span>New chores</span></td></tr>' + news : '') + '</tbody></table></div>' +
       '<div class="wrap"><button class="btn" type="button" data-act="ctAdd">Add a chore row</button></div>' +
       '<p class="note">Who does each chore, big jobs and travel settings are in each chore’s editor (Setup → Chores → Edit); the spreadsheet also has a column per person (1 = they do it). Rows you delete from the spreadsheet are left alone; to retire a chore, set Active to no.</p>' +
@@ -2206,7 +2269,7 @@
   function upTo(el, tag) { while (el && el.tagName !== tag) el = el.parentNode; return el; }
   function ctEdit(t) {
     var key = t.getAttribute('data-ct'), f = t.getAttribute('data-f'), ct = ctState(), v;
-    if (f === 'active' || f === 'review') v = t.checked;
+    if (f === 'active' || f === 'review' || f === 'shared' || f === 'big') v = t.checked;
     else if (CT_NUM.indexOf(f) >= 0) v = t.value === '' ? 0 : Math.max(0, Math.round(Number(t.value) || 0));
     else if (f === 'bounty') { v = parseMoney(t.value); if (isNaN(v)) { t.classList.add('bad'); return; } t.classList.remove('bad'); }
     else v = t.value;
@@ -2223,6 +2286,11 @@
     if (v === '' || isNaN(Number(v)) || Number(v) < 0) { toast('Type the number to set, 0 or more.', true); return; }
     ctList().forEach(function (c) { (ct.d[c.id] = ct.d[c.id] || {})[f] = Math.round(Number(v)); n++; });
     ct.msg = ''; toast(CT_HEAD[f] + ' set on ' + n + ' chore' + (n === 1 ? '' : 's') + '. Tap Save to keep it.'); renderChoreTable();
+  }
+  function ctBulkVac() {   /* e.g. pick the Travel category, then "Only on vacation" for all of them */
+    var ct = ctState(), v = val('ctBVac'), n = 0, lab = find(VACS, function (x) { return x[0] === v; });
+    ctList().forEach(function (c) { (ct.d[c.id] = ct.d[c.id] || {}).vac = v; n++; });
+    ct.msg = ''; toast('On vacation: ' + (lab ? lab[1] : 'Always').toLowerCase() + ' for ' + n + ' chore' + (n === 1 ? '' : 's') + '. Tap Save to keep it.'); renderChoreTable();
   }
   function ctBulkLv(off) {
     var ct = ctState(), t = off ? '' : levelsText(parseLevels(val('ctBL'))), n = 0;
@@ -2246,6 +2314,10 @@
       if (ch.lv !== undefined) d.levels = parseLevels(ch.lv);
       if (ch.freq !== undefined) d.freq = ch.freq;
       if (ch.review !== undefined) d.review = ch.review;
+      if (ch.days !== undefined) { var dk = daysKey(ch.days); if (dk === null) { bad.push(c.name + ': days "' + ch.days + '" should look like Mon, Thu or weekdays'); return; } d.days = dk; }
+      if (ch.shared !== undefined) d.shared = ch.shared;
+      if (ch.vac !== undefined) { d.homeOnly = ch.vac === 'hide'; d.tripOnly = ch.vac === 'only'; }
+      if (ch.big !== undefined) d.major = ch.big;
       if (ch.bounty !== undefined) d.bountyCents = ch.bounty;
       if (ch.active !== undefined) d.active = ch.active;
       if (ch.who !== undefined) d.who = ch.who ? ch.who.split(',') : [];
@@ -2255,7 +2327,8 @@
       var name = trim(r.name), cat = trim(r.cat || ''), rw = rwFromRow(r);
       noteCat(cat);
       ops.push({ t: 'set', c: 'chores', id: DB.newId('chores'), d: { name: name, pts: Math.max(0, Math.round(Number(r.pts) || 0)), cat: cat, rw: rw, need: compatNeed(rw), coins: rw.food || rw.clean || 0, levels: parseLevels(r.lv), freq: r.freq || '', review: !!r.review, bountyCents: r.bounty || 0,
-        who: r.who ? r.who.split(',') : activePeople().map(function (p) { return p.id; }), active: r.active !== false, order: ++order, major: false, majorEach: false, majorDays: [], travel: false, homeOnly: false } });
+        who: r.who ? r.who.split(',') : activePeople().map(function (p) { return p.id; }), active: r.active !== false, order: ++order, major: !!r.big, majorEach: false, majorDays: [], travel: false, homeOnly: r.vac === 'hide', tripOnly: r.vac === 'only',
+        days: daysKey(r.days || '') || [], shared: !!r.shared } });
     });
     if (bad.length) { toast(bad[0] + (bad.length > 1 ? ' (and ' + (bad.length - 1) + ' more)' : ''), true); return; }
     if (!ops.length) return;
@@ -2268,10 +2341,10 @@
   function csvCell(s) { s = String(s == null ? '' : s); return /[",;\t\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
   function ctDownload() {
     var ppl = activePeople();
-    var lines = [['ID', 'Chore', 'Category'].concat(CT_NUM.map(function (k) { return CT_HEAD[k]; }), ['Levels', 'How often', 'Daily review', 'Bounty', 'Active']).concat(ppl.map(function (p) { return p.name; })).map(csvCell).join(',')];
+    var lines = [['ID', 'Chore', 'Category'].concat(CT_NUM.map(function (k) { return CT_HEAD[k]; }), ['Levels', 'How often', 'Daily review', 'Days', 'Shared', 'On vacation', 'Big job', 'Bounty', 'Active']).concat(ppl.map(function (p) { return p.name; })).map(csvCell).join(',')];
     ctOrder().forEach(function (c) {
       var r = ctRow(c), who = r.who ? r.who.split(',') : [];
-      lines.push([c.id, trim(r.name), trim(r.cat)].concat(CT_NUM.map(function (k) { return r[k] || 0; }), [levelsText(parseLevels(r.lv)), freqOf(r) ? freqText(freqOf(r)).toLowerCase() : 'any time', r.review ? 'yes' : '', r.bounty ? dollars(r.bounty) : '', r.active ? 'yes' : 'no'])
+      lines.push([c.id, trim(r.name), trim(r.cat)].concat(CT_NUM.map(function (k) { return r[k] || 0; }), [levelsText(parseLevels(r.lv)), freqOf(r) ? freqText(freqOf(r)).toLowerCase() : 'any time', r.review ? 'yes' : '', r.days || 'every day', r.shared ? 'yes' : '', r.vac === 'hide' ? 'hide' : r.vac === 'only' ? 'only' : 'always', r.big ? 'yes' : '', r.bounty ? dollars(r.bounty) : '', r.active ? 'yes' : 'no'])
         .concat(ppl.map(function (p) { return who.indexOf(p.id) >= 0 ? 1 : ''; })).map(csvCell).join(','));
     });
     try {
@@ -2318,7 +2391,8 @@
       id: col(['id']), name: col(['chore', 'name', 'chorename', 'chores', 'quest', 'quests']), cat: col(['category', 'cat', 'group']),
       pts: col(['chorecoins', 'chorecoin', 'points', 'pts', 'point']), food: col(['foodcoins', 'foodcoin', 'food']), clean: col(['cleancoins', 'cleancoin', 'clean']),
       tuck: col(['tuckin', 'tuckins', 'tuck', 'tuckinpct', 'tuckinpercent']), play: col(['play', 'plays', 'playtime', 'playpct', 'playpercent']), any: col(['needsmost', 'needmost', 'any']),
-      lv: col(['levels', 'level', 'grades', 'rating']), freq: col(['howoften', 'often', 'frequency', 'freq', 'limit']), review: col(['dailyreview', 'review', 'inreview', 'checkin']), bounty: col(['bounty', 'bountyusd', 'bountydollars']), active: col(['active', 'on', 'enabled']), who: col(['who', 'assigned', 'assignedto', 'people', 'kids']),
+      lv: col(['levels', 'level', 'grades', 'rating']), freq: col(['howoften', 'often', 'frequency', 'freq', 'limit']), review: col(['dailyreview', 'review', 'inreview', 'checkin']), days: col(['days', 'day', 'onlyon', 'whichdays', 'ondays']), shared: col(['shared', 'sharedchore', 'oneforall']),
+      vac: col(['onvacation', 'vacation', 'hideonvacation', 'hidevacation', 'homeonly', 'notonvacation', 'novacation', 'hideontrips']), big: col(['bigjob', 'bigjobs', 'big', 'major']), bounty: col(['bounty', 'bountyusd', 'bountydollars']), active: col(['active', 'on', 'enabled']), who: col(['who', 'assigned', 'assignedto', 'people', 'kids']),
       gives: col(['gives', 'give', 'cointype', 'reward', 'petgame']), coins: col(['coins', 'coin', 'petcoins', 'amount'])
     };
     if (C.name < 0) { toast('The first row needs column names, with at least a Chore column.', true); return; }
@@ -2351,6 +2425,9 @@
       if (C.lv >= 0) { var ls = get(C.lv); v.lv = levelsText(parseLevels(ls)); if (ls && !v.lv && !/^(none|no|-)$/i.test(ls)) warn.push('Row ' + line + ' (' + name + '): levels "' + ls + '" should look like Great 100, Good 75, OK 50, Bad 0'); }
       if (C.freq >= 0) { var fs = get(C.freq), fk = freqKey(fs); if (fk === null) warn.push('Row ' + line + ' (' + name + '): how often "' + fs + '" should look like any time, once a day, 2 a day or once a week'); else v.freq = fk; }
       if (C.review >= 0) v.review = /^(1(\.0+)?|y|yes|x|true|✓|✔)$/i.test(get(C.review));
+      if (C.days >= 0) { var ds = get(C.days), dk = daysKey(ds); if (dk === null) warn.push('Row ' + line + ' (' + name + '): days "' + ds + '" should look like Mon, Thu or weekdays or every day'); else v.days = dk.length ? daysText(dk) : ''; }
+      ['shared', 'big'].forEach(function (k) { if (C[k] >= 0) v[k] = /^(1(\.0+)?|y|yes|x|true|✓|✔)$/i.test(get(C[k])); });
+      if (C.vac >= 0) { var vs = get(C.vac), vk = vacKey(vs); if (vk === null) warn.push('Row ' + line + ' (' + name + '): on vacation "' + vs + '" should be always, hide or only'); else v.vac = vk; }
       if (C.bounty >= 0) { var bc = parseMoney(get(C.bounty)); if (isNaN(bc)) warn.push('Row ' + line + ' (' + name + '): bounty "' + get(C.bounty) + '" should look like 5.00'); else v.bounty = bc; }
       if (C.active >= 0) { var as = lc(get(C.active)); v.active = !/^(n|no|false|0|off|archived?|retired?|x)$/.test(as); }
       if (C.who >= 0) {
@@ -2393,21 +2470,27 @@
         '<div class="checks"><label><input type="checkbox" id="ceRate"' + (lv ? ' checked' : '') + '>Rate how well it went (asks when it is logged)</label></div>' +
         '<div id="ceLvBox"' + (lv ? '' : ' hidden') + '><label class="field" for="ceLevels"><span>Levels, and the percent of the pay each one gets</span><input type="text" id="ceLevels" maxlength="120" value="' + esc(levelsText(lv || DEFAULT_LEVELS)) + '"></label>' +
         '<label class="field w-lg" for="ceHide"><span>Pet hides under the bed (no playing with it for ' + (Number(st.hideHours) || 24) + ' hours) when rated</span><select id="ceHide">' + hideOpts(lv || DEFAULT_LEVELS, c && c.hideLv) + '</select></label></div></fieldset>' +
-      '<div class="wrap end"><label class="field w-sm" for="ceBounty"><span>Bounty ($)</span><input type="text" id="ceBounty" inputmode="decimal" placeholder="0.00" value="' + (c && c.bountyCents ? dollars(c.bountyCents) : '') + '"></label></div>' +
       '<datalist id="catlist">' + cats.map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
       '<fieldset><legend>Who can do it</legend><div class="checks">' + act.map(function (p) {
         return '<label><input type="checkbox" name="who" value="' + esc(p.id) + '"' + (who.indexOf(p.id) >= 0 ? ' checked' : '') + '>' + esc(p.name) + '</label>';
       }).join('') + '</div></fieldset>' +
-      '<div class="wrap end"><label class="field w-md" for="ceFreq"><span>How often kids can log it</span><select id="ceFreq">' + freqOpts(freqOf(c) ? c.freq : '') + '</select></label></div>' +
-      '<div class="checks"><label><input type="checkbox" id="ceReview"' + (c && c.review ? ' checked' : '') + '>Show it in the daily review (parents rate it for every kid at the end of the day)</label></div>' +
-      '<div class="checks"><label><input type="checkbox" id="ceTravel"' + (c && c.homeOnly ? '' : ' checked') + '>Works while traveling</label>' +
-      '<label><input type="checkbox" id="ceMajor"' + (c && c.major ? ' checked' : '') + '>Big job (counts toward Adventure Passes)</label>' +
-      '<label><input type="checkbox" id="ceEach"' + (c && c.majorEach ? ' checked' : '') + '>Everyone assigned must do it</label>' +
-      '<label><input type="checkbox" id="ceTrip"' + (c && c.travel ? ' checked' : '') + '>Big job on trips only (not at home)</label>' +
-      '</div>' +
-      '<fieldset><legend>Big job on these days (none checked means every day)</legend><div class="checks">' + ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(function (dl, i) {
-        return '<label><input type="checkbox" name="mday" value="' + i + '"' + (c && c.majorDays && c.majorDays.indexOf(i) >= 0 ? ' checked' : '') + '>' + dl + '</label>';
-      }).join('') + '</div></fieldset>' +
+      /* when it can be done (cl-v35): days of the week, how often, shared by everyone, hidden on vacation */
+      '<fieldset><legend>When</legend>' +
+        '<div class="field"><span>Days it shows up (none ticked = every day)</span><div class="checks days">' + [1, 2, 3, 4, 5, 6, 0].map(function (i) {
+          return '<label><input type="checkbox" name="cday" value="' + i + '"' + (c && daysOf(c) && daysOf(c).indexOf(i) >= 0 ? ' checked' : '') + '>' + DAYN[i] + '</label>';
+        }).join('') + '</div></div>' +
+        '<div class="wrap end"><label class="field w-md" for="ceFreq"><span>How often each kid can log it</span><select id="ceFreq">' + freqOpts(freqOf(c) ? c.freq : '') + '</select></label></div>' +
+        '<div class="checks"><label><input type="checkbox" id="ceShared"' + (c && c.shared ? ' checked' : '') + '>Shared: once one kid does it, it’s done for everyone (that day, or that week if How often is weekly)</label>' +
+        '</div><div class="wrap end"><label class="field w-lg" for="ceVac"><span>On vacation</span><select id="ceVac">' + VACS.map(function (x) { return '<option value="' + x[0] + '"' + (vacOf(c) === x[0] ? ' selected' : '') + '>' + (x[0] ? x[1] : 'Show it (home and away)') + '</option>'; }).join('') + '</select></label></div>' +
+      '</fieldset>' +
+      '<fieldset><legend>Big job</legend><div class="checks"><label><input type="checkbox" id="ceMajor"' + (c && c.major ? ' checked' : '') + '>Big job (counts toward Adventure Passes)</label></div>' +
+        '<div id="ceBigBox"' + (c && c.major ? '' : ' hidden') + '><div class="checks"><label><input type="checkbox" id="ceEach"' + (c && c.majorEach ? ' checked' : '') + '>Everyone assigned must do it</label>' +
+        '<label><input type="checkbox" id="ceTrip"' + (c && c.travel ? ' checked' : '') + '>Big job on trips only (not at home)</label></div>' +
+        '<div class="field"><span>Counts as a big job on these days (none ticked = every day)</span><div class="checks days">' + [1, 2, 3, 4, 5, 6, 0].map(function (i) {
+          return '<label><input type="checkbox" name="mday" value="' + i + '"' + (c && c.majorDays && c.majorDays.indexOf(i) >= 0 ? ' checked' : '') + '>' + DAYN[i] + '</label>';
+        }).join('') + '</div></div></div></fieldset>' +
+      '<fieldset><legend>Extras</legend><div class="checks"><label><input type="checkbox" id="ceReview"' + (c && c.review ? ' checked' : '') + '>Show it in the daily review (parents rate it for every kid at the end of the day)</label></div>' +
+        '<div class="wrap end"><label class="field w-sm" for="ceBounty"><span>Bounty ($)</span><input type="text" id="ceBounty" inputmode="decimal" placeholder="0.00" value="' + (c && c.bountyCents ? dollars(c.bountyCents) : '') + '"></label></div></fieldset>' +
       '<p class="note">A bounty pays money when approved. People who do it together choose how to split it.</p>' +
       '<div class="wrap"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="cancelEdit">Cancel</button>' +
       (c ? '<button class="btn ' + (c.active === false ? '' : 'danger') + '" type="button" data-act="toggleChore" data-cid="' + esc(c.id) + '">' + (c.active === false ? 'Restore' : 'Archive') + '</button>' : '') + '</div></form></li>';
@@ -2506,6 +2589,7 @@
         if (c && pid && canLog(pid, c)) addEntry(pid, S.date, c, levelExtra(c, Number(d('i'))));
         updateLogList(); break;
       case 'lvCancel': S.lvPick = null; updateLogList(); break;
+      case 'showDone': S.showDone = !S.showDone; updateLogList(); break;
       case 'rvPick': if (needAdmin()) { var rv = rvState(), rk = d('k'), ri = Number(d('i')), ex0 = rvEntry(rk.split('|')[0], rk.split('|')[1], rv.date), c0 = find(S.chores, function (x) { return x.id === rk.split('|')[1]; });
         var cur0 = ex0 ? (levelsOf(c0) ? levelsOf(c0).map(function (x) { return x.n; }).indexOf(ex0.lv) : 0) : -1;
         if (rv.picks[rk] === ri || (rv.picks[rk] === undefined && cur0 === ri && ex0 && ex0.status === 'approved')) delete rv.picks[rk]; else rv.picks[rk] = ri; renderReview(); } break;
@@ -2656,6 +2740,7 @@
         if (ctCount() && S.armed !== 'ctClose') { S.armed = 'ctClose'; toast('You have unsaved changes. Tap Setup again to leave them for later.'); setTimeout(function () { if (S.armed === 'ctClose') S.armed = null; }, 4000); break; }
         S.armed = null; S.ctable = false; S.fromData = false; go(); window.scrollTo(0, 0); break;
       case 'ctSave': ctSave(); break;
+      case 'ctBulkVac': ctBulkVac(); break;
       case 'ctDiscard': confirmTap('ctDiscard', function () { var ct = ctState(); ct.d = {}; ct.n = []; ct.msg = ''; renderChoreTable(); }); break;
       case 'ctAdd': ctState().n.push(ctNewRow(ctState().cat)); renderChoreTable();
         var nr = $$('.ct-t tr.new input[data-f=name]'); if (nr.length) nr[nr.length - 1].focus(); break;
@@ -2713,6 +2798,7 @@
     else if (a === 'showArch') { S.showArchived = t.checked; updateChoreList(); }
     else if (a === 'chPick') { S.chPick[t.getAttribute('data-cid') + '|' + t.getAttribute('data-pid')] = !!t.checked; updateChoreBoard(); }
     else if (t.id === 'ceRate') { var lb = $('#ceLvBox'); if (lb) lb.hidden = !t.checked; }
+    else if (t.id === 'ceMajor') { var bb = $('#ceBigBox'); if (bb) bb.hidden = !t.checked; }
     else if (a === 'chLv') { S.chLv[t.getAttribute('data-cid')] = Number(t.value); }
     else if (a === 'apLevel') setLevel(t.getAttribute('data-id'), Number(t.value));
     else if (a === 'apSel') { var sk = t.getAttribute('data-key'); if (t.checked) delete S.apSkip[sk]; else S.apSkip[sk] = 1; go(); }
@@ -2794,7 +2880,9 @@
       if (isNaN(bounty)) { toast('Enter the bounty like 5.00, or leave it empty.', true); return; }
       var who = $$('input[name=who]', f).filter(function (x) { return x.checked; }).map(function (x) { return x.value; });
       var mdays = $$('input[name=mday]', f).filter(function (x) { return x.checked; }).map(function (x) { return Number(x.value); });
-      var data = { name: cname, pts: pts, who: who, cat: cat, rw: rw, need: compatNeed(rw), coins: rw.food || rw.clean || 0, levels: levels, hideLv: hideLv, freq: val('ceFreq') || '', review: $('#ceReview').checked, bountyCents: bounty, major: $('#ceMajor').checked, majorEach: $('#ceEach').checked, majorDays: mdays, travel: $('#ceTrip').checked, homeOnly: !$('#ceTravel').checked };
+      var cdays = $$('input[name=cday]', f).filter(function (x) { return x.checked; }).map(function (x) { return Number(x.value); }).sort();
+      if (cdays.length === 7) cdays = [];
+      var data = { name: cname, pts: pts, who: who, cat: cat, rw: rw, need: compatNeed(rw), coins: rw.food || rw.clean || 0, levels: levels, hideLv: hideLv, freq: val('ceFreq') || '', review: $('#ceReview').checked, bountyCents: bounty, major: $('#ceMajor').checked, majorEach: $('#ceEach').checked, majorDays: mdays, travel: $('#ceTrip').checked, homeOnly: val('ceVac') === 'hide', tripOnly: val('ceVac') === 'only', days: cdays, shared: $('#ceShared').checked };
       var op = cid ? { t: 'update', c: 'chores', id: cid, d: data }
         : { t: 'set', c: 'chores', id: DB.newId('chores'), d: assign(data, { active: true, order: S.chores.reduce(function (m, c) { return Math.max(m, c.order || 0); }, 0) + 1 }) };
       var eff = catList(S.chores).filter(function (x) { return x !== 'Other'; });

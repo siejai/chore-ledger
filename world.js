@@ -1421,7 +1421,7 @@
   function homeAction() {
     var P = W.P, mine = W.homeOwner === W.pid, st = Pz().state(W.pid), f = null;
     if (P.moving) return null;
-    if (mine && st.pet && st.pet.final) return { kind: 'final', label: 'Move ' + st.pet.name + ' in' };
+    if (mine && st.pet && st.pet.final) return { kind: 'final', label: 'Move ' + st.pet.name + ' in', o: W.pet };
     /* several pieces can be next to you (the mirror sits between the nightstand and the wardrobe): the one you tapped wins,
        then any piece that does something (a nightstand used to hide the mirror) */
     var aim = W.aim, best = null, first = null;
@@ -1429,6 +1429,7 @@
       var dx = Math.max(o.x - P.x, 0, P.x - (o.x + o.w - 1)), dy = Math.max(o.y - P.y, 0, P.y - (o.y + o.h - 1));
       if (dx + dy !== 1) return;
       var a = furnAct(o, mine, st); if (!a) return;
+      a.o = o;   /* its button floats over this piece */
       if (aim && aim.x >= o.x && aim.x < o.x + o.w && aim.y >= o.y && aim.y < o.y + o.h) best = a;
       else if (!first) first = a;
     });
@@ -1453,10 +1454,10 @@
     }
     if (a.kind === 'feed') {
       if (!w.meals) { say('The fridge is empty. Buy meals at the Store, or take ' + nm + ' to the Pet Café.', 3500); return; }
-      Pz().feed(W.pid).then(function () { petMeal(2, 8); hud(); }, function () {});
-      return;
+      if (!(window.Games && Pz().startFeed)) { Pz().feed(W.pid).then(function () { petMeal(2, 8); hud(); }, function () {}); return; }
+      if (!Pz().startFeed(W.pid)) return;   /* the meal close-up opens below */
     }
-    if (a.kind === 'sleep') {
+    else if (a.kind === 'sleep') {
       var bt = bedTime(); if (bt) { say('Shh! ' + nm + ' is sleeping. ' + Math.max(1, Math.ceil((bt - Date.now()) / 60000)) + ' more minute' + (bt - Date.now() > 60000 ? 's' : '') + '.', 3000); return; }
       if (!w.rest) { say('No tuck-ins left' + (w.restPart ? ' (' + w.restPart + '% toward the next)' : '') + '. Chores tagged tuck-in earn them, or buy toothpaste at the Store.', 3000); return; } G.game = { kind: 'sleep', mood: 'lazy', id: Date.now() }; }
     else if (a.kind === 'bath') { if (!w.kits) { say('No bath kits. Buy one at the Store, then come back for a bath.', 3000); return; } G.game = { kind: 'bath', mood: 'ok', id: Date.now() }; }
@@ -1483,7 +1484,7 @@
   function overlayOn() { var G = Pz().G; return !!(G.room && (!G.room.walk || G.game || G.room.panel)); }
   function closeRoom() {
     var G = Pz().G, room = G.room, door = room && room.door;
-    if (room && room.walk) { room.panel = null; G.game = null; renderRoom(); hud(); start(); return; }
+    if (room && room.walk) { room.panel = null; G.game = null; if (room.kind === 'meal') G.room = null; renderRoom(); hud(); start(); return; }
     G.room = null; G.game = null;
     renderRoom();
     if (door && W.P) {
@@ -1515,7 +1516,7 @@
       }).join('') + '</div>' +
       (!away() && hideInfo() ? '<div class="hud-bag note"><b>' + C().esc(p.name) + ' is hiding</b> under your bed after a terrible bedtime. No playing with it until ' + hideInfo().back + '.</div>'
         : !away() && nightInfo() ? '<div class="hud-bag note"><b>Night time.</b> ' + C().esc(p.name) + ' is asleep ' + (nightInfo().tucked ? 'in bed' : 'under the bed') + ' until ' + nightInfo().wake + '. Shops are closed.</div>'
-        : !away() ? '<div class="hud-bag note">Bag: ' + w.meals + ' meal &middot; ' + w.kits + ' bath kit &middot; ' + w.rest + ' tuck-in' + (w.restPart ? ' +' + w.restPart + '%' : '') + ' &middot; ' + w.energy + ' play' + (w.playPart ? ' +' + w.playPart + '%' : '') + (w.balls ? ' &middot; ' + w.balls + ' ball' + (w.balls > 1 ? 's' : '') : '') +
+        : !away() ? '<div class="hud-bag note">Bag: ' + w.meals + ' meal &middot; ' + w.kits + ' bath kit &middot; ' + w.rest + ' tuck-in' + Pz().partBar(w, 'rest') + ' &middot; ' + w.energy + ' play' + Pz().partBar(w, 'energy') + (w.balls ? ' &middot; ' + w.balls + ' ball' + (w.balls > 1 ? 's' : '') : '') +
         (st.doc.egg ? ' &middot; <b class="egg-tag">Rare egg at home!</b>' : '') + (bedTime() ? ' &middot; <b>' + C().esc(p.name) + ' is asleep at home</b>' : '') + (p.final ? ' &middot; <b>Fully grown! Go home.</b>' : p.leveledOn === C().today() ? ' &middot; Leveled up today' : '') + '</div>'
         : W.region === 'ship' && W.ship ? '<div class="hud-bag note">Lido Deck &middot; hands ' + W.ship.carry.length + '/' + capacity() + (W.ship.carry.length ? ' (' + W.ship.carry.join(', ') + ')' : '') + ' &middot; <b>' + A().tickets(W.pid) + '</b> tickets' + (capacity() > 3 ? '' : ' &middot; a healthy pet carries 1 more') + '</div>'
         : '<div class="hud-bag note">Sunny Beach &middot; found ' + ((A().exp() || {}).found || []).length + ' thing' + (((A().exp() || {}).found || []).length === 1 ? '' : 's') + ' so far</div>');
@@ -1530,10 +1531,12 @@
   function actionHud() {
     var b = W.root && W.root.querySelector('.act-btn'); if (!b) return;
     var a = currentAction(), fl = W.root.querySelector('.float-act');
-    if (away() && fl) {   /* adventures: the button floats right above the chest, fishing spot or desk instead of sitting in the corner */
-      var show = !!(a && a.o && AUTO.indexOf(a.kind) < 0 && !W.fish);
+    if (fl && (away() || W.region === 'home') && (!a || a.o)) {   /* the button floats right by the thing it works on (chest, fishing spot, desk, bed, tub, wardrobe...) */
+      var show = !!(a && AUTO.indexOf(a.kind) < 0 && !W.fish);
+      if (W.region === 'home' && a) show = true;   /* nothing happens by itself in the house */
+      var info = a && (a.kind === 'full' || /^(Hiding|Shh, asleep)$/.test(a.label));   /* labels, not real actions */
       b.hidden = true; fl.hidden = !show; W.floatAt = show ? a.o : null;
-      if (show) { if (fl.textContent !== a.label) fl.textContent = a.label; fl.className = 'float-act' + (a.kind === 'full' ? ' muted' : '') + (fl.classList && fl.classList.contains('below') ? ' below' : ''); placeFloat(); }
+      if (show) { if (fl.textContent !== a.label) fl.textContent = a.label; fl.className = 'float-act' + (info ? ' muted' : '') + (fl.classList && fl.classList.contains('below') ? ' below' : ''); placeFloat(); }
       return;
     }
     if (fl) { fl.hidden = true; W.floatAt = null; }
@@ -1541,8 +1544,10 @@
   }
   function placeFloat() {
     var fl = W.floatAt && W.root && W.root.querySelector('.float-act'); if (!fl || !W.cam) return;
+    if (W.P && (W.P.moving || W.P.path.length)) { fl.hidden = true; W.floatAt = null; return; }   /* walking off: it comes back where the kid stops */
     /* above the thing, or below it when the kid stands on the square above (so the button never covers the kid) */
-    var below = W.P && W.P.y < W.floatAt.y, x = ((W.floatAt.x + 0.5) * T - W.cam.x) * W.scale, y = ((below ? W.floatAt.y + 1 : W.floatAt.y) * T + (below ? 2 : -4) - W.cam.y) * W.scale;
+    var o = W.floatAt, op = pos(o), ow = o.w || 1, oh = o.h || 1;
+    var below = W.P && W.P.y < op.y, x = ((op.x + (ow - 1) / 2 + 0.5) * T - W.cam.x) * W.scale, y = ((below ? op.y + oh : op.y) * T + (below ? 2 : -4) - W.cam.y) * W.scale;
     if (!below) y = Math.max(y, (W.hudH || 50) + 46);   /* never under the top bar */
     if (fl.classList) { if (below) fl.classList.add('below'); else fl.classList.remove('below'); }
     fl.style.left = Math.round(x) + 'px'; fl.style.top = Math.round(y) + 'px';

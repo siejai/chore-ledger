@@ -627,5 +627,413 @@
     }
   }
 
+  /* ---------- feed (the Feed button, the kitchen at home, the Pet Café): drag each bite to the pet's mouth and it chomps it down.
+     Cube pets (o.cube: the Gloopcube and Ice Cube lines) get the food pressed onto their face, and it sinks into them. ---------- */
+  var MENUS = { meal: ['biscuit', 'fish', 'berry'], plate: ['drum', 'carrot', 'biscuit'], dinner: ['drum', 'fish', 'carrot', 'berry'], sundae: ['scoopV', 'scoopP', 'scoopC'] };
+  var FOOD_NAME = { biscuit: 'Biscuit', fish: 'Fish', berry: 'Strawberry', drum: 'Drumstick', carrot: 'Carrot', scoopV: 'Vanilla scoop', scoopP: 'Strawberry scoop', scoopC: 'Chocolate scoop' };
+  var FOOD_COL = { biscuit: '#c58a4a', fish: '#9fb7c9', berry: '#e8453c', drum: '#a8622e', carrot: '#f08a2a', scoopV: '#f4e2b8', scoopP: '#ff9cc0', scoopC: '#8a5634' };
+  var PLATE = { x: 96, y: 262 }, CHOMPS = [0, 0.42, 0.84], NOMS = ['Nom!', 'Munch!', 'Yum!', 'Chomp!'];
+  function drawFood(c, k) {
+    c.lineWidth = 1.6; c.strokeStyle = 'rgba(60,35,20,.55)';
+    if (k === 'biscuit') {   /* a bone-shaped biscuit */
+      c.fillStyle = '#d9a35b'; c.beginPath(); c.rect(-11, -5, 22, 10); [[-12, -5], [-12, 5], [12, -5], [12, 5]].forEach(function (q) { c.moveTo(q[0] + 6, q[1]); c.arc(q[0], q[1], 6, 0, 7); }); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(-9, -3, 18, 2.5);
+    } else if (k === 'fish') {
+      c.fillStyle = '#7fa6c4'; c.beginPath(); c.moveTo(12, 0); c.lineTo(20, -8); c.lineTo(20, 8); c.closePath(); c.fill(); c.stroke();
+      ell(c, 0, 0, 14, 8, '#9fc0d8'); c.beginPath(); if (c.ellipse) c.ellipse(0, 0, 14, 8, 0, 0, 7); c.stroke();
+      ell(c, -8, -2, 2, 2, '#1f2a33'); c.strokeStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.moveTo(-2, -5); c.quadraticCurveTo(2, 0, -2, 5); c.stroke();
+    } else if (k === 'berry') {
+      c.fillStyle = '#e8453c'; c.beginPath(); c.moveTo(0, 13); c.bezierCurveTo(-15, 2, -12, -11, 0, -8); c.bezierCurveTo(12, -11, 15, 2, 0, 13); c.fill(); c.stroke();
+      c.fillStyle = '#ffe9a8'; [[-5, -2], [4, -3], [-2, 4], [5, 4], [0, -5]].forEach(function (q) { c.fillRect(q[0], q[1], 1.6, 2.2); });
+      c.fillStyle = '#4fa33a'; c.beginPath(); c.moveTo(0, -8); c.lineTo(-8, -13); c.lineTo(-2, -9); c.lineTo(0, -15); c.lineTo(2, -9); c.lineTo(8, -13); c.closePath(); c.fill();
+    } else if (k === 'drum') {
+      c.fillStyle = '#f6efe2'; c.fillRect(6, -2.5, 12, 5); ell(c, 19, -3.5, 3.4, 3.4, '#f6efe2'); ell(c, 19, 3.5, 3.4, 3.4, '#f6efe2');
+      ell(c, -3, 0, 12, 10, '#b8692e'); ell(c, -6, -3, 5, 3, 'rgba(255,220,170,.45)');
+    } else if (k === 'carrot') {
+      c.fillStyle = '#4fa33a'; c.beginPath(); c.moveTo(-12, -2); c.lineTo(-20, -9); c.lineTo(-15, 0); c.lineTo(-21, 4); c.lineTo(-12, 2); c.closePath(); c.fill();
+      c.fillStyle = '#f08a2a'; c.beginPath(); c.moveTo(-13, -6); c.quadraticCurveTo(4, -5, 16, 0); c.quadraticCurveTo(4, 5, -13, 6); c.closePath(); c.fill(); c.stroke();
+      c.strokeStyle = 'rgba(150,70,10,.6)'; c.beginPath(); c.moveTo(-6, -3); c.lineTo(-3, -1); c.moveTo(1, 2); c.lineTo(4, 1); c.moveTo(6, -2); c.lineTo(8, -1); c.stroke();
+    } else {   /* an ice cream scoop */
+      var col = FOOD_COL[k];
+      c.fillStyle = col; c.beginPath(); c.arc(0, -2, 12, Math.PI * 0.95, Math.PI * 2.05); c.lineTo(12, 4);
+      for (var i = 0; i <= 6; i++) c.lineTo(12 - i * 4, 4 + (i % 2 ? 4 : 0)); c.closePath(); c.fill(); c.stroke();
+      ell(c, -4, -7, 4, 2.5, 'rgba(255,255,255,.55)');
+      if (k === 'scoopC') { ell(c, 2, -15, 4, 4, '#e3283a'); c.strokeStyle = '#4fa33a'; c.beginPath(); c.moveTo(2, -18); c.quadraticCurveTo(5, -24, 9, -24); c.stroke(); }
+    }
+  }
+  /* each piece is drawn into its own little canvas so bites can be cut out of it */
+  function foodCanvas(f) {
+    if (f.cv && f.cvBites === f.bites) return f.cv;
+    var cv = f.cv || document.createElement('canvas'), x = cv.getContext('2d'); cv.width = cv.height = 96;
+    x.setTransform(2, 0, 0, 2, 48, 48); x.clearRect(-24, -24, 48, 48); drawFood(x, f.k);
+    x.globalCompositeOperation = 'destination-out';
+    [[13, -6, 9], [8, 7, 9], [-2, -2, 11]].slice(0, f.bites).forEach(function (b) { x.beginPath(); x.arc(b[0], b[1], b[2], 0, 7); x.arc(b[0] - 6, b[1] + 5, b[2] * 0.7, 0, 7); x.fill(); });
+    x.globalCompositeOperation = 'source-over';
+    f.cv = cv; f.cvBites = f.bites; return cv;
+  }
+  function mouthAt(g) {
+    var b = g.pb; if (!b) return null;
+    var m = g.o.mouth || { x: 80, y: 120 };
+    return { x: b.x0 + (m.x - PET_VB.x) / PET_VB.w * b.w, y: b.y0 + (m.y - PET_VB.y) / PET_VB.h * b.h };
+  }
+  function feedZone(g) {
+    var b = g.pb; if (!b) return null;
+    if (g.cube) return { x: b.hx - b.hr * 0.12, y: b.hy + b.hr * 0.22, r: Math.max(30, b.hr * 0.85) };
+    var m = mouthAt(g);
+    return { x: m.x, y: m.y, r: Math.max(26, b.hr * 0.5) };
+  }
+  /* the big "aaah" mouth drawn over the pet's own while it waits for the food, and chomping while it chews */
+  function bigMouth(g, c) {
+    var o = g.mo, b = g.pb, m = mouthAt(g); if (o < 0.08 || !b || !m) return;
+    var hk = g.cube ? 0.62 : 1, rx = b.hr * 0.3 * o * hk, ry = b.hr * 0.36 * o * hk, my = m.y + ry * (g.cube ? 0.15 : 0.35);   /* cube heads are the whole cube: a smaller mouth */
+    c.save(); c.translate(m.x, my); c.scale(0.86, 1);
+    ell(c, 0, 0, rx + 2.5, ry + 2.5, '#4a1620');
+    ell(c, 0, 0, rx, ry, '#7a2433');
+    c.save(); c.beginPath(); if (c.ellipse) c.ellipse(0, 0, rx, ry, 0, 0, 7); else c.arc(0, 0, rx, 0, 7); c.clip();
+    ell(c, 0, ry * 0.75, rx * 0.72, ry * 0.5, '#f47a8a');   /* tongue */
+    c.fillStyle = '#ffffff'; c.fillRect(-rx * 0.5, -ry - 1, rx * 0.36, ry * 0.32); c.fillRect(rx * 0.14, -ry - 1, rx * 0.36, ry * 0.32);   /* two front teeth */
+    c.restore(); c.restore();
+  }
+  function feedUi(g) {
+    var n = g.food.length, who = g.o.name + (/s$/i.test(g.o.name) ? '’' : '’s'), hint = g.cube ? 'Press each bite onto ' + who + ' face. It soaks right in!' : 'Drag each bite to ' + who + ' mouth.';
+    g.steps.innerHTML = '<ol>' + g.food.map(function (f) { return '<li class="' + (f.st === 'gone' ? 'done' : '') + '">' + FOOD_NAME[f.k] + '</li>'; }).join('') + '</ol><p class="mg-hint">' + hint + '</p>';
+    g.tools.innerHTML = '<div class="mg-meter tummy"><i style="width:' + Math.round(g.eaten / n * 100) + '%"></i></div>';
+  }
+  function feedEat(g, f) {
+    var z = feedZone(g); if (!z) return;
+    if (g.held === f) g.held = null;
+    f.t = 0; f.fired = 0;
+    if (g.cube) {   /* stuck on the face where it touched, a little way in */
+      var dx = f.x - z.x, dy = f.y - z.y, d = Math.sqrt(dx * dx + dy * dy) || 1, k = Math.min(1, z.r * 0.55 / d);
+      f.x = z.x + dx * k; f.y = z.y + dy * k; f.sx = f.x; f.sy = f.y; f.st = 'absorb'; g.wob = 1;
+      text(g, f.x, f.y - 18, g.cube === 'icecube' ? 'Crunch!' : 'Gloop!', g.cube === 'icecube' ? '#3a8ed8' : '#3fa65c', 18);
+    } else { f.x = z.x - 8; f.y = z.y + 2; f.st = 'eat'; }
+  }
+  function feedDone(g, f) {
+    f.st = 'gone'; g.eaten++; feedUi(g);
+    var z = feedZone(g) || { x: 260, y: 120 };
+    sparkle(g, z.x, z.y - 10, 4, '#ff8fb8');
+    if (g.eaten >= g.food.length) { g.result = { ate: g.eaten }; finish(g, 'Yum! ' + g.o.name + ' is full.'); }
+  }
+  G.feed = {
+    init: function (g) {
+      var menu = MENUS[g.o.food] || MENUS.meal, n = menu.length;
+      g.cube = g.o.cube || '';
+      g.food = menu.map(function (k, i) { var hx = PLATE.x + (i - (n - 1) / 2) * (n > 3 ? 27 : 34), hy = PLATE.y - 14 - (i % 2) * 7; return { k: k, x: hx, y: hy, hx: hx, hy: hy, st: 'plate', bites: 0, t: 0 }; });
+      g.eaten = 0; g.open = 0; g.chew = 0; g.wob = 0; g.lean = 0;
+      feedUi(g);
+    },
+    down: function (g, p) {
+      if (g.over || g.held) return;
+      var best = null, bd = 34;
+      g.food.forEach(function (f) { if (f.st !== 'plate' && f.st !== 'back') return; var d = dist(p.x, p.y, f.x, f.y); if (d < bd) { bd = d; best = f; } });
+      if (best) { g.held = best; best.st = 'drag'; best.x = p.x; best.y = p.y - 8; }
+    },
+    drag: function (g, q) {
+      var f = g.held; if (!f || f.st !== 'drag') return;
+      f.x = clamp(q.x, 8, VW - 8); f.y = clamp(q.y - 8, 8, VH - 8);
+      var z = feedZone(g); if (z && dist(f.x, f.y, z.x, z.y) < z.r) feedEat(g, f);   /* touching the mouth is enough */
+    },
+    up: function (g) {
+      var f = g.held; g.held = null; if (!f || f.st !== 'drag') return;
+      var z = feedZone(g);
+      if (z && dist(f.x, f.y, z.x, z.y) < z.r * 1.6) feedEat(g, f); else f.st = 'back';
+    },
+    update: function (g, dt) {
+      var z = feedZone(g), near = 0;
+      if (g.held && z) near = clamp(1 - (dist(g.held.x, g.held.y, z.x, z.y) - z.r) / 120, 0, 1);
+      g.lean += (near - g.lean) * Math.min(1, dt * 6);
+      var eating = null;
+      g.food.forEach(function (f) {
+        if (f.st === 'back') { f.x += (f.hx - f.x) * Math.min(1, dt * 9); f.y += (f.hy - f.y) * Math.min(1, dt * 9); if (dist(f.x, f.y, f.hx, f.hy) < 1) { f.x = f.hx; f.y = f.hy; f.st = 'plate'; } }
+        else if (f.st === 'eat') {
+          eating = f; f.t += dt;
+          if (z) { f.x += (z.x - 8 - f.x) * Math.min(1, dt * 12); f.y += (z.y + 2 - f.y) * Math.min(1, dt * 12); }
+          while (f.fired < CHOMPS.length && f.t >= CHOMPS[f.fired]) {
+            f.fired++; f.bites = f.fired; g.chew = 0.28;
+            for (var i = 0; i < 7; i++) part(g, { k: 'conf', x: f.x + rnd(-6, 10), y: f.y + rnd(-4, 6), vx: rnd(-90, 40), vy: rnd(-140, -40), r: rnd(1.6, 2.8), life: rnd(0.6, 1.1), age: 0, rot: rnd(0, 6), col: FOOD_COL[f.k] });
+            text(g, (z ? z.x : f.x) - 40 + (f.fired % 2) * 22, (z ? z.y : f.y) - 24 - (f.fired % 2) * 14, NOMS[(g.eaten + f.fired) % NOMS.length], '#e8453c', 17);
+          }
+          if (f.t > 1.05) feedDone(g, f);
+        } else if (f.st === 'absorb') {
+          eating = f; f.t += dt;
+          var b = g.pb, cx = b ? b.hx : f.sx, cy = b ? b.hy + b.hr * 0.35 : f.sy, u = clamp((f.t - 0.25) / 1.2, 0, 1);
+          f.x = f.sx + (cx - f.sx) * u; f.y = f.sy + (cy - f.sy) * u;
+          if (Math.random() < dt * 14) { if (g.cube === 'icecube') sparkle(g, f.x + rnd(-10, 10), f.y + rnd(-10, 10), 1, '#e6f6ff'); else bubbles(g, f.x + rnd(-8, 8), f.y, 1, 'rgba(160,240,170,.75)'); }
+          if (f.t > 1.5) { g.wob = Math.max(g.wob, 0.6); text(g, f.x, f.y - 12, g.cube === 'icecube' ? 'Brrr, yum!' : 'Slurp!', g.cube === 'icecube' ? '#3a8ed8' : '#3fa65c', 16); feedDone(g, f); }
+        }
+      });
+      g.eating = eating;
+      g.chew = Math.max(0, g.chew - dt); g.wob = Math.max(0, g.wob - dt * 0.9);
+      /* the mouth opens wide the moment food is picked up ("aaah", a little bigger as it comes close), and snaps open and shut while it chews */
+      var target = eating && eating.st === 'eat' ? (g.chew > 0.14 ? 0.95 : 0.3) : g.held ? 0.8 + 0.25 * near + Math.sin(g.t * 7) * 0.05 : 0;
+      g.mo = (g.mo || 0) + (target - (g.mo || 0)) * Math.min(1, dt * (target > (g.mo || 0) ? 16 : 10));
+      g.open = target;
+    },
+    draw: function (g, c) {
+      var cafe = g.o.place === 'cafe';
+      /* the room */
+      c.fillStyle = cafe ? '#fff4e2' : '#fde8c8'; c.fillRect(0, 0, VW, VH);
+      if (cafe) { c.fillStyle = '#2fae7a'; c.fillRect(0, 130, VW, 50); c.fillStyle = '#1f8f6a'; c.fillRect(0, 126, VW, 5); }
+      else { for (var bx = 0; bx < VW; bx += 20) for (var by = 120; by < 186; by += 20) { c.fillStyle = ((bx + by) / 20) % 2 < 1 ? '#e8f2f8' : '#ffffff'; c.fillRect(bx, by, 20, 20); } }
+      c.fillStyle = cafe ? '#bfe6ff' : '#cfeaff'; rr(c, 24, 22, 96, 76, 6); c.fill(); c.strokeStyle = cafe ? '#ffffff' : '#c9a44c'; c.lineWidth = 5; c.stroke();
+      c.fillStyle = cafe ? '#ffffff' : '#c9a44c'; c.fillRect(70, 22, 4, 76); c.fillRect(24, 58, 96, 4);
+      if (!cafe) { c.fillStyle = '#8a5a34'; c.fillRect(150, 54, 70, 6); ell(c, 168, 46, 8, 8, '#e8653c'); ell(c, 188, 47, 7, 7, '#6fae4f'); ell(c, 206, 46, 8, 8, '#ffd23f'); }
+      else { c.fillStyle = '#24443a'; rr(c, 150, 24, 80, 58, 5); c.fill(); c.fillStyle = '#fff'; c.font = 'bold 12px sans-serif'; c.textAlign = 'center'; c.fillText('MENU', 190, 42); }
+      /* the pet, standing behind the table, leaning toward the food */
+      var lean = g.lean, chew = g.chew / 0.28, wob = g.wob, sx = 1, sy = 1;
+      if (g.cube) { sx = 1 + Math.sin(g.t * 24) * 0.07 * wob; sy = 1 - Math.sin(g.t * 24) * 0.07 * wob; }
+      else { sy = 1 - 0.05 * Math.sin(chew * Math.PI) + Math.sin(g.t * 2.4) * 0.008; sx = 1 + 0.03 * Math.sin(chew * Math.PI); }
+      /* sized so every pet's head is about the same size, standing behind the table with its mouth well above it */
+      if (!g.fit) {
+        var hd = g.o.head || { x: 100, y: 90, r: 44 }, mo = g.o.mouth || { y: hd.y + hd.r * 0.45 }, fh = clamp(56 * PET_VB.h / Math.max(20, hd.r), 170, 340);
+        g.fit = { h: fh, gy: g.cube ? 228 : clamp(178 - (mo.y - PET_VB.gy) / PET_VB.h * fh, 246, 340) };   /* cubes sit right on the table edge, whole face showing */
+      }
+      var b = petBox(g, 266 - lean * 12, g.fit.gy, g.fit.h); g.pb = b;
+      var mood = g.eating && g.eating.st === 'eat' ? 'eat' : g.held ? 'ok' : g.eating || g.eaten ? 'happy' : 'hungry';   /* eyes wide open while the food is on its way */
+      drawPet(g, c, g.petImg(mood), b, sx, sy);
+      bigMouth(g, c);
+      /* bites being eaten sit at the mouth, in front of the pet; cube food sinks in */
+      g.food.forEach(function (f) {
+        if (f.st !== 'eat' && f.st !== 'absorb') return;
+        var cv = foodCanvas(f), sc = 1;
+        c.save();
+        if (f.st === 'absorb') { var u = clamp((f.t - 0.25) / 1.2, 0, 1); c.globalAlpha = 1 - u * 0.9; sc = 1 - u * 0.45;
+          if (g.cube === 'icecube') { c.fillStyle = 'rgba(220,244,255,' + (0.55 * Math.min(1, f.t * 3)) + ')'; rr(c, f.x - 17 * sc, f.y - 17 * sc, 34 * sc, 34 * sc, 6); c.fill(); }
+        }
+        c.drawImage(cv, f.x - 24 * sc, f.y - 24 * sc, 48 * sc, 48 * sc);
+        if (f.st === 'absorb' && g.cube !== 'icecube') { c.globalAlpha = 0.35 * clamp(f.t * 2, 0, 1); ell(c, f.x, f.y, 16 * sc, 14 * sc, '#8fe36a'); }
+        c.restore();
+      });
+      /* the table and the plate */
+      c.fillStyle = cafe ? '#ffffff' : '#c58a4a'; c.fillRect(0, 238, VW, 62); c.fillStyle = cafe ? '#e45757' : '#a8703a'; c.fillRect(0, 238, VW, 6);
+      if (cafe) { c.strokeStyle = '#ffffff'; c.lineWidth = 4; c.setLineDash && c.setLineDash([10, 10]); c.beginPath(); c.moveTo(0, 272); c.lineTo(VW, 272); c.stroke(); c.setLineDash && c.setLineDash([]); }
+      ell(c, PLATE.x, PLATE.y - 4, 62, 16, '#ffffff'); c.strokeStyle = '#d8d0c0'; c.lineWidth = 2; c.beginPath(); if (c.ellipse) c.ellipse(PLATE.x, PLATE.y - 4, 62, 16, 0, 0, 7); c.stroke();
+      ell(c, PLATE.x, PLATE.y - 5, 46, 10, '#f4efe6');
+      /* food on the plate, coming back, or in hand (drawn last so it sits on top) */
+      var held = null;
+      g.food.forEach(function (f) {
+        if (f.st === 'plate' || f.st === 'back') { c.drawImage(foodCanvas(f), f.x - 24, f.y - 24, 48, 48); }
+        else if (f.st === 'drag') held = f;
+      });
+      if (!g.held && !g.over && !g.eating) {   /* a little hint: the next bite bobs */
+        var nx = null; g.food.forEach(function (f) { if (!nx && f.st === 'plate') nx = f; });
+        if (nx) { c.save(); c.globalAlpha = 0.5 + 0.5 * Math.sin(g.t * 5); c.strokeStyle = '#ffd23f'; c.lineWidth = 3; c.beginPath(); c.arc(nx.x, nx.y, 22, 0, 7); c.stroke(); c.restore(); }
+      }
+      if (held) { c.save(); c.translate(held.x, held.y); c.rotate(Math.sin(g.t * 9) * 0.08); c.drawImage(foodCanvas(held), -27, -27, 54, 54); c.restore(); }
+      if (held && g.lean > 0.2) { var z = feedZone(g); if (z) { c.save(); c.globalAlpha = 0.35 * g.lean; c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.setLineDash && c.setLineDash([6, 6]); c.beginPath(); c.arc(z.x, z.y, z.r, 0, 7); c.stroke(); c.restore(); } }
+    }
+  };
+
+  /* ---------- icecream (an adventure): one customer at a time asks for a cone or a sundae; tap the items to build it, then tap the
+     customer (or Serve). Nobody walks around and nobody runs out of patience: they wait until they get what they asked for.
+     o.secs (round length, 120), o.avatar(i) -> svg of a customer, o.done({ happy }) ---------- */
+  var IC = {
+    base: { cone: 'Cone', bowl: 'Bowl' },
+    main: { straw: 'Strawberries', pie: 'Apple pie', banana: 'Bananas' },
+    flav: { van: 'Vanilla', choc: 'Chocolate', mint: 'Mint' },
+    top: { sprC: 'Chocolate sprinkles', sprR: 'Rainbow sprinkles', syrup: 'Chocolate syrup', whip: 'Whipped cream' },
+    col: { van: '#fff1c9', choc: '#7b4a2a', mint: '#a8ecc8' }, dark: { van: '#e8d39a', choc: '#5a3018', mint: '#6fcf9f' }
+  };
+  /* the tray, a row per step: what to put it in, what goes in the bowl, the ice cream, the toppings ('' leaves a gap) */
+  var IC_TOOLS = [['cone', 'Cone'], ['bowl', 'Bowl'], ['toss', 'Start over'], ['serve', 'Serve'],
+    ['straw', 'Strawberries'], ['pie', 'Apple pie'], ['banana', 'Bananas'], ['', ''],
+    ['van', 'Vanilla'], ['choc', 'Chocolate'], ['mint', 'Mint'], ['', ''],
+    ['sprC', 'Choc sprinkles'], ['sprR', 'Rainbow sprinkles'], ['syrup', 'Choc syrup'], ['whip', 'Whipped cream']];
+  var IC_CUST = { x: 92, y: 238, h: 192 }, IC_WORK = { x: 300, y: 196 }, IC_BUB = { x: 150, y: 18, w: 120, h: 112 };
+  function icPick(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function icOrder(n) {   /* simple at first, more toppings as the round goes on */
+    var base = n === 0 ? 'cone' : Math.random() < 0.5 ? 'cone' : 'bowl', tops = ['sprC', 'sprR', 'syrup', 'whip'].sort(function () { return Math.random() - 0.5; });
+    var k = base === 'cone' ? (n < 1 ? 0 : n < 3 ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 3)) : (n < 2 ? Math.floor(Math.random() * 2) : 1 + Math.floor(Math.random() * 3));
+    tops = tops.slice(0, k);
+    if (tops.indexOf('sprC') >= 0 && tops.indexOf('sprR') >= 0) tops.splice(tops.indexOf('sprR'), 1);   /* one kind of sprinkles */
+    return { base: base, main: base === 'bowl' ? icPick(['straw', 'pie', 'banana']) : '', flav: icPick(['van', 'choc', 'mint']), tops: tops.sort() };
+  }
+  function icSame(a, b) { return a.base === b.base && (a.main || '') === (b.main || '') && a.flav === b.flav && a.tops.slice().sort().join() === b.tops.slice().sort().join(); }
+  function icName(o) { return IC.flav[o.flav] + ' ' + (o.base === 'cone' ? 'cone' : { straw: 'strawberry sundae', pie: 'apple pie sundae', banana: 'banana sundae' }[o.main]); }
+  function icToolIcon(k) {
+    var s = {
+      cone: '<path d="M12 14 h16 l-8 22 Z" fill="#e0a85a" stroke="#a8702a" stroke-width="1.5"/><path d="M14 18 l10 10 M18 15 l8 8 M26 18 l-10 10" stroke="#a8702a" stroke-width="1"/><path d="M11 14 q9 -12 18 0 Z" fill="#fff1c9" stroke="#e8d39a"/>',
+      bowl: '<path d="M6 16 h28 q-2 14 -14 14 q-12 0 -14 -14 Z" fill="#cfeaff" stroke="#7fb8d8" stroke-width="1.5"/><rect x="17" y="30" width="6" height="5" fill="#7fb8d8"/><ellipse cx="20" cy="36" rx="9" ry="2.5" fill="#7fb8d8"/>',
+      toss: '<path d="M11 13 h18 l-2 22 h-14 Z" fill="#9aa4ad"/><rect x="9" y="9" width="22" height="4" rx="2" fill="#6b757e"/><rect x="17" y="6" width="6" height="3" fill="#6b757e"/>',
+      serve: '<path d="M8 26 h24 q0 -12 -12 -12 q-12 0 -12 12 Z" fill="#ffd23f" stroke="#c9a020" stroke-width="1.5"/><rect x="6" y="26" width="28" height="4" rx="2" fill="#c9a020"/><circle cx="20" cy="12" r="2.5" fill="#c9a020"/>',
+      straw: '<path d="M14 30 q-8 -8 -4 -14 q4 -4 8 0 q4 -4 8 0 q4 6 -4 14 Z" fill="#e8453c"/><path d="M14 16 l-4 -5 l6 2 l2 -5 l2 5 l6 -2 l-4 5" fill="#4fa33a"/><circle cx="16" cy="22" r="1" fill="#ffe9a8"/><circle cx="22" cy="24" r="1" fill="#ffe9a8"/>',
+      pie: '<path d="M6 28 L34 28 L20 10 Z" fill="#e8b45a" stroke="#a8702a" stroke-width="1.5"/><path d="M12 24 h16 M15 20 h10 M17 16 h6" stroke="#a8702a" stroke-width="1.5"/><path d="M6 28 h28 v4 h-28 Z" fill="#c98a3a"/>',
+      banana: '<path d="M6 14 q8 18 28 12 q-4 6 -14 6 q-14 -2 -14 -18 Z" fill="#ffd84a" stroke="#c9a020" stroke-width="1.5"/><path d="M5 13 l2 -3" stroke="#6b4a1e" stroke-width="2"/>',
+      van: '<circle cx="20" cy="20" r="12" fill="#fff1c9" stroke="#e8d39a" stroke-width="2"/>',
+      choc: '<circle cx="20" cy="20" r="12" fill="#7b4a2a" stroke="#5a3018" stroke-width="2"/>',
+      mint: '<circle cx="20" cy="20" r="12" fill="#a8ecc8" stroke="#6fcf9f" stroke-width="2"/>',
+      sprC: '<circle cx="20" cy="22" r="11" fill="#f4efe6"/><path d="M13 18 l3 1 M22 15 l2 2 M25 22 l3 -1 M16 26 l2 2 M20 21 l2 -1" stroke="#5a3018" stroke-width="2.4" stroke-linecap="round"/>',
+      sprR: '<circle cx="20" cy="22" r="11" fill="#f4efe6"/><path d="M13 18 l3 1" stroke="#e8453c" stroke-width="2.4" stroke-linecap="round"/><path d="M22 15 l2 2" stroke="#3a8ed8" stroke-width="2.4" stroke-linecap="round"/><path d="M25 22 l3 -1" stroke="#ffd23f" stroke-width="2.4" stroke-linecap="round"/><path d="M16 26 l2 2" stroke="#4fa33a" stroke-width="2.4" stroke-linecap="round"/><path d="M20 21 l2 -1" stroke="#c48cff" stroke-width="2.4" stroke-linecap="round"/>',
+      syrup: '<rect x="14" y="10" width="12" height="22" rx="4" fill="#5a3018"/><rect x="16" y="5" width="8" height="6" rx="2" fill="#e8453c"/><rect x="16" y="17" width="8" height="7" rx="1.5" fill="#fff1c9"/>',
+      whip: '<path d="M10 30 q-2 -8 6 -10 q-2 -8 6 -9 q8 1 6 9 q8 2 6 10 Z" fill="#ffffff" stroke="#d8d8e8" stroke-width="1.5"/><path d="M15 26 q5 -3 10 0" stroke="#d8d8e8" fill="none"/>'
+    }[k] || '';
+    return '<svg viewBox="0 0 40 40" aria-hidden="true">' + s + '</svg>';
+  }
+  /* one dessert, standing on (x, y) at scale s; tm = time each layer went on (for the little pop) */
+  function drawDessert(g, c, d, x, y, s, tm) {
+    function pop(k) { var a = tm && tm[k] != null ? g.t - tm[k] : 9; return a < 0.28 ? 1 + 0.28 * Math.sin(a / 0.28 * Math.PI) : 1; }
+    c.save(); c.translate(x, y); c.scale(s, s);
+    var top = -40;   /* where the ice cream sits */
+    if (d.base === 'cone') {
+      c.save(); var p0 = pop('base'); c.scale(p0, p0);
+      c.fillStyle = '#e0a85a'; c.beginPath(); c.moveTo(-15, -40); c.lineTo(15, -40); c.lineTo(0, 0); c.closePath(); c.fill(); c.strokeStyle = '#a8702a'; c.lineWidth = 1.5; c.stroke();
+      c.save(); c.clip(); c.strokeStyle = 'rgba(168,112,42,.7)'; c.lineWidth = 1.2; for (var i = -30; i < 30; i += 7) { c.beginPath(); c.moveTo(i, -42); c.lineTo(i + 24, 2); c.moveTo(i + 24, -42); c.lineTo(i, 2); c.stroke(); } c.restore();
+      c.restore();
+      if (d.flav) {   /* soft-serve: three swirls and a curl, poured in one after another */
+        var fa = tm && tm.flav != null ? clamp((g.t - tm.flav) / 0.45, 0, 1) : 1, col = IC.col[d.flav], dk = IC.dark[d.flav];
+        [[-40, 17, 9], [-52, 13, 8], [-62, 9, 7]].forEach(function (t, j) { if (fa > j / 3) { ell(c, 0, t[0], t[1], t[2], col); c.strokeStyle = dk; c.lineWidth = 1.4; c.beginPath(); if (c.ellipse) c.ellipse(0, t[0], t[1], t[2], 0, 0.1, Math.PI - 0.1); c.stroke(); } });
+        if (fa >= 1) { c.fillStyle = col; c.beginPath(); c.moveTo(-4, -68); c.quadraticCurveTo(2, -80, 7, -72); c.quadraticCurveTo(4, -68, 0, -66); c.closePath(); c.fill(); }
+        top = -60;
+      }
+    } else if (d.base === 'bowl') {
+      var pb = pop('base');
+      c.save(); c.scale(pb, pb);
+      c.fillStyle = '#7fb8d8'; c.fillRect(-4, -12, 8, 10); ell(c, 0, -2, 14, 4, '#7fb8d8');
+      ell(c, 0, -30, 34, 7, 'rgba(160,210,240,.55)');   /* back rim */
+      c.restore();
+      if (d.main) {
+        c.save(); var pm = pop('main'); c.translate(0, -28); c.scale(pm, pm);
+        if (d.main === 'banana') { [-1, 1].forEach(function (q) { c.save(); c.scale(q, 1); c.fillStyle = '#ffd84a'; c.strokeStyle = '#c9a020'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(6, 4); c.quadraticCurveTo(34, 6, 40, -12); c.quadraticCurveTo(30, -2, 6, -4); c.closePath(); c.fill(); c.stroke(); c.restore(); }); }
+        else if (d.main === 'pie') { c.fillStyle = '#e8b45a'; c.beginPath(); c.moveTo(-28, 4); c.lineTo(28, 4); c.lineTo(10, -16); c.lineTo(-10, -16); c.closePath(); c.fill(); c.strokeStyle = '#a8702a'; c.lineWidth = 1.4; c.stroke(); c.beginPath(); c.moveTo(-18, -3); c.lineTo(18, -3); c.moveTo(-12, -10); c.lineTo(12, -10); c.stroke(); }
+        else { [[-18, -2], [18, -2], [-10, -10], [10, -10], [0, 0]].forEach(function (q) { c.fillStyle = '#e8453c'; c.beginPath(); c.moveTo(q[0], q[1] + 7); c.bezierCurveTo(q[0] - 9, q[1] + 1, q[0] - 6, q[1] - 7, q[0], q[1] - 5); c.bezierCurveTo(q[0] + 6, q[1] - 7, q[0] + 9, q[1] + 1, q[0], q[1] + 7); c.fill(); ell(c, q[0], q[1] - 5, 3, 1.5, '#4fa33a'); }); }
+        c.restore();
+      }
+      if (d.flav) {   /* a big scoop on top */
+        var pf = pop('flav'), sc = IC.col[d.flav];
+        c.save(); c.translate(0, -44); c.scale(pf, pf);
+        ell(c, 0, 0, 22, 19, sc); c.fillStyle = sc; c.beginPath(); c.moveTo(-22, 4); for (var k = 0; k <= 8; k++) c.lineTo(-22 + k * 5.5, 8 + (k % 2 ? 6 : 0)); c.lineTo(22, 4); c.closePath(); c.fill();
+        ell(c, -7, -7, 6, 4, 'rgba(255,255,255,.4)');
+        c.restore();
+        top = -62;
+      }
+      /* the glass in front */
+      c.save(); c.scale(pb, pb); c.fillStyle = 'rgba(190,228,250,.55)'; c.beginPath(); c.moveTo(-34, -30); c.quadraticCurveTo(-30, -8, 0, -8); c.quadraticCurveTo(30, -8, 34, -30); c.quadraticCurveTo(0, -22, -34, -30); c.fill();
+      c.strokeStyle = '#7fb8d8'; c.lineWidth = 1.5; c.beginPath(); if (c.ellipse) c.ellipse(0, -30, 34, 7, 0, 0, Math.PI); c.stroke(); c.restore();
+    }
+    /* toppings, in a fixed order so a sundae always stacks the same way */
+    var tops = d.tops || [];
+    if (tops.indexOf('syrup') >= 0) { var ps = pop('syrup'); c.strokeStyle = '#5a3018'; c.lineWidth = 3.2 * ps; c.lineCap = 'round'; c.beginPath(); c.moveTo(-14, top + 8); c.quadraticCurveTo(-4, top - 2, 4, top + 6); c.quadraticCurveTo(10, top + 10, 14, top + 4); c.stroke(); [[-12, 10], [2, 14], [12, 9]].forEach(function (q) { c.beginPath(); c.moveTo(q[0], top + 8); c.lineTo(q[0], top + q[1] + 3 * ps); c.stroke(); }); }
+    if (tops.indexOf('whip') >= 0) { var pw = pop('whip'); c.save(); c.translate(0, top - 2); c.scale(pw, pw); ell(c, 0, 2, 14, 7, '#ffffff'); ell(c, 0, -5, 10, 6, '#ffffff'); ell(c, 0, -11, 6, 5, '#ffffff'); c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(-3, -14); c.quadraticCurveTo(1, -22, 4, -15); c.fill(); c.strokeStyle = '#d8d8e8'; c.lineWidth = 1; c.beginPath(); c.moveTo(-9, 0); c.quadraticCurveTo(0, 4, 9, 0); c.stroke(); c.restore(); top -= 12; }
+    ['sprC', 'sprR'].forEach(function (k) {
+      if (tops.indexOf(k) < 0) return;
+      var cols = k === 'sprC' ? ['#5a3018', '#3a2010'] : ['#e8453c', '#3a8ed8', '#ffd23f', '#4fa33a', '#c48cff', '#ff8fb8'];
+      for (var i = 0; i < 12; i++) { var a = i * 2.39996, r = 3 + (i * 5) % 11, sx = Math.cos(a) * r, sy = top + 6 + Math.sin(a) * r * 0.45; c.save(); c.translate(sx, sy); c.rotate(a * 1.7); c.fillStyle = cols[i % cols.length]; c.fillRect(-2.2, -0.9, 4.4, 1.8); c.restore(); }
+    });
+    c.restore();
+  }
+  function icUi(g) {
+    var cur = g.cur, can = {};
+    IC_TOOLS.forEach(function (t) { if (t[0]) can[t[0]] = true; });
+    if (cur.base) { can.cone = can.bowl = false; } else { ['straw', 'pie', 'banana', 'van', 'choc', 'mint', 'sprC', 'sprR', 'syrup', 'whip', 'toss', 'serve'].forEach(function (k) { can[k] = false; }); }
+    if (cur.base !== 'bowl' || cur.main) can.straw = can.pie = can.banana = false;
+    if (cur.flav) can.van = can.choc = can.mint = false;
+    ['sprC', 'sprR', 'syrup', 'whip'].forEach(function (k) { if (!cur.flav || cur.tops.indexOf(k) >= 0) can[k] = false; });
+    if (g.over) IC_TOOLS.forEach(function (t) { can[t[0]] = false; });
+    g.tools.innerHTML = IC_TOOLS.map(function (t) {
+      if (!t[0]) return '<span class="ic-gap"></span>';
+      return '<button type="button" class="mg-tool ic-' + t[0] + '" data-tool="' + t[0] + '"' + (can[t[0]] ? '' : ' disabled') + '>' + icToolIcon(t[0]) + '<span>' + t[1] + '</span></button>';
+    }).join('');
+  }
+  function icStatus(g) {
+    var s = Math.max(0, Math.ceil(g.left)), m = Math.floor(s / 60), r = s % 60;
+    g.steps.innerHTML = '<div class="ic-status"><span class="ic-clock">' + m + ':' + (r < 10 ? '0' : '') + r + '</span><span class="ic-happy">' + g.happy + ' happy customer' + (g.happy === 1 ? '' : 's') + ' &middot; +' + g.happy + ' ticket' + (g.happy === 1 ? '' : 's') + '</span></div>';
+    g.shown = s;
+  }
+  function icNext(g) {
+    var i = g.n % g.avs.length;
+    g.cust = { img: g.avs[i], order: icOrder(g.n), st: 'in', t: 0, shake: 0 };
+  }
+  function icServe(g) {
+    var cu = g.cust, cur = g.cur;
+    if (!cu || cu.st !== 'wait' || g.over) return;
+    if (!cur.base) { say(g, 'Make the order first, then serve it.', 1400); return; }
+    if (icSame(cur, cu.order)) {
+      g.happy++; cu.st = 'happy'; cu.t = 0; g.flyT = 0; g.fly = { d: cur, tm: g.curT };
+      g.cur = { base: '', main: '', flav: '', tops: [] }; g.curT = {};
+      for (var i = 0; i < 6; i++) part(g, { k: 'txt', x: IC_CUST.x + rnd(-30, 30), y: IC_CUST.y - 140 + rnd(-10, 10), vx: rnd(-10, 10), vy: -50, r: 16, life: 1.1, age: 0, col: '#ff5a8a', text: '♥' });
+      text(g, IC_CUST.x, IC_CUST.y - 160, '+1 ticket', '#c9941a', 18);
+      say(g, icPick(['Yum, thank you!', 'Perfect!', 'Just what I wanted!', 'Delicious!']), 1300);
+      icStatus(g);
+    } else {
+      cu.shake = 0.5; say(g, 'Hmm, that’s not what I asked for. Look at my order!', 1800);
+      for (var k = 0; k < 8; k++) part(g, { k: 'bub', x: IC_WORK.x + rnd(-20, 20), y: IC_WORK.y - 40 + rnd(-20, 20), vx: rnd(-30, 30), vy: rnd(-40, -10), r: rnd(3, 6), life: 0.7, age: 0, col: 'rgba(200,200,210,.8)' });
+      g.cur = { base: '', main: '', flav: '', tops: [] }; g.curT = {};
+    }
+    icUi(g);
+  }
+  G.icecream = {
+    init: function (g) {
+      g.left = g.o.secs || 120; g.happy = 0; g.n = 0; g.cur = { base: '', main: '', flav: '', tops: [] }; g.curT = {};
+      g.avs = []; for (var i = 0; i < 6; i++) g.avs.push(imgOf(g.o.avatar(i)));
+      icNext(g); icUi(g); icStatus(g);
+    },
+    tool: function (g, k) {
+      if (g.over) return;
+      var cur = g.cur, t = g.t;
+      if (k === 'serve') { icServe(g); return; }
+      if (k === 'toss') { if (cur.base) { for (var i = 0; i < 8; i++) part(g, { k: 'bub', x: IC_WORK.x + rnd(-20, 20), y: IC_WORK.y - 30 + rnd(-20, 20), vx: rnd(-30, 30), vy: rnd(-40, -10), r: rnd(3, 6), life: 0.6, age: 0, col: 'rgba(200,200,210,.8)' }); } g.cur = { base: '', main: '', flav: '', tops: [] }; g.curT = {}; icUi(g); return; }
+      if (IC.base[k]) { if (cur.base) return; cur.base = k; g.curT.base = t; }
+      else if (IC.main[k]) { if (cur.base !== 'bowl' || cur.main) return; cur.main = k; g.curT.main = t; }
+      else if (IC.flav[k]) { if (!cur.base || cur.flav) return; cur.flav = k; g.curT.flav = t; }
+      else if (IC.top[k]) {
+        if (!cur.flav || cur.tops.indexOf(k) >= 0) return; cur.tops.push(k); g.curT[k] = t;
+        if (k === 'sprC' || k === 'sprR') for (var j = 0; j < 10; j++) part(g, { k: 'conf', x: IC_WORK.x + rnd(-20, 20), y: IC_WORK.y - 120, vx: rnd(-20, 20), vy: rnd(20, 80), r: rnd(1.4, 2.2), life: 0.45, age: 0, rot: rnd(0, 6), col: k === 'sprC' ? '#5a3018' : icPick(['#e8453c', '#3a8ed8', '#ffd23f', '#4fa33a', '#c48cff']) });
+      }
+      icUi(g);
+    },
+    down: function (g, p) {
+      if (g.over) return;
+      if (p.x < IC_CUST.x + 50 && p.y < IC_CUST.y + 10 && p.x > IC_CUST.x - 60) { icServe(g); return; }   /* tap the customer to hand it over */
+      if (dist(p.x, p.y, IC_WORK.x, IC_WORK.y - 40) < 50 && g.cur.base) icServe(g);   /* or tap the dessert */
+    },
+    update: function (g, dt) {
+      if (!g.over) { g.left -= dt; if (Math.ceil(g.left) !== g.shown) icStatus(g); }
+      var cu = g.cust;
+      if (cu) {
+        cu.t += dt; if (cu.shake > 0) cu.shake -= dt;
+        if (cu.st === 'in' && cu.t > 0.45) { cu.st = 'wait'; cu.t = 0; }
+        else if (cu.st === 'happy' && cu.t > 1.1) { cu.st = 'out'; cu.t = 0; }
+        else if (cu.st === 'out' && cu.t > 0.4) { g.n++; if (!g.over) icNext(g); else g.cust = null; }
+      }
+      if (g.fly) { g.flyT += dt; if (g.flyT > 0.5) g.fly = null; }
+      if (!g.over && g.left <= 0) { g.left = 0; icStatus(g); g.result = { happy: g.happy }; icUi(g); finish(g, 'Time’s up! ' + g.happy + ' happy customer' + (g.happy === 1 ? '' : 's') + '.'); }
+    },
+    draw: function (g, c) {
+      /* the parlor: striped wall, awning, the soft-serve machine, a counter */
+      for (var x = 0; x < VW; x += 24) { c.fillStyle = (x / 24) % 2 ? '#ffe3ee' : '#fff6fa'; c.fillRect(x, 0, 24, 176); }
+      c.fillStyle = '#ff8fb8'; c.fillRect(0, 0, VW, 12); for (var a = 0; a < VW; a += 20) { c.beginPath(); c.arc(a + 10, 12, 10, 0, Math.PI); c.fillStyle = (a / 20) % 2 ? '#ffffff' : '#ff8fb8'; c.fill(); }
+      c.fillStyle = '#c0ccd6'; rr(c, 322, 44, 64, 112, 8); c.fill(); c.fillStyle = '#e8eef2'; rr(c, 328, 50, 52, 40, 6); c.fill();
+      ['van', 'choc', 'mint'].forEach(function (k, i) { ell(c, 338 + i * 16, 70, 6, 6, IC.col[k]); c.fillStyle = '#9aa4ad'; c.fillRect(335 + i * 16, 96, 6, 12); });
+      c.fillStyle = '#ffffff'; c.font = 'bold 10px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#6b757e'; c.fillText('SOFT SERVE', 354, 128);
+      /* the customer, behind the counter */
+      var cu = g.cust;
+      if (cu && cu.img) {
+        var off = cu.st === 'in' ? (1 - clamp(cu.t / 0.45, 0, 1)) * -160 : cu.st === 'out' ? -clamp(cu.t / 0.4, 0, 1) * 160 : 0;
+        var hop = cu.st === 'happy' ? Math.abs(Math.sin(cu.t * 9)) * 10 : cu.st === 'in' ? Math.abs(Math.sin(cu.t * 14)) * 4 : Math.sin(g.t * 2.4) * 1.2;
+        var sh = cu.shake > 0 ? Math.sin(cu.shake * 50) * 4 : 0;
+        if (ok(cu.img)) { var h = IC_CUST.h, w = h * KID_VB.w / KID_VB.h; c.drawImage(cu.img, IC_CUST.x - w / 2 + off + sh, IC_CUST.y - h * KID_VB.gy / KID_VB.h - hop, w, h); }
+        /* the order bubble */
+        if (cu.st === 'wait' || cu.st === 'in') {
+          var bx = IC_BUB.x + off * 0.3, by = IC_BUB.y, bw = IC_BUB.w, bh = IC_BUB.h;
+          c.save(); c.globalAlpha = cu.st === 'in' ? clamp(cu.t / 0.45, 0, 1) : 1;
+          c.fillStyle = '#ffffff'; c.strokeStyle = '#e0c0cc'; c.lineWidth = 2; rr(c, bx, by, bw, bh, 14); c.fill(); c.stroke();
+          c.beginPath(); c.moveTo(bx + 4, by + bh - 30); c.lineTo(bx - 16, by + bh - 14); c.lineTo(bx + 8, by + bh - 18); c.closePath(); c.fill();
+          drawDessert(g, c, cu.order, bx + bw / 2, by + bh - 22, 0.62, null);
+          c.fillStyle = '#5a4a52'; c.font = 'bold 10px sans-serif'; c.textAlign = 'center'; c.fillText(icName(cu.order), bx + bw / 2, by + bh - 8);
+          c.restore();
+        } else if (cu.st === 'happy') { c.fillStyle = '#ff5a8a'; c.font = 'bold 28px sans-serif'; c.textAlign = 'center'; c.fillText('♥', IC_CUST.x + 34, IC_CUST.y - 120 - cu.t * 20); }
+      }
+      /* counter */
+      c.fillStyle = '#f2e1c4'; c.fillRect(0, 176, VW, 14); c.fillStyle = '#d9c3a0'; c.fillRect(0, 188, VW, 3);
+      c.fillStyle = '#7fd3b0'; c.fillRect(0, 191, VW, 109); c.fillStyle = 'rgba(255,255,255,.35)'; for (var sx = 10; sx < VW; sx += 34) c.fillRect(sx, 191, 14, 109);
+      /* the work spot and what's being made */
+      ell(c, IC_WORK.x, IC_WORK.y - 2, 46, 8, 'rgba(0,0,0,.08)');
+      if (g.cur.base) drawDessert(g, c, g.cur, IC_WORK.x, IC_WORK.y, 1.15, g.curT);
+      else if (!g.fly) { c.save(); c.globalAlpha = 0.75 + 0.25 * Math.sin(g.t * 4); c.fillStyle = '#ffffff'; rr(c, IC_WORK.x - 62, IC_WORK.y - 46, 124, 26, 13); c.fill(); c.fillStyle = '#d94a7a'; c.font = 'bold 13px sans-serif'; c.textAlign = 'center'; c.fillText('Tap Cone or Bowl', IC_WORK.x, IC_WORK.y - 28); c.restore(); }
+      if (g.fly) { var u = clamp(g.flyT / 0.5, 0, 1); drawDessert(g, c, g.fly.d, IC_WORK.x + (IC_CUST.x + 40 - IC_WORK.x) * u, IC_WORK.y - Math.sin(u * Math.PI) * 50, 1.15 - u * 0.4, null); }
+    }
+  };
+
   window.Games = { mount: mount, stop: stop, active: function () { return !!cur; }, _g: function () { return cur; } };
 })();

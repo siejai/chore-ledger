@@ -838,3 +838,50 @@ svg.cre .cre-wings{transform-box:fill-box;transform-origin:50% 50%;animation:cre
 .rv-bar .grow{font-size:14px;color:var(--muted)}
 .rv-bar .btn{margin-left:8px}
 .ct-t td:nth-child(10){width:130px}.ct-t td:nth-child(11){width:60px;text-align:center}.ct-t td:nth-child(12){width:86px}.ct-t td:nth-child(13){width:40px;text-align:center}
+.mg-meter.tummy i{background:linear-gradient(90deg,#ffc35a,#e8653c)}
+.mg-feed .mg-tools{display:flex;justify-content:center;align-items:center}
+.mg-feed .mg-tools:before{content:'Tummy';font-size:13px;font-weight:600;color:var(--muted);margin-right:8px}
+.ct-t{min-width:1800px}
+.ct-t td:nth-child(12){min-width:130px}.ct-t td:nth-child(13){width:60px;text-align:center}.ct-t td:nth-child(14){min-width:150px}.ct-t td:nth-child(15){width:60px;text-align:center}.ct-t td:nth-child(16){width:86px;text-align:left}.ct-t td:nth-child(17){width:40px;text-align:center}
+.editor .checks.days{display:flex;flex-wrap:wrap}
+.editor .checks.days label{min-width:62px}
+.done-link{list-style:none;text-align:center;padding:10px 0}
+/* the ice cream shop (cl-v36) */
+.region.icecream{background:linear-gradient(#fff6fa,#ffd9e8);color:#17211e;border-color:#d94a7a}
+.region.icecream small{color:#5a4a52}
+.ic .ic-intro h2{margin:0 0 6px}
+.ic-how{margin:6px 0 10px;padding-left:20px}.ic-how li{margin:3px 0}
+.mg-icecream .mg-steps{margin-bottom:4px}
+.ic-status{display:flex;align-items:center;justify-content:space-between;font-weight:700}
+.ic-clock{font-family:ui-monospace,Menlo,monospace;font-size:20px;background:var(--surface2);border-radius:8px;padding:2px 10px}
+.ic-happy{font-size:14px;color:#c9941a}
+.mg-icecream .mg-tools{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.mg-icecream .mg-tool{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:62px;padding:4px 2px;margin:0;width:auto}
+.mg-icecream .mg-tool svg{width:34px;height:34px}
+.mg-icecream .mg-tool span{font-size:11px;line-height:1.15;text-align:center}
+.mg-icecream .mg-tool[disabled]{opacity:.35}
+.mg-icecream .mg-tool.ic-serve{background:#ffd23f;border-color:#c9a020;color:#3a2a00;font-weight:700}
+.mg-icecream .mg-tool.ic-serve[disabled]{background:var(--surface2);border-color:var(--line);color:var(--muted)}
+.mg-icecream .mg-tool.ic-toss span{color:var(--muted)}
+/* progress toward the next tuck-in / play (cl-v36) */
+.pbar{display:inline-block;width:34px;height:7px;margin:0 3px 0 4px;border-radius:4px;background:#dfe6e3;vertical-align:middle;overflow:hidden}
+.pbar i{display:block;height:100%;border-radius:4px}
+.pbar.pb-rest i{background:#7a5fd6}.pbar.pb-play i{background:#2f9e5a}
+.pbar.big{width:auto;flex:1 1 auto;height:10px;margin:0 8px}
+.pet-prog{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--surface2)}
+.pprog{display:flex;align-items:center;flex:1 1 150px;min-width:0;font-size:13px}
+.pprog-l{white-space:nowrap}.pprog small{white-space:nowrap;color:var(--muted)}
+.pprog{flex:1 1 100%}
+.pprog-l{min-width:82px}
+.pbar.big{min-width:70px;display:block}
+/* Crystal Caverns (cl-v37) */
+.region.caverns{background:linear-gradient(#e9e4ff,#c9bdf5);color:#17211e;border-color:#6a4c9c}
+.region.caverns small{color:#3a3256}
+.cav-hud{display:flex;align-items:center;justify-content:space-between;font-weight:700}
+.cav-clock{font-size:20px;background:var(--surface2);border-radius:8px;padding:2px 10px}
+.cav-tix{display:flex;align-items:center;font-size:14px;color:#c9541a}
+.cav-tk{display:inline-block;width:16px;height:10px;margin-right:6px;border-radius:2px;background:#ff7a59;box-shadow:inset 0 0 0 2px #ffe2d6}
+.cav-stage{position:relative;border-radius:12px;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+.cav-cv{display:block;touch-action:none}
+.cav-say{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(20,14,40,.85);color:#fff;font-weight:700;border-radius:999px;padding:4px 14px;white-space:nowrap;pointer-events:none}
+.cav-tip{text-align:center}

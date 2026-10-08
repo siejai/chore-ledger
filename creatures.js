@@ -1262,5 +1262,16 @@
     var g = sp.blob ? BLOB[st] : GEO[st];
     return { x: 100, y: 186 - (186 - g.hy) * g.scale, r: g.hr * g.scale };
   }
-  window.CRE = { SPECIES: SPECIES, draw: draw, byId: byId, randomPalette: randomPalette, egg: egg, starters: starters, rares: rares, accessory: accessory, headSpot: headSpot };
+  /* where the mouth is in the pet picture (same coordinates as headSpot); a guess under the head when the art has none */
+  function mouthSpot(spId, st, view) {
+    var sp = byId(spId) || SPECIES[0], M = window.C3D_META && window.C3D_META[sp.id], v = view || 'three', h = headSpot(spId, st, v);
+    st = Math.max(0, Math.min(2, st || 0));
+    if (M && window.C3D && !C3D.off && M.stages[st] && M.stages[st].v[v]) {
+      var m = M.stages[st], a = m.v[v], T = v === 'three' ? M.clay : M.toon, gx = a.ground[0], gy = a.ground[1], bb = a.bb || [0, 0, T, T], mo = a.mouth;
+      var k = Math.min(U3 * m.span / T, 104 / Math.max(gx - bb[0], 1), 104 / Math.max(bb[2] - gx, 1), 218 / Math.max(gy - bb[1], 1));
+      if (mo && mo[4]) return { x: 100 + (mo[0] - gx) * k, y: 186 + (mo[1] - gy) * k, r: h.r };
+    }
+    return { x: h.x, y: h.y + h.r * 0.45, r: h.r };
+  }
+  window.CRE = { SPECIES: SPECIES, draw: draw, byId: byId, randomPalette: randomPalette, egg: egg, starters: starters, rares: rares, accessory: accessory, headSpot: headSpot, mouthSpot: mouthSpot };
 })();
