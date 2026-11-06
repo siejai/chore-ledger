@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<!-- No network: everything comes from inside the app. 'unsafe-inline' scripts are needed only
+     because Capacitor injects its bridge as an inline script. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="format-detection" content="telephone=no">
+<title>Lit Town</title>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app" class="screen screen-loading">
+  <div class="loading">Lit Town</div>
+</div>
+
+<script src="js/util.js"></script>
+<script src="js/anim.js"></script>
+<script src="js/audio-ids.js"></script>
+<script src="js/hub.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/phonics.js"></script>
+<script src="js/trace-check.js"></script>
+<script src="art/art-core.js"></script>
+<script src="art/ui.js"></script>
+<script src="art/brand.js"></script>
+<script src="art/characters.js"></script>
+<script src="art/hub.js"></script>
+<script src="js/avatar-render.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/trace.js"></script>
+<script src="js/screens/home.js"></script>
+<script src="js/screens/lesson.js"></script>
+<script src="js/screens/world.js"></script>
+<script src="js/screens/house.js"></script>
+<script src="js/screens/shop.js"></script>
+<script src="js/screens/parent.js"></script>
+<script src="js/screens/desk.js"></script>
+<script src="js/screens/placement.js"></script>
+<script src="js/updates.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

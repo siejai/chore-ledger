@@ -463,7 +463,7 @@
   var petLast = {};
   if (window.C3D) C3D.onReady(function () { for (var k in W.imgs) if ((k.indexOf('pet|') === 0 || k.indexOf('av|') === 0) && W.imgs.hasOwnProperty(k)) delete W.imgs[k]; petLast = {}; });
   /* 3D pets have front, side and back views: walking down shows the face, up shows the back, sideways the profile */
-  function is3d(p) { return !!(window.C3D && !C3D.off && p && C3D.has(p.sp)); }
+  function is3d(p) { return !!(!window.PETS_2D && window.C3D && !C3D.off && p && C3D.has(p.sp)); }   /* cl-v39: flat 2D pets when creatures.js sets PETS_2D */
   function petView(p, dir) { return !is3d(p) ? '' : dir === 'up' ? 'back' : dir === 'side' ? 'side' : 'front'; }
   function petImage(pid, mood, moving, dir, a) {
     var st = Pz().state(pid); if (!st.pet) return null;

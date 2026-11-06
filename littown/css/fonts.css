@@ -1,0 +1,21 @@
+/* Bundled fonts (SIL Open Font License — see fonts/*-LICENSE.txt). No web fonts are fetched. */
+@font-face {
+  font-family: 'Andika';
+  font-style: normal; font-weight: 400;
+  src: url('../fonts/andika-latin-400-normal.woff2') format('woff2'), url('../fonts/andika-latin-400-normal.woff') format('woff');
+}
+@font-face {
+  font-family: 'Andika';
+  font-style: normal; font-weight: 700;
+  src: url('../fonts/andika-latin-700-normal.woff2') format('woff2'), url('../fonts/andika-latin-700-normal.woff') format('woff');
+}
+@font-face {
+  font-family: 'OpenDyslexic';
+  font-style: normal; font-weight: 400;
+  src: url('../fonts/opendyslexic-latin-400-normal.woff2') format('woff2'), url('../fonts/opendyslexic-latin-400-normal.woff') format('woff');
+}
+@font-face {
+  font-family: 'OpenDyslexic';
+  font-style: normal; font-weight: 700;
+  src: url('../fonts/opendyslexic-latin-700-normal.woff2') format('woff2'), url('../fonts/opendyslexic-latin-700-normal.woff') format('woff');
+}

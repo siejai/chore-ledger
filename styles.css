@@ -885,3 +885,49 @@ svg.cre .cre-wings{transform-box:fill-box;transform-origin:50% 50%;animation:cre
 .cav-cv{display:block;touch-action:none}
 .cav-say{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(20,14,40,.85);color:#fff;font-weight:700;border-radius:999px;padding:4px 14px;white-space:nowrap;pointer-events:none}
 .cav-tip{text-align:center}
+
+/* ---------- cl-v39: pet stink lines drift up and fade (creatures.js stink()) ---------- */
+@keyframes creStink{0%{transform:translate(0,8px);opacity:0}25%{opacity:.9}70%{opacity:.9}100%{transform:translate(4px,-12px);opacity:0}}
+svg.cre .cre-stink{animation:creStink 1.8s ease-in-out infinite}
+svg.cre .cre-stink.cs1{animation-delay:-.6s}svg.cre .cre-stink.cs2{animation-delay:-1.2s}
+
+/* ---------- cl-v42: games on the kids' tablets (gate.js) ---------- */
+.tag.game{color:#fff;background:#2563eb;border-color:#2563eb}
+.tab-pick h2{font-size:22px;text-transform:none;letter-spacing:0;color:var(--ink);text-align:center;margin:12px 0 18px}
+.tab-pick .chip{min-height:72px;font-size:22px}
+.home{max-width:760px;margin:12px auto 0}
+.home-hi{display:flex;align-items:center;gap:12px}
+.home-hi h1{font-size:26px;white-space:normal}
+.home-av{width:64px;height:64px;flex:none}
+.home-av svg,.home-av img{width:64px;height:64px}
+.games-card h2{font-size:18px;text-transform:none;letter-spacing:0;color:var(--ink);margin:0 0 6px}
+.games-card.open{border-color:var(--good);background:linear-gradient(0deg,var(--surface),var(--surface)) padding-box}
+.games-card.open h2{color:var(--good)}
+.games-card.locked{border-color:var(--warn)}
+.gate-list{list-style:none;margin:8px 0 10px;padding:0;display:grid;gap:6px}
+.gate-list .gc{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);font-size:17px}
+.gate-list .gc small{color:var(--muted)}
+.gate-list .gc-ic{width:26px;text-align:center;font-size:18px}
+.gate-list .gc.ok{border-color:var(--good)}.gate-list .gc.ok .gc-ic,.gate-list .gc.ok small{color:var(--good)}
+.gate-list .gc.wait .gc-ic,.gate-list .gc.wait small{color:var(--warn)}
+.games-h{margin-top:6px}
+.app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px}
+.app-tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px 10px;min-height:118px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+.app-tile img{width:64px;height:64px;border-radius:14px}
+.app-tile .app-dot{width:64px;height:64px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:600;background:var(--surface2);color:var(--ink)}
+.app-tile .app-dot.cq{background:var(--accent);color:var(--accent-ink)}
+.app-tile .app-dot.pet{background:#f59e0b;color:#fff}.app-tile .app-dot.lit{background:#7c3aed;color:#fff}
+.app-tile .app-name{font-size:14px;line-height:1.2;text-align:center;overflow-wrap:anywhere}
+.app-tile.big{min-height:128px;border-width:2px}
+.app-tile.locked img,.app-tile.locked .app-dot{filter:grayscale(1);opacity:.45}
+.app-tile.locked .app-name{color:var(--muted)}
+.app-tile .app-lock{position:absolute;top:8px;right:10px;font-size:20px}
+.parent-tab .hrow{align-items:center;gap:10px}
+.parent-tab .hrow .h-ic{width:24px;text-align:center;font-size:18px}
+.parent-tab .hrow.ok .h-ic{color:var(--good)}.parent-tab .hrow.bad .h-ic{color:var(--warn)}.parent-tab .hrow.warn .h-ic{color:var(--muted)}
+.apps-list .app-row{align-items:center;gap:10px;flex-wrap:wrap}
+.apps-list .app-ico img{width:36px;height:36px;border-radius:8px;display:block}
+.apps-list .note.mono{font-size:11px;overflow-wrap:anywhere}
+.gate-row{align-items:center;gap:10px;flex-wrap:wrap}
+.seg.small button{padding:6px 10px;min-height:34px;font-size:13px}
+.time-card{display:grid;gap:8px}.time-row{display:flex;align-items:center;gap:12px}.time-row.out{color:var(--muted)}.time-row .meter{flex:0 0 120px;height:8px;border-radius:4px;background:var(--line);overflow:hidden}.time-row .meter span{display:block;height:100%;background:var(--accent)}.time-row.out .meter span{background:var(--muted)}

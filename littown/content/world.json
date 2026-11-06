@@ -1,0 +1,830 @@
+{
+  "schemaVersion": 2,
+  "start": { "location": "home", "x": 470, "y": 580 },
+  "flames": {
+    "awards": [
+      {"minAccuracy": 0, "flames": 1},
+      {"minAccuracy": 0.8, "flames": 2},
+      {"minAccuracy": 0.95, "flames": 3}
+    ],
+    "perfectBonus": 2,
+    "replayFlames": 1,
+    "startingFlames": 0
+  },
+  "shop": {
+    "tabs": [
+      {"id": "hair", "slots": ["hair"]},
+      {"id": "clothes", "slots": ["top", "bot", "shoes", "acc"]},
+      {"id": "home", "location": "home", "upgrades": true}
+    ]
+  },
+  "finale": { "lesson": 100, "line": "town-lit" },
+  "house": {
+    "freeUpgradeEvery": 4,
+    "note": "Every 4 lessons one thing in her house gets a free fix-up (junk -> fixed). After that, deluxe and premium versions can be bought with flames. Each tier's art maps 'fixtureId.part' to a sprite ('' hides that layer).",
+    "chains": [
+      {
+        "id": "bed",
+        "lesson": 4,
+        "room": "bedroom",
+        "name": "bed",
+        "tiers": [
+          {"id": "junk", "art": {"bed.base": "fx-bed-junk"}},
+          {"id": "fixed", "art": {"bed.base": "fx-bed-fixed"}},
+          {"id": "deluxe", "cost": 3, "art": {"bed.base": "fx-bed-deluxe"}},
+          {"id": "premium", "cost": 5, "art": {"bed.base": "fx-bed-premium"}}
+        ]
+      },
+      {
+        "id": "fridge",
+        "lesson": 8,
+        "room": "kitchen",
+        "name": "fridge",
+        "tiers": [
+          {"id": "junk", "art": {"fridge.base": "fx-fridge-junk", "fridge.door0": "fx-fridge-junk-door"}},
+          {"id": "fixed", "art": {"fridge.base": "fx-fridge", "fridge.door0": "fx-fridge-door"}},
+          {"id": "deluxe", "cost": 3, "art": {"fridge.base": "fx-fridge-deluxe", "fridge.door0": "fx-fridge-deluxe-door"}},
+          {"id": "premium", "cost": 5, "art": {"fridge.base": "fx-fridge-premium", "fridge.door0": "fx-fridge-premium-door"}}
+        ]
+      },
+      {
+        "id": "bedding",
+        "lesson": 12,
+        "room": "bedroom",
+        "name": "bedding and rug",
+        "tiers": [
+          {"id": "junk", "art": {"bed.bedding": "fx-bedding-junk", "rug.base": "fx-rug-junk"}},
+          {"id": "fixed", "art": {"bed.bedding": "fx-bedding-fixed", "rug.base": "fx-rug-fixed"}},
+          {"id": "deluxe", "cost": 3, "art": {"bed.bedding": "fx-bedding-deluxe", "rug.base": "fx-rug-deluxe"}},
+          {"id": "premium", "cost": 5, "art": {"bed.bedding": "fx-bedding-premium", "rug.base": "fx-rug-premium"}}
+        ]
+      },
+      {
+        "id": "lighting",
+        "lesson": 16,
+        "room": "bedroom",
+        "name": "lamp",
+        "tiers": [
+          {"id": "junk", "art": {"lamp.base": "fx-lamp-junk", "lamp.glow": "fx-lamp-junk-glow"}, "dim": 0.28},
+          {"id": "fixed", "art": {"lamp.base": "fx-lamp-fixed", "lamp.glow": "fx-lamp-fixed-glow"}, "dim": 0},
+          {"id": "deluxe", "cost": 3, "art": {"lamp.base": "fx-lamp-deluxe", "lamp.glow": "fx-lamp-deluxe-glow"}, "dim": 0},
+          {"id": "premium", "cost": 5, "art": {"lamp.base": "fx-lamp-premium", "lamp.glow": "fx-lamp-premium-glow"}, "dim": 0}
+        ]
+      },
+      {
+        "id": "bath-sink",
+        "lesson": 20,
+        "room": "bath",
+        "name": "bathroom sink",
+        "tiers": [
+          {"id": "junk", "art": {"bath-sink.base": "fx-sink-bath-junk"}},
+          {"id": "fixed", "art": {"bath-sink.base": "fx-sink-bath"}},
+          {"id": "deluxe", "cost": 3, "art": {"bath-sink.base": "fx-sink-bath-deluxe"}},
+          {"id": "premium", "cost": 5, "art": {"bath-sink.base": "fx-sink-bath-premium"}}
+        ]
+      },
+      {
+        "id": "toilet-tub",
+        "lesson": 24,
+        "room": "bath",
+        "name": "toilet and tub",
+        "tiers": [
+          {"id": "junk", "art": {"toilet.grime": "fx-toilet-grime", "tub.grime": "fx-tub-grime"}},
+          {"id": "fixed", "art": {"toilet.grime": "", "tub.grime": ""}},
+          {"id": "deluxe", "cost": 3, "comingSoon": true},
+          {"id": "premium", "cost": 5, "comingSoon": true}
+        ]
+      },
+      {
+        "id": "desk",
+        "lesson": 28,
+        "room": "bedroom",
+        "name": "desk",
+        "note": "Her writing desk is scruffy until lesson 28. Board styles and marker colours come with the deluxe and premium versions (not drawn yet).",
+        "tiers": [
+          {"id": "junk", "art": {"desk.base": "fx-desk-junk"}},
+          {"id": "fixed", "art": {"desk.base": "fx-desk-fixed"}},
+          {"id": "deluxe", "cost": 3, "comingSoon": true, "writing": {"board": "rainbow frame", "markers": ["#E5484D", "#3D8BFD", "#4CC27A", "#8E6CEF"]}},
+          {"id": "premium", "cost": 5, "comingSoon": true, "writing": {"board": "glitter frame", "markers": ["#E5484D", "#FF9F43", "#FFD23F", "#4CC27A", "#3D8BFD", "#8E6CEF", "#F76CA8", "#2B2440"]}}
+        ]
+      },
+      {
+        "id": "stove",
+        "lesson": 32,
+        "room": "kitchen",
+        "name": "stove",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "table",
+        "lesson": 36,
+        "room": "kitchen",
+        "name": "table and chairs",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "bookshelf",
+        "lesson": 40,
+        "room": "bedroom",
+        "name": "bookshelf and books",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk", "art": {"bookbox.base": "fx-bookbox"}},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "curtains",
+        "lesson": 44,
+        "room": "bedroom",
+        "name": "curtains",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "paint",
+        "lesson": 48,
+        "room": "bedroom",
+        "name": "wall paint",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "tv",
+        "lesson": 52,
+        "room": "living",
+        "name": "TV",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "deck",
+        "lesson": 56,
+        "room": "deck",
+        "name": "deck things",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "kitchen-sink",
+        "lesson": 60,
+        "room": "kitchen",
+        "name": "kitchen sink",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "sofa",
+        "lesson": 64,
+        "room": "living",
+        "name": "sofa",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "mirror",
+        "lesson": 68,
+        "room": "bath",
+        "name": "bathroom mirror",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "window",
+        "lesson": 72,
+        "room": "bedroom",
+        "name": "windows",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk", "art": {"window.base": "fx-window-junk"}},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "wardrobe",
+        "lesson": 76,
+        "room": "bedroom",
+        "name": "wardrobe",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "living-rug",
+        "lesson": 80,
+        "room": "living",
+        "name": "living room rug",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "cabinets",
+        "lesson": 84,
+        "room": "kitchen",
+        "name": "cabinets",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "deck-lights",
+        "lesson": 88,
+        "room": "deck",
+        "name": "deck lights",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "bath-tiles",
+        "lesson": 92,
+        "room": "bath",
+        "name": "bathroom tiles",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "floors",
+        "lesson": 96,
+        "room": "living",
+        "name": "floors",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      },
+      {
+        "id": "chandelier",
+        "lesson": 100,
+        "room": "living",
+        "name": "chandelier",
+        "comingSoon": true,
+        "tiers": [
+          {"id": "junk"},
+          {"id": "fixed"},
+          {"id": "deluxe", "cost": 3},
+          {"id": "premium", "cost": 5}
+        ]
+      }
+    ]
+  },
+  "locations": [
+    {
+      "id": "home",
+      "name": "home",
+      "pack": "loc-home",
+      "building": "bld-home",
+      "hub": [180, 490],
+      "bgColor": "#FFF1DC",
+      "decorate": true,
+      "packs": ["home-bedroom", "home-living", "home-kitchen", "home-bath", "home-upgrades", "home-deck"],
+      "rooms": [
+        {
+          "id": "bedroom",
+          "icon": "ui-room-bedroom",
+          "background": "bg-room-bedroom",
+          "floor": { "y1": 430, "y2": 590 },
+          "surfaces": [
+            {"name": "windowsill", "x1": 140, "x2": 320, "y": 246},
+            {"name": "bed", "x1": 480, "x2": 820, "y": 428},
+            {"name": "box", "x1": 84, "x2": 196, "y": 522}
+          ],
+          "playerStart": [330, 560],
+          "signs": [],
+          "hotspots": [],
+          "fixtures": [
+            {"id": "window", "type": "deco", "x": 230, "y": 270, "parts": {"base": "fx-window-junk"}},
+            {"id": "bookbox", "type": "deco", "x": 140, "y": 580, "parts": {"base": "fx-bookbox"}, "say": "box"},
+            {"id": "rug", "type": "deco", "x": 420, "y": 598, "z": 2, "parts": {"base": "fx-rug-junk"}, "flat": true},
+            {"id": "bed", "type": "bed", "x": 650, "y": 545, "parts": {"base": "fx-bed-junk", "bedding": "fx-bedding-junk"}},
+            {"id": "lamp", "type": "lamp", "x": 905, "y": 548, "parts": {"base": "fx-lamp-junk", "glow": "fx-lamp-junk-glow"}},
+            {"id": "desk", "type": "desk", "x": 262, "y": 470, "parts": {"base": "fx-desk-junk", "things": "fx-desk-things"}, "zones": {"marker": [0.06, 0, 0.45, 0.42], "chalk": [0.45, 0.16, 0.72, 0.47], "paper": [0.72, 0.3, 0.97, 0.5]}},
+            {"id": "wordshelf", "type": "wordshelf", "x": 690, "y": 330, "parts": {"base": "fx-wordshelf"}, "rows": [0.492, 0.862], "perRow": 5}
+          ]
+        },
+        {
+          "id": "living",
+          "icon": "ui-room-living",
+          "background": "bg-room-living",
+          "floor": { "y1": 430, "y2": 590 },
+          "surfaces": [
+            {"name": "sofa", "x1": 254, "x2": 436, "y": 366},
+            {"name": "shelf", "x1": 500, "x2": 664, "y": 196},
+            {"name": "tvstand", "x1": 472, "x2": 712, "y": 390},
+            {"name": "bookshelf", "x1": 32, "x2": 136, "y": 304}
+          ],
+          "playerStart": [400, 556],
+          "fixtures": [
+            {"id": "oldshelf", "type": "shelf", "x": 84, "y": 446, "parts": {"base": "fx-oldshelf", "book": "fx-oldshelf-book"}, "pivot": [0.636, 0.373], "say": "book"},
+            {"id": "tv", "type": "tv", "x": 570, "y": 391, "parts": {"base": "fx-tv", "on": "fx-tv-on", "static": ["fx-tv-static-a", "fx-tv-static-b", "fx-tv-static-c"]}},
+            {"id": "living-switch", "type": "switch", "x": 740, "y": 262, "parts": {"base": "fx-switch", "toggle": "fx-switch-toggle"}, "throw": 20},
+            {"id": "deckdoor", "type": "door", "x": 870, "y": 441, "parts": {"base": "fx-deckdoor", "panel": "fx-deckdoor-panel"}, "slide": -0.44, "opens": "deck"}
+          ],
+          "signs": [],
+          "hotspots": []
+        },
+        {
+          "id": "kitchen",
+          "icon": "ui-room-kitchen",
+          "background": "bg-room-kitchen",
+          "floor": { "y1": 430, "y2": 590 },
+          "surfaces": [
+            {"name": "counter", "x1": 200, "x2": 740, "y": 308},
+            {"name": "windowsill", "x1": 222, "x2": 378, "y": 206},
+            {"name": "table", "x1": 798, "x2": 952, "y": 360},
+            {"name": "fridge-top", "x1": 40, "x2": 124, "y": 218}
+          ],
+          "playerStart": [690, 520],
+          "fixtures": [
+            {"id": "fridge", "type": "container", "x": 82, "y": 446, "parts": {"base": "fx-fridge", "doors": [{"part": "fx-fridge-door", "hinge": "left"}]}, "slots": [[0.3, 0.413], [0.7, 0.413], [0.3, 0.652], [0.7, 0.652], [0.3, 0.891], [0.7, 0.891]], "capacity": 6, "accepts": "food"},
+            {"id": "cabinet", "type": "container", "x": 495, "y": 200, "parts": {"base": "fx-cabinet", "doors": [{"part": "fx-cabinet-door-l", "hinge": "left"}, {"part": "fx-cabinet-door-r", "hinge": "right"}]}, "slots": [[0.28, 0.5], [0.72, 0.5], [0.28, 0.882], [0.72, 0.882]], "capacity": 4, "accepts": "food"},
+            {"id": "kitchen-sink", "type": "sink", "x": 300, "y": 334, "parts": {"base": "fx-sink-kitchen"}, "spout": [0.454, 0.388], "basin": 0.64},
+            {"id": "kitchen-switch", "type": "switch", "x": 172, "y": 278, "parts": {"base": "fx-switch", "toggle": "fx-switch-toggle"}, "throw": 14}
+          ],
+          "signs": [],
+          "hotspots": []
+        },
+        {
+          "id": "bath",
+          "icon": "ui-room-bath",
+          "background": "bg-room-bath",
+          "floor": { "y1": 430, "y2": 590 },
+          "surfaces": [
+            {"name": "windowsill", "x1": 80, "x2": 176, "y": 180},
+            {"name": "bathshelf", "x1": 732, "x2": 820, "y": 242},
+            {"name": "tubrim", "x1": 740, "x2": 930, "y": 384}
+          ],
+          "playerStart": [620, 560],
+          "fixtures": [
+            {"id": "toilet", "type": "toilet", "x": 150, "y": 482, "parts": {"base": "fx-toilet", "grime": "fx-toilet-grime", "swirl": "fx-toilet-swirl"}, "swirl": {"at": [0.5, 0.634], "w": 0.48}},
+            {"id": "tub", "type": "tub", "x": 845, "y": 500, "parts": {"base": "fx-tub", "grime": "fx-tub-grime"}, "spout": [0.731, 0.213], "basin": 0.487, "bubbles": [0.12, 0.84, 0.487]},
+            {"id": "bath-sink", "type": "sink", "x": 480, "y": 478, "parts": {"base": "fx-sink-bath"}, "spout": [0.711, 0.229], "basin": 0.336},
+            {"id": "bath-switch", "type": "switch", "x": 612, "y": 300, "parts": {"base": "fx-switch", "toggle": "fx-switch-toggle"}, "throw": 14}
+          ],
+          "signs": [],
+          "hotspots": []
+        },
+        {
+          "id": "deck",
+          "icon": "ui-room-deck",
+          "background": "bg-room-deck",
+          "opensAtLesson": 26,
+          "bgColor": "#BFE6FF",
+          "floor": { "y1": 430, "y2": 590 },
+          "surfaces": [
+            {"name": "table", "x1": 552, "x2": 688, "y": 386},
+            {"name": "bench", "x1": 304, "x2": 412, "y": 408},
+            {"name": "railing", "x1": 270, "x2": 660, "y": 314}
+          ],
+          "playerStart": [520, 560],
+          "fixtures": [],
+          "signs": [],
+          "hotspots": []
+        }
+      ]
+    },
+    {
+      "id": "bakery",
+      "name": "bakery",
+      "pack": "loc-bakery",
+      "background": "bg-bakery",
+      "building": "bld-bakery",
+      "hub": [420, 360],
+      "bgColor": "#FFF1DC",
+      "packs": ["loc-bakery-rooms"],
+      "rooms": [
+        {
+          "id": "shop",
+          "icon": "ui-room-shop",
+          "background": "bg-bakery",
+    "floor": { "y1": 430, "y2": 590 },
+          "surfaces": [
+            {"name": "counter", "x1": 446, "x2": 970, "y": 314},
+            {"name": "shelf-top", "x1": 480, "x2": 936, "y": 178},
+            {"name": "shelf-low", "x1": 480, "x2": 936, "y": 254},
+            {"name": "stove-top", "x1": 238, "x2": 410, "y": 204},
+            {"name": "window-sill", "x1": 26, "x2": 210, "y": 316}
+          ],
+          "signs": [
+            {"x": 574, "y": 32, "w": 292, "h": 70, "text": "buns", "minLesson": 19}
+          ],
+          "hotspots": [
+            {"name": "oven", "x": 236, "y": 198, "w": 176, "h": 248, "sfx": "ding", "say": "oven"},
+            {"name": "window", "x": 30, "y": 92, "w": 176, "h": 230, "sfx": "chime"},
+            {"name": "display-case", "x": 702, "y": 346, "w": 251, "h": 90, "sfx": "sparkle"},
+            {"name": "lamp-left", "x": 436, "y": 94, "w": 68, "h": 48, "sfx": "ding", "say": "lamp"},
+            {"name": "lamp-right", "x": 926, "y": 94, "w": 68, "h": 48, "sfx": "ding", "say": "lamp"}
+          ],
+          "playerStart": [300, 560]
+        },
+        {
+          "id": "kitchen",
+          "icon": "ui-room-bakekitchen",
+          "background": "bg-bakery-kitchen",
+          "floor": { "y1": 430, "y2": 590 },
+          "surfaces": [
+            {"name": "table", "x1": 340, "x2": 700, "y": 330},
+            {"name": "shelf", "x1": 350, "x2": 690, "y": 214}
+          ],
+          "playerStart": [470, 560],
+          "signs": [],
+          "hotspots": [
+            {"name": "mixer", "x": 560, "y": 236, "w": 100, "h": 94, "sfx": "whoosh", "say": "mix"},
+            {"name": "pots", "x": 350, "y": 56, "w": 340, "h": 74, "sfx": "ding", "say": "pots"},
+            {"name": "window", "x": 740, "y": 36, "w": 130, "h": 70, "sfx": "chime"},
+            {"name": "clock", "x": 908, "y": 46, "w": 64, "h": 64, "sfx": "click"}
+          ],
+          "fixtures": [
+            {"id": "big-oven", "type": "container", "x": 170, "y": 440, "parts": {"base": "fx-bake-oven", "doors": [{"part": "fx-bake-oven-door", "hinge": "left"}], "glow": "fx-bake-oven-glow"}, "slots": [[0.32, 0.44], [0.68, 0.44], [0.32, 0.59], [0.68, 0.59]], "capacity": 4, "accepts": "food", "bake": true, "bakeMs": 3000, "say": "hot"},
+            {"id": "pantry", "type": "container", "x": 850, "y": 440, "parts": {"base": "fx-pantry", "doors": [{"part": "fx-pantry-door-l", "hinge": "left"}, {"part": "fx-pantry-door-r", "hinge": "right"}]}, "slots": [[0.28, 0.32], [0.72, 0.32], [0.28, 0.53], [0.72, 0.53], [0.28, 0.74], [0.72, 0.74]], "capacity": 6, "accepts": "food"}
+          ]
+        },
+        {
+          "id": "cafe",
+          "icon": "ui-room-cafe",
+          "background": "bg-bakery-cafe",
+          "floor": { "y1": 430, "y2": 590 },
+          "surfaces": [
+            {"name": "table-left", "x1": 226, "x2": 374, "y": 400},
+            {"name": "table-right", "x1": 466, "x2": 614, "y": 400},
+            {"name": "case-top", "x1": 704, "x2": 936, "y": 232}
+          ],
+          "playerStart": [770, 565],
+          "signs": [
+            {"x": 400, "y": 64, "w": 204, "h": 72, "text": "jam buns", "minLesson": 19}
+          ],
+          "hotspots": [
+            {"name": "cocoa", "x": 944, "y": 224, "w": 50, "h": 78, "sfx": "ding"},
+            {"name": "window", "x": 50, "y": 96, "w": 242, "h": 190, "sfx": "chime"},
+            {"name": "cake-case", "x": 700, "y": 232, "w": 240, "h": 70, "sfx": "sparkle"},
+            {"name": "lamp-left", "x": 445, "y": 26, "w": 50, "h": 34, "sfx": "ding", "say": "lamp"},
+            {"name": "lamp-right", "x": 735, "y": 26, "w": 50, "h": 34, "sfx": "ding", "say": "lamp"}
+          ]
+        }
+      ],
+      "unlockLesson": 10
+    },
+    {
+      "id": "park",
+      "name": "park",
+      "pack": "loc-park",
+      "background": "bg-park",
+      "building": "bld-park",
+      "hub": [720, 480],
+      "bgColor": "#BFE6FF",
+      "floor": { "y1": 430, "y2": 590 },
+      "surfaces": [
+        {"name": "bench", "x1": 296, "x2": 474, "y": 470},
+        {"name": "picnic-table", "x1": 782, "x2": 934, "y": 392},
+        {"name": "picnic-bench", "x1": 768, "x2": 948, "y": 438}
+      ],
+      "signs": [
+        {"x": 159, "y": 295, "w": 146, "h": 62, "text": "pond", "minLesson": 12}
+      ],
+      "hotspots": [
+        {"name": "pond", "x": 10, "y": 466, "w": 280, "h": 92, "sfx": "whoosh", "say": "pond"},
+        {"name": "lamp", "x": 684, "y": 184, "w": 56, "h": 274, "sfx": "ding", "say": "lamp"},
+        {"name": "sun", "x": 818, "y": 22, "w": 124, "h": 124, "sfx": "chime", "say": "sun"},
+        {"name": "tree-left", "x": 0, "y": 230, "w": 146, "h": 162, "sfx": "whoosh"}
+      ],
+      "unlockLesson": 20
+    },
+    {
+      "id": "school",
+      "name": "school",
+      "pack": "loc-school",
+      "background": "bg-school",
+      "building": "bld-school",
+      "hub": [500, 200],
+      "bgColor": "#FFF1DC",
+      "unlockLesson": 40,
+      "comingSoon": true
+    },
+    {
+      "id": "shop",
+      "name": "shop",
+      "pack": "loc-shop",
+      "background": "bg-shop",
+      "building": "bld-shop",
+      "hub": [820, 240],
+      "bgColor": "#FFF1DC",
+      "unlockLesson": 60,
+      "comingSoon": true
+    },
+    {
+      "id": "farm",
+      "name": "farm",
+      "pack": "loc-farm",
+      "background": "bg-farm",
+      "building": "bld-farm",
+      "hub": [180, 230],
+      "bgColor": "#BFE6FF",
+      "unlockLesson": 80,
+      "comingSoon": true
+    }
+  ],
+  "items": [
+    {"id": "plant", "sprite": "item-plant", "label": "plant", "location": "home", "x": 58, "y": 304, "fx": "wiggle", "sfx": "pop", "cost": 0, "room": "living"},
+    {"id": "book", "sprite": "item-book", "label": "book", "location": "home", "x": 518, "y": 196, "colors": {"item": "#8E6CEF"}, "wear": "hand", "fx": "hop", "sfx": "pop", "cost": 0, "room": "living"},
+    {"id": "lamp", "sprite": "item-lamp", "label": "lamp", "location": "home", "x": 490, "y": 390, "fx": "squish", "sfx": "ding", "cost": 0, "room": "living", "light": true},
+    {"id": "ball", "sprite": "item-ball", "label": "ball", "location": "home", "x": 420, "y": 476, "wear": "hand", "fx": "hop", "sfx": "boing", "cost": 0, "room": "living"},
+    {"id": "mat", "sprite": "item-mat", "label": "mat", "word": "mat", "flat": true, "location": "home", "x": 870, "y": 590, "fx": "squish", "sfx": "soft", "cost": 2, "room": "living"},
+    {"id": "map", "sprite": "item-map", "label": "map", "word": "map", "location": "home", "x": 420, "y": 594, "wear": "hand", "fx": "wiggle", "sfx": "whoosh", "cost": 2, "room": "living"},
+    {"id": "mitt", "sprite": "item-mitt", "label": "mitt", "word": "mitt", "location": "home", "x": 476, "y": 528, "wear": "hand", "fx": "squish", "sfx": "pop", "cost": 2, "room": "living"},
+    {"id": "tin", "sprite": "item-tin", "label": "tin", "word": "tin", "location": "home", "x": 82, "y": 218, "wear": "hand", "fx": "wiggle", "sfx": "ding", "cost": 2, "room": "kitchen"},
+    {"id": "pot", "sprite": "item-pot", "label": "pot", "word": "pot", "location": "home", "x": 637, "y": 308, "colors": {"item": "#E5484D"}, "wear": "hand", "fx": "hop", "sfx": "ding", "cost": 3, "room": "kitchen"},
+    {"id": "top", "sprite": "item-top", "label": "top", "word": "top", "location": "home", "x": 562, "y": 196, "fx": "spin", "sfx": "whoosh", "cost": 2, "room": "living"},
+    {"id": "cat", "sprite": "item-cat", "label": "cat", "word": "cat", "location": "home", "x": 282, "y": 366, "fx": "hop", "sfx": "meow", "cost": 6, "room": "living"},
+    {"id": "dog", "sprite": "item-dog", "label": "dog", "word": "dog", "location": "home", "x": 762, "y": 548, "fx": "hop", "sfx": "woof", "cost": 6, "room": "living"},
+    {"id": "kit", "sprite": "item-kit", "label": "kit", "word": "kit", "location": "home", "x": 326, "y": 494, "fx": "wiggle", "sfx": "pop", "cost": 3, "room": "living"},
+    {"id": "mask", "sprite": "item-mask", "label": "mask", "location": "home", "x": 346, "y": 366, "colors": {"item": "#8E6CEF"}, "wear": "head", "fx": "spin", "sfx": "sparkle", "cost": 3, "room": "living"},
+    {"id": "sock", "sprite": "item-sock", "label": "sock", "word": "sock", "location": "home", "x": 706, "y": 590, "wear": "hand", "fx": "wiggle", "sfx": "squeak", "cost": 2, "room": "living"},
+    {"id": "snack", "sprite": "item-snack", "label": "snack", "word": "snack", "location": "home", "x": 434, "y": 308, "wear": "hand", "fx": "squish", "sfx": "pop", "cost": 2, "room": "kitchen"},
+    {"id": "cup", "sprite": "item-cup", "label": "cup", "word": "cup", "location": "home", "x": 570, "y": 308, "colors": {"item": "#3D8BFD"}, "wear": "hand", "fx": "hop", "sfx": "ding", "cost": 2, "room": "kitchen"},
+    {"id": "rat", "sprite": "item-rat", "label": "rat", "word": "rat", "location": "home", "x": 688, "y": 476, "fx": "hop", "sfx": "squeak", "cost": 5, "room": "living"},
+    {"id": "drum", "sprite": "item-drum", "label": "drum", "word": "drum", "location": "home", "x": 520, "y": 494, "fx": "squish", "sfx": "drum", "cost": 4, "room": "living"},
+    {"id": "hat-red", "sprite": "item-hat", "label": "red hat", "location": "home", "x": 110, "y": 304, "colors": {"item": "#E5484D", "item2": "#FFD23F"}, "wear": "head", "fx": "spin", "sfx": "pop", "cost": 3, "room": "living"},
+    {"id": "mug", "sprite": "item-mug", "label": "mug", "word": "mug", "location": "home", "x": 714, "y": 308, "colors": {"item": "#4CC27A"}, "wear": "hand", "fx": "hop", "sfx": "ding", "cost": 2, "room": "kitchen"},
+    {"id": "gift", "sprite": "item-gift", "label": "gift", "word": "gift", "location": "home", "x": 606, "y": 484, "wear": "hand", "fx": "squish", "sfx": "sparkle", "cost": 3, "room": "living"},
+    {"id": "fan", "sprite": "item-fan", "label": "fan", "word": "fan", "location": "home", "x": 232, "y": 486, "fx": "spin", "sfx": "whoosh", "cost": 3, "room": "living"},
+    {"id": "tent", "sprite": "item-tent", "label": "tent", "word": "tent", "location": "home", "x": 184, "y": 588, "fx": "squish", "sfx": "boing", "cost": 8, "room": "living"},
+    {"id": "cap", "sprite": "item-cap", "label": "cap", "word": "cap", "location": "home", "x": 408, "y": 366, "colors": {"item": "#3D8BFD"}, "wear": "head", "fx": "spin", "sfx": "pop", "cost": 3, "room": "living"},
+    {"id": "hat-tan", "sprite": "item-hat", "label": "tan hat", "location": "home", "x": 180, "y": 304, "colors": {"item": "#C98B5A", "item2": "#3B2F45"}, "wear": "head", "fx": "spin", "sfx": "pop", "cost": 3, "room": "living"},
+    {"id": "pin", "sprite": "item-pin", "label": "pin", "location": "bakery", "room": "shop", "x": 600, "y": 540, "wear": "hand", "fx": "spin", "sfx": "whoosh", "cost": 0},
+    {"id": "pan", "sprite": "item-pan", "label": "pan", "location": "bakery", "room": "shop", "x": 292, "y": 204, "wear": "hand", "fx": "hop", "sfx": "ding", "cost": 0},
+    {"id": "bun", "sprite": "item-bun", "label": "bun", "location": "bakery", "room": "shop", "x": 876, "y": 314, "wear": "hand", "fx": "squish", "sfx": "pop", "cost": 0, "tags": ["food"]},
+    {"id": "muffin", "sprite": "item-muffin", "label": "muffin", "location": "bakery", "room": "shop", "x": 822, "y": 314, "colors": {"item": "#FF9EC4"}, "wear": "hand", "fx": "squish", "sfx": "pop", "cost": 0, "tags": ["food"]},
+    {"id": "bag", "sprite": "item-bag", "label": "bag", "location": "bakery", "room": "shop", "x": 160, "y": 316, "wear": "hand", "fx": "wiggle", "sfx": "whoosh", "cost": 0},
+    {"id": "eggs", "sprite": "item-eggs", "label": "eggs", "location": "bakery", "room": "shop", "x": 370, "y": 204, "wear": "hand", "fx": "wiggle", "sfx": "squeak", "cost": 0, "tags": ["food"]},
+    {"id": "cake", "sprite": "item-cake", "label": "cake", "location": "bakery", "room": "shop", "x": 500, "y": 314, "colors": {"item": "#FF9EC4"}, "fx": "squish", "sfx": "sparkle", "cost": 0, "tags": ["food"]},
+    {"id": "cupcake", "sprite": "item-cupcake", "label": "cupcake", "location": "bakery", "room": "shop", "x": 774, "y": 314, "colors": {"item": "#C9B6FF"}, "wear": "hand", "fx": "hop", "sfx": "pop", "cost": 0, "tags": ["food"]},
+    {"id": "jam", "sprite": "item-jam", "label": "jam", "location": "bakery", "room": "shop", "x": 726, "y": 314, "colors": {"item": "#E5484D"}, "wear": "hand", "fx": "wiggle", "sfx": "pop", "cost": 0, "tags": ["food"]},
+    {"id": "cookie", "sprite": "item-cookie", "label": "cookie", "location": "bakery", "room": "shop", "x": 930, "y": 314, "wear": "hand", "fx": "spin", "sfx": "pop", "cost": 0, "tags": ["food"]},
+    {"id": "pie", "sprite": "item-pie", "label": "pie", "location": "bakery", "room": "shop", "x": 662, "y": 314, "fx": "squish", "sfx": "pop", "cost": 0, "tags": ["food"]},
+    {"id": "bread", "sprite": "item-bread", "label": "bread", "location": "bakery", "room": "shop", "x": 584, "y": 314, "wear": "hand", "fx": "squish", "sfx": "pop", "cost": 0, "tags": ["food"]},
+    {"id": "whisk", "sprite": "item-whisk", "label": "whisk", "location": "bakery", "room": "shop", "x": 818, "y": 178, "wear": "hand", "fx": "spin", "sfx": "whoosh", "cost": 0},
+    {"id": "milk", "sprite": "item-milk", "label": "milk", "location": "bakery", "room": "shop", "x": 70, "y": 316, "wear": "hand", "fx": "wiggle", "sfx": "pop", "cost": 0, "tags": ["food"]},
+    {"id": "bowl", "sprite": "item-bowl", "label": "bowl", "location": "bakery", "room": "kitchen", "x": 410, "y": 330, "fx": "wiggle", "sfx": "pop", "cost": 0},
+    {"id": "tray", "sprite": "item-tray", "label": "tray", "location": "bakery", "room": "kitchen", "x": 470, "y": 214, "fx": "hop", "sfx": "pop", "cost": 0, "tags": ["food"]},
+    {"id": "flour", "sprite": "item-flour", "label": "flour", "location": "bakery", "room": "kitchen", "x": 360, "y": 566, "fx": "squish", "sfx": "soft", "cost": 0, "tags": ["food"]},
+    {"id": "plate", "sprite": "item-plate", "label": "cake", "location": "bakery", "room": "cafe", "x": 300, "y": 400, "fx": "wiggle", "sfx": "pop", "cost": 0, "tags": ["food"]},
+    {"id": "cocoa", "sprite": "item-cocoa", "label": "hot cocoa", "location": "bakery", "room": "cafe", "x": 540, "y": 400, "fx": "hop", "sfx": "pop", "cost": 0, "tags": ["food"]},
+    {"id": "kite", "sprite": "item-kite", "label": "kite", "location": "park", "x": 958, "y": 586, "wear": "hand", "fx": "spin", "sfx": "whoosh", "cost": 0},
+    {"id": "net", "sprite": "item-net", "label": "net", "location": "park", "x": 276, "y": 506, "wear": "hand", "fx": "wiggle", "sfx": "whoosh", "cost": 0},
+    {"id": "duck", "sprite": "item-duck", "label": "duck", "location": "park", "x": 120, "y": 520, "fx": "hop", "sfx": "quack", "cost": 0},
+    {"id": "hen", "sprite": "item-hen", "label": "hen", "location": "park", "x": 650, "y": 500, "fx": "hop", "sfx": "squeak", "cost": 0},
+    {"id": "bus", "sprite": "item-bus", "label": "bus", "location": "park", "x": 330, "y": 590, "colors": {"item": "#FFD23F"}, "fx": "wiggle", "sfx": "boing", "cost": 0},
+    {"id": "bat", "sprite": "item-bat", "label": "bat", "location": "park", "x": 492, "y": 512, "wear": "hand", "fx": "spin", "sfx": "whoosh", "cost": 0},
+    {"id": "frog", "sprite": "item-frog", "label": "frog", "location": "park", "x": 221, "y": 512, "fx": "hop", "sfx": "boing", "cost": 0},
+    {"id": "nest", "sprite": "item-nest", "label": "nest", "location": "park", "x": 430, "y": 470, "fx": "wiggle", "sfx": "squeak", "cost": 0},
+    {"id": "rock", "sprite": "item-rock", "label": "rock", "location": "park", "x": 338, "y": 470, "wear": "hand", "fx": "squish", "sfx": "soft", "cost": 0},
+    {"id": "crab", "sprite": "item-crab", "label": "crab", "location": "park", "x": 690, "y": 585, "fx": "wiggle", "sfx": "squeak", "cost": 0},
+    {"id": "scooter", "sprite": "item-scooter", "label": "scooter", "location": "park", "x": 440, "y": 588, "colors": {"item": "#F76CA8"}, "fx": "wiggle", "sfx": "whoosh", "cost": 0},
+    {"id": "bucket", "sprite": "item-bucket", "label": "bucket", "location": "park", "x": 754, "y": 540, "colors": {"item": "#3D8BFD"}, "wear": "hand", "fx": "hop", "sfx": "pop", "cost": 0},
+    {"id": "shovel", "sprite": "item-shovel", "label": "shovel", "location": "park", "x": 786, "y": 540, "wear": "hand", "fx": "spin", "sfx": "pop", "cost": 0},
+    {"id": "flowers", "sprite": "item-flowers", "label": "flowers", "location": "park", "x": 896, "y": 392, "wear": "hand", "fx": "wiggle", "sfx": "sparkle", "cost": 0},
+    {"id": "basket", "sprite": "item-basket", "label": "basket", "location": "park", "x": 820, "y": 392, "wear": "hand", "fx": "squish", "sfx": "pop", "cost": 0},
+    {"id": "beanbag", "sprite": "item-beanbag", "label": "bean bag", "location": "home", "x": 530, "y": 596, "cost": 5, "colors": {"item": "#8E6CEF"}, "fx": "squish", "sfx": "boing", "room": "living"},
+    {"id": "armchair", "sprite": "item-armchair", "label": "chair", "location": "home", "x": 326, "y": 596, "cost": 6, "fx": "squish", "sfx": "soft", "room": "living"},
+    {"id": "bookcase", "sprite": "item-bookcase", "label": "books", "location": "home", "x": 48, "y": 596, "cost": 7, "fx": "wiggle", "sfx": "pop", "room": "living"},
+    {"id": "floorlamp", "sprite": "item-floorlamp", "label": "lamp", "location": "home", "x": 170, "y": 452, "cost": 4, "fx": "wiggle", "sfx": "ding", "room": "living", "light": true},
+    {"id": "cactus", "sprite": "item-cactus", "label": "cactus", "location": "home", "x": 604, "y": 196, "cost": 2, "wear": "hand", "fx": "wiggle", "sfx": "pop", "room": "living"},
+    {"id": "fishbowl", "sprite": "item-fishbowl", "label": "fish", "location": "home", "x": 662, "y": 390, "cost": 5, "fx": "wiggle", "sfx": "squeak", "room": "living"},
+    {"id": "toybox", "sprite": "item-toybox", "label": "toy box", "location": "home", "x": 636, "y": 594, "cost": 5, "fx": "hop", "sfx": "drum", "room": "living"},
+    {"id": "easel", "sprite": "item-easel", "label": "easel", "location": "home", "x": 966, "y": 596, "cost": 4, "fx": "wiggle", "sfx": "pop", "room": "living"},
+    {"id": "lantern", "sprite": "item-lantern", "label": "lantern", "location": "home", "x": 646, "y": 196, "cost": 3, "wear": "hand", "fx": "wiggle", "sfx": "chime", "room": "living", "light": true},
+    {"id": "nightlight", "sprite": "item-nightlight", "label": "night light", "location": "home", "x": 702, "y": 390, "cost": 2, "wear": "hand", "fx": "spin", "sfx": "sparkle", "room": "living", "light": true},
+    {"id": "apple", "sprite": "item-apple", "label": "apple", "location": "home", "x": 338, "y": 206, "cost": 1, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"},
+    {"id": "sandwich", "sprite": "item-sandwich", "label": "sandwich", "location": "home", "x": 832, "y": 360, "cost": 2, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"},
+    {"id": "cheese", "sprite": "item-cheese", "label": "cheese", "location": "home", "x": 384, "y": 308, "cost": 2, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"},
+    {"id": "banana", "sprite": "item-banana", "label": "banana", "location": "home", "x": 526, "y": 308, "cost": 1, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"},
+    {"id": "carrot", "sprite": "item-carrot", "label": "carrot", "location": "home", "x": 262, "y": 206, "cost": 1, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"},
+    {"id": "pizza", "sprite": "item-pizza", "label": "pizza", "location": "home", "x": 876, "y": 360, "cost": 2, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"},
+    {"id": "juice", "sprite": "item-juice", "label": "juice", "location": "home", "x": 478, "y": 308, "cost": 1, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"},
+    {"id": "grapes", "sprite": "item-grapes", "label": "grapes", "location": "home", "x": 920, "y": 360, "cost": 1, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"}
+  ],
+  "characters": [
+    {
+      "id": "tam",
+      "name": "Tam",
+      "location": "bakery",
+      "x": 300,
+      "y": 575,
+      "look": {
+        "skin": "#A0663D",
+        "hair": "#2B1E1A",
+        "hairStyle": "puffs",
+        "top": "chef",
+        "topColor": "#FFFDF7",
+        "top2": "#E5484D",
+        "bot": "pants",
+        "botColor": "#2F4C9C",
+        "shoes": "sneakers",
+        "shoeColor": "#FF9EC4",
+        "acc": "chefhat",
+        "accColor": "#FFFDF7"
+      }
+    },
+    {
+      "id": "pip",
+      "name": "Pip",
+      "location": "home",
+      "x": 626,
+      "y": 558,
+      "look": {
+        "skin": "#F8CBA8",
+        "hair": "#C8843A",
+        "hairStyle": "ponytail",
+        "top": "stripe",
+        "topColor": "#FF9EC4",
+        "top2": "#FFFDF7",
+        "bot": "skirt",
+        "botColor": "#8E6CEF",
+        "shoes": "sneakers",
+        "shoeColor": "#3D8BFD",
+        "acc": "bow",
+        "accColor": "#F76CA8"
+      },
+      "room": "living"
+    },
+    {
+      "id": "dot",
+      "name": "Dot",
+      "location": "park",
+      "x": 570,
+      "y": 585,
+      "look": {
+        "skin": "#D99A6C",
+        "hair": "#5A3825",
+        "hairStyle": "braids",
+        "top": "hoodie",
+        "topColor": "#4CC27A",
+        "top2": "#FFE79A",
+        "bot": "shorts",
+        "botColor": "#2F4C9C",
+        "shoes": "sneakers",
+        "shoeColor": "#FFD23F",
+        "acc": "cap",
+        "accColor": "#E5484D"
+      }
+    },
+    {
+      "id": "sid",
+      "name": "Sid",
+      "location": "park",
+      "x": 870,
+      "y": 585,
+      "look": {
+        "skin": "#FFE0CC",
+        "hair": "#E8C170",
+        "hairStyle": "pixie",
+        "top": "jersey",
+        "topColor": "#3D8BFD",
+        "top2": "#FFD23F",
+        "bot": "cargo",
+        "botColor": "#6F6880",
+        "shoes": "boots",
+        "shoeColor": "#8A5A3B",
+        "acc": "glasses",
+        "accColor": "#3B2F45"
+      }
+    }
+  ],
+  "outfits": [
+    {"slot": "hair", "part": "bob", "cost": 0},
+    {"slot": "hair", "part": "long", "cost": 0},
+    {"slot": "hair", "part": "curly", "cost": 0},
+    {"slot": "hair", "part": "afro", "cost": 0},
+    {"slot": "hair", "part": "ponytail", "cost": 0},
+    {"slot": "hair", "part": "pixie", "cost": 0},
+    {"slot": "top", "part": "tee", "cost": 0},
+    {"slot": "top", "part": "hoodie", "cost": 0},
+    {"slot": "bot", "part": "pants", "cost": 0},
+    {"slot": "bot", "part": "skirt", "cost": 0},
+    {"slot": "shoes", "part": "sneakers", "cost": 0},
+    {"slot": "shoes", "part": "boots", "cost": 0},
+    {"slot": "acc", "part": "glasses", "cost": 0},
+    {"slot": "acc", "part": "bow", "cost": 0},
+    {"slot": "top", "part": "stripe", "cost": 2},
+    {"slot": "hair", "part": "puffs", "cost": 3},
+    {"slot": "acc", "part": "headband", "cost": 2},
+    {"slot": "bot", "part": "shorts", "cost": 2},
+    {"slot": "acc", "part": "chefhat", "cost": 3},
+    {"slot": "top", "part": "sweater", "cost": 3},
+    {"slot": "hair", "part": "braids", "cost": 3},
+    {"slot": "acc", "part": "cap", "cost": 2},
+    {"slot": "top", "part": "dress", "cost": 4},
+    {"slot": "bot", "part": "tutu", "cost": 3},
+    {"slot": "bot", "part": "leggings", "cost": 2},
+    {"slot": "shoes", "part": "sandals", "cost": 2},
+    {"slot": "hair", "part": "buzz", "cost": 2},
+    {"slot": "bot", "part": "cargo", "cost": 3},
+    {"slot": "shoes", "part": "rainboots", "cost": 3},
+    {"slot": "acc", "part": "beanie", "cost": 2},
+    {"slot": "hair", "part": "bun", "cost": 3},
+    {"slot": "top", "part": "jacket", "cost": 4},
+    {"slot": "top", "part": "jersey", "cost": 3},
+    {"slot": "acc", "part": "flowers", "cost": 4},
+    {"slot": "top", "part": "chef", "cost": 4}
+  ],
+  "requests": [
+    {"id": "pip-mat", "character": "pip", "text": "pass the mat.", "wants": ["mat"], "minLesson": 9},
+    {"id": "pip-map", "character": "pip", "text": "pass the map.", "wants": ["map"], "minLesson": 9},
+    {"id": "pip-tin", "character": "pip", "text": "pass the tin.", "wants": ["tin"], "minLesson": 9},
+    {"id": "pip-pot", "character": "pip", "text": "pass the pot.", "wants": ["pot"], "minLesson": 9},
+    {"id": "pip-cat", "character": "pip", "text": "Get the cat.", "wants": ["cat"], "minLesson": 15},
+    {"id": "pip-sock", "character": "pip", "text": "Get the sock!", "wants": ["sock"], "minLesson": 15},
+    {"id": "pip-cup", "character": "pip", "text": "Get the cup.", "wants": ["cup"], "minLesson": 16},
+    {"id": "pip-hat", "character": "pip", "text": "Get the red hat.", "wants": ["hat-red"], "minLesson": 18},
+    {"id": "pip-gift", "character": "pip", "text": "Can you get the gift?", "wants": ["gift"], "minLesson": 20},
+    {"id": "tam-pin", "character": "tam", "text": "pass the pin.", "wants": ["pin"], "minLesson": 7},
+    {"id": "tam-pan", "character": "tam", "text": "pass the pan.", "wants": ["pan"], "minLesson": 7},
+    {"id": "tam-eggs", "character": "tam", "text": "Get the eggs.", "wants": ["eggs"], "minLesson": 15},
+    {"id": "tam-bun", "character": "tam", "text": "Get the bun.", "wants": ["bun"], "minLesson": 19},
+    {"id": "tam-bag", "character": "tam", "text": "Get the bag.", "wants": ["bag"], "minLesson": 19},
+    {"id": "tam-muffin", "character": "tam", "text": "Can you get the muffin?", "wants": ["muffin"], "minLesson": 20},
+    {"id": "dot-net", "character": "dot", "text": "Get the net.", "wants": ["net"], "minLesson": 15},
+    {"id": "dot-duck", "character": "dot", "text": "Get the duck.", "wants": ["duck"], "minLesson": 16},
+    {"id": "dot-hen", "character": "dot", "text": "Get the hen.", "wants": ["hen"], "minLesson": 18},
+    {"id": "dot-frog", "character": "dot", "text": "Get the frog!", "wants": ["frog"], "minLesson": 20},
+    {"id": "sid-bat", "character": "sid", "text": "Get the bat.", "wants": ["bat"], "minLesson": 19},
+    {"id": "sid-bus", "character": "sid", "text": "Can you get the bus?", "wants": ["bus"], "minLesson": 20}
+  ],
+  "extraWords": ["yes", "no"]
+}

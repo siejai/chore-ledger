@@ -1,0 +1,4 @@
+Before uploading: on the PC, in Documents\chore-quest-kids, run
+    node tools\sign-manifest.js <this folder>\kids-manifest.json
+which writes kids-manifest.json.sig next to it. Upload everything in this folder (subfolders too), the manifest
+and its .sig included, in one commit. Without the .sig the tablets ignore the release.

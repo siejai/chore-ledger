@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "note": "Placement test (\"show me what you know\") and the step-back rule. Every threshold is here. Checkpoints run in order; each asks a block of items from its pool. Lessons above the last written lesson only report what she knows; her placement is capped at the last written lesson.",
+  "settings": {
+    "test": {
+      "itemsPerCheck": 4,
+      "passFrac": 0.75,
+      "stopFrac": 0.5,
+      "extraBlockPass": 0.6,
+      "maxItems": 48,
+      "maxMinutes": 12,
+      "options": 4,
+      "maxFastRequeues": 2
+    },
+    "result": {
+      "stepBelow": 1
+    },
+    "stepBack": {
+      "firstLessonEasy": 0.9,
+      "failsInARow": 2,
+      "failBelow": 0.8,
+      "step": 1,
+      "easyPass": 0.9,
+      "heavyReviewCount": 10,
+      "demoteBoxes": 1,
+      "keepsMissing": 3
+    }
+  },
+  "stages": {
+    "sounds": "Letter sounds",
+    "cvc": "Short words (CVC)",
+    "blends": "Blends",
+    "letters": "The last letters (v, y, z, qu)",
+    "digraphs": "Digraphs (sh, ch, th, ng, nk)",
+    "silent-e": "Silent e"
+  },
+  "checkpoints": [
+    { "lesson": 2, "stage": "sounds", "sounds": ["m", "a", "t", "s", "i"] },
+    { "lesson": 8, "stage": "sounds", "sounds": ["p", "n", "o", "d", "c", "g"] },
+    { "lesson": 8, "stage": "cvc", "words": ["mat", "sit", "pin", "top", "dog", "cap", "pot", "dig"] },
+    { "lesson": 13, "stage": "sounds", "sounds": ["e", "u", "k", "r"] },
+    { "lesson": 13, "stage": "cvc", "words": ["pet", "sun", "duck", "rug", "kid", "red", "cup", "nut"] },
+    { "lesson": 20, "stage": "sounds", "sounds": ["h", "b", "f", "l", "w", "j", "x"] },
+    { "lesson": 20, "stage": "blends", "words": ["frog", "crab", "jump", "flag", "swim", "gift", "lamp", "stop"] },
+    { "lesson": 26, "stage": "letters", "words": [
+      { "w": "van", "wrong": ["fan", "vat", "ban"] },
+      { "w": "yes", "wrong": ["yet", "less", "jes"] },
+      { "w": "zip", "wrong": ["sip", "zap", "nip"] },
+      { "w": "quiz", "wrong": ["quit", "fizz", "quip"] },
+      { "w": "puff", "wrong": ["huff", "pup", "cuff"] },
+      { "w": "bell", "wrong": ["belt", "tell", "ball"] }
+    ] },
+    { "lesson": 38, "stage": "digraphs", "words": [
+      { "w": "ship", "wrong": ["sip", "chip", "shop"] },
+      { "w": "chop", "wrong": ["shop", "cop", "chip"] },
+      { "w": "thin", "wrong": ["tin", "chin", "thing"] },
+      { "w": "fish", "wrong": ["fist", "dish", "fix"] },
+      { "w": "sing", "wrong": ["sink", "sin", "king"] },
+      { "w": "pink", "wrong": ["ping", "pin", "sink"] },
+      { "w": "much", "wrong": ["mush", "such", "munch"] }
+    ] },
+    { "lesson": 50, "stage": "silent-e", "words": [
+      { "w": "cake", "wrong": ["cap", "lake", "cape"] },
+      { "w": "bike", "wrong": ["bit", "like", "bite"] },
+      { "w": "home", "wrong": ["hop", "hose", "dome"] },
+      { "w": "cute", "wrong": ["cut", "cube", "mute"] },
+      { "w": "made", "wrong": ["mad", "make", "fade"] },
+      { "w": "pine", "wrong": ["pin", "pipe", "line"] }
+    ] }
+  ]
+}

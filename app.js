@@ -99,9 +99,13 @@
   }
 
   /* ================= state ================= */
-  var ROLE = LS.get('cl.role');
+  var APP = window.CL_APP === 'kids';   /* the kids' Android app (cl-v38): always a kids' device, no service worker, no web push */
+  var ROLE = APP ? 'kids' : LS.get('cl.role');
+  /* cl-v42: on a kids' tablet set up as the home screen (chore-gate plugin), Chore Quest is the launcher and games unlock with chores */
+  function launcher() { return APP && !!(window.Gate && window.Gate.on); }
   var MODE = window.CL_MODE === 'bank' || ROLE === 'parent' ? 'bank' : 'family';
   function setRole(role) {
+    if (APP && role === 'parent') { toast('This is the kids’ app. Parents use the Bank of Daddy on their phones.', true); return; }
     LS.set('cl.role', role);
     if (role === 'kids') { LS.set('cl.keep', null); if (window.CL_MODE === 'bank') { location.href = 'index.html'; return; } }
     location.reload();
@@ -706,9 +710,9 @@
   /* ================= render ================= */
   function tabsFor() {
     if (MODE === 'bank') return [['approvals', 'Approvals'], ['review', 'Review'], ['bank', 'Accounts'], ['log', 'Chores'], ['lists', 'Lists'], ['pet', 'Pets'], ['history', 'History'], ['setup', 'Setup']];
-    if (S.admin) return [['log', 'Chores'], ['pet', 'Pets'], ['approvals', 'Approvals'], ['review', 'Review'], ['bank', 'Bank'], ['lists', 'Lists'], ['history', 'History'], ['setup', 'Setup']];
+    if (S.admin) return (launcher() ? [['home', 'Tablet']] : []).concat([['log', 'Chores'], ['pet', 'Pets'], ['approvals', 'Approvals'], ['review', 'Review'], ['bank', 'Bank'], ['lists', 'Lists'], ['history', 'History'], ['setup', 'Setup']]);
     if (isAdult(S.me)) return [['log', 'Chores'], ['history', 'History']];
-    return [['log', 'Chores'], ['pet', 'My Pet'], ['history', 'History']];
+    return (launcher() ? [['home', 'Home']] : []).concat([['log', 'Chores'], ['pet', 'My Pet'], ['history', 'History']]);
   }
   function header(D) {
     var p = person(S.me);
@@ -732,6 +736,10 @@
   }
   var lastShell = '';
   function render() {
+    render0();
+    if (window.Gate && window.Gate.on) { try { window.Gate.sync(); } catch (e) {} }
+  }
+  function render0() {
     paintPersonColors();
     raf = 0;
     var ae = document.activeElement;
@@ -781,6 +789,7 @@
     else if (S.tab === 'history') { if (S.admin && S.mtg && S.mtg.open) renderMeeting(); else renderHistory(D); }
     else if (S.tab === 'lists') renderLists();
     else if (S.tab === 'review') renderReview();
+    else if (S.tab === 'home') { if (window.Gate) window.Gate.render(view, D); else view.innerHTML = ''; }
     else renderSetup(D);
   }
   function scrollNav() {
@@ -935,15 +944,25 @@
   }
 
   /* ----- profile picker (every time the app opens, since devices are shared) ----- */
+  function tabletKids() { var ids = window.Gate ? window.Gate.tabletKids() : null; return kids().filter(function (p) { return !ids || ids.indexOf(p.id) >= 0; }); }
+  function kidPinOf(pid) { var p = person(pid); return p && p.tabPin && p.tabPin.hash ? p.tabPin : null; }
   function renderPicker() {
-    var ps = activePeople();
-    view.innerHTML = '<div class="picker"><h2>Who is using the app?</h2>' +
+    var L = launcher();
+    if (L && S.kidPin && kidPinOf(S.kidPin)) {
+      var kp = person(S.kidPin);
+      view.innerHTML = '<div class="picker tab-pick"><h2>Hi ' + esc(kp.name) + '!</h2><form class="stack tight" data-form="kidpin"><label class="field w-sm" for="kidPin"><span>Your PIN</span><input id="kidPin" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="8"></label>' +
+        '<div class="wrap"><button class="btn primary" type="submit">Go</button><button class="btn" type="button" data-act="kidPinCancel">Not me</button></div></form></div>';
+      setTimeout(function () { var i = $('#kidPin'); if (i) i.focus(); }, 60);
+      return;
+    }
+    var ps = L ? tabletKids() : activePeople();
+    view.innerHTML = '<div class="picker' + (L ? ' tab-pick' : '') + '"><h2>' + (L ? 'Who’s playing?' : 'Who is using the app?') + '</h2>' +
       ps.map(function (p) {
         var pet = window.Pets ? window.Pets.miniHtml(p.id) : '';
         return '<button type="button" class="chip pick ' + pCls(p) + (p.id === S.lastMe ? ' last' : '') + '" data-act="choose" data-pid="' + esc(p.id) + '">' + (pet || '<span class="dot"></span>') + '<span class="grow">' + esc(p.name) + '</span></button>';
       }).join('') +
       '<button type="button" class="chip pick" data-act="choose" data-pid="@parent"><span class="dot"></span><span class="grow">Parent</span></button>' +
-      '<p class="note" style="margin-top:10px">Pick your name each time. The app comes back here after 5 minutes without use.</p></div>';
+      (L ? '<p class="note" style="margin-top:10px">Games open when your chores for today are approved.</p></div>' : '<p class="note" style="margin-top:10px">Pick your name each time. The app comes back here after 5 minutes without use.</p></div>');
   }
 
   /* ----- Chore reminders: a parent taps the bell, the kid's devices get a push notification and an in-app reminder bar ----- */
@@ -983,6 +1002,7 @@
   }
   /* push: this device signs up with Firebase Cloud Messaging and records which kids use it; a Cloud Function sends the pushes */
   function pushCan() {
+    if (APP) return false;
     var cfg = window.CL_CONFIG || {};
     return DB.mode === 'firebase' && !!cfg.vapidKey && location.protocol === 'https:' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   }
@@ -1240,6 +1260,7 @@
   }
   function rowHtml(c, x, pid) {
     var n = x ? x.a + x.p : 0, tags = giveTag(c);
+    if (c.gate) tags += '<span class="tag game">Unlocks games</span>';
     if (c.bountyCents > 0) tags += '<span class="tag bounty">' + money(c.bountyCents) + ' bounty</span>';
     if (c.major && window.ADV && ADV.bigJobsToday().indexOf(c) >= 0) tags += '<span class="tag big">Big job</span>';
     var full = pid && !S.admin && freqFull(pid, c, S.date), fq = limOf(c);
@@ -2092,6 +2113,7 @@
       '<div class="wrap"><button class="btn primary" type="submit">Save</button>' + (S.chores.some(function (c) { return c.travel; }) ? '' : '<button class="btn" type="button" data-act="addTravel">Add travel chores</button>') + '</div>' +
       '<p class="note">Mark big jobs in the chore editor. A kid earns a pass when their big jobs are approved; when every big job in the house is done, everyone gets a pass and can find a rare egg. During vacation every chore still works (untick Works while traveling in the chore editor for home-only ones), big jobs come from the trip big jobs, and pets get hungry and dirty half as fast and never starve.</p></form>';
     var parents = st.parents || [];
+    h += gamesSetupHtml();
     h += '<section class="stack tight"><h2>Parents</h2><div class="list">' + parents.map(function (p) {
       var me = S.parent && p.id === S.parent.id;
       return '<div class="srow"><div class="grow">' + esc(p.name) + (me ? ' <small>(you)</small>' : '') + '</div>' +
@@ -2142,7 +2164,7 @@
         var who = (c.who || []).map(pname);
         html += '<li class="srow' + (c.active === false ? ' off' : '') + '"><div class="grow">' + esc(c.name) + (c.active === false ? ' (archived)' : '') +
           ' ' + giveTag(c) + (c.bountyCents > 0 ? ' <span class="tag bounty">' + money(c.bountyCents) + '</span>' : '') +
-          (c.major ? ' <span class="tag big">Big job' + (c.majorEach ? ', everyone' : '') + '</span>' : '') + (c.travel && c.major ? ' <span class="tag plain">Trip big job</span>' : '') + (c.tripOnly ? ' <span class="tag plain">Only on vacation</span>' : c.homeOnly ? ' <span class="tag plain">Hidden on vacation</span>' : '') + (daysOf(c) ? ' <span class="tag plain">' + esc(daysText(daysOf(c))) + '</span>' : '') + (c.shared ? ' <span class="tag plain">Shared</span>' : '') + (freqOf(c) ? ' <span class="tag plain">' + freqText(freqOf(c)) + '</span>' : '') + (c.review ? ' <span class="tag plain">Daily review</span>' : '') +
+          (c.major ? ' <span class="tag big">Big job' + (c.majorEach ? ', everyone' : '') + '</span>' : '') + (c.travel && c.major ? ' <span class="tag plain">Trip big job</span>' : '') + (c.tripOnly ? ' <span class="tag plain">Only on vacation</span>' : c.homeOnly ? ' <span class="tag plain">Hidden on vacation</span>' : '') + (daysOf(c) ? ' <span class="tag plain">' + esc(daysText(daysOf(c))) + '</span>' : '') + (c.shared ? ' <span class="tag plain">Shared</span>' : '') + (freqOf(c) ? ' <span class="tag plain">' + freqText(freqOf(c)) + '</span>' : '') + (c.review ? ' <span class="tag plain">Daily review</span>' : '') + (c.gate ? ' <span class="tag game">Unlocks games</span>' : '') +
           '<br><small>' + (who.length ? esc(who.join(', ')) : 'Nobody assigned') + '</small></div>' +
           ptsBadge(c.pts, !!levelsOf(c)) + '<button class="btn small" type="button" data-act="editChore" data-cid="' + esc(c.id) + '">Edit</button></li>';
       });
@@ -2154,16 +2176,16 @@
      Columns: chore coins (pts), food and clean coins, tuck-in %, play %, needs most %, levels (graded chores), bounty, on. ----- */
   var CT_NUM = ['pts', 'food', 'clean', 'tuck', 'play', 'any'];
   var CT_HEAD = { pts: 'Chore coins', food: 'Food coins', clean: 'Clean coins', tuck: 'Tuck-in %', play: 'Play %', any: 'Needs most %' };
-  var CT_FILTER = [['', 'All'], ['food', 'Food coins'], ['clean', 'Clean coins'], ['tuck', 'Tuck-ins'], ['play', 'Play'], ['any', 'Needs most'], ['rated', 'Rated'], ['review', 'Daily review'], ['days', 'Set days'], ['shared', 'Shared'], ['vac', 'Vacation'], ['big', 'Big jobs'], ['only', 'Chore coins only']];
+  var CT_FILTER = [['', 'All'], ['food', 'Food coins'], ['clean', 'Clean coins'], ['tuck', 'Tuck-ins'], ['play', 'Play'], ['any', 'Needs most'], ['rated', 'Rated'], ['review', 'Daily review'], ['gate', 'Unlock games'], ['days', 'Set days'], ['shared', 'Shared'], ['vac', 'Vacation'], ['big', 'Big jobs'], ['only', 'Chore coins only']];
   function ctState() { if (!S.ct) S.ct = { d: {}, n: [], q: '', cat: '', give: '', arch: false, msg: '' }; return S.ct; }
   function whoKey(ids) { return (ids || []).slice().sort().join(','); }
   function ctBase(c) {
     var r = rewardsOf(c);
     return { name: c.name || '', cat: c.cat || '', pts: Number(c.pts) || 0, food: r.food, clean: r.clean, tuck: r.tuck, play: r.play, any: r.any,
-      lv: levelsText(levelsOf(c)), freq: (freqOf(c) ? c.freq : ''), review: !!c.review, days: daysOf(c) ? daysText(daysOf(c)) : '', shared: !!c.shared, vac: vacOf(c), big: !!c.major,
+      lv: levelsText(levelsOf(c)), freq: (freqOf(c) ? c.freq : ''), review: !!c.review, gate: !!c.gate, days: daysOf(c) ? daysText(daysOf(c)) : '', shared: !!c.shared, vac: vacOf(c), big: !!c.major,
       bounty: Number(c.bountyCents) || 0, active: c.active !== false, who: whoKey(c.who) };
   }
-  function ctNewRow(cat) { return { name: '', cat: cat || '', pts: 4, food: 0, clean: 0, tuck: 0, play: 0, any: 0, lv: '', freq: '', review: false, days: '', shared: false, vac: '', big: false, bounty: 0, active: true, who: '' }; }
+  function ctNewRow(cat) { return { name: '', cat: cat || '', pts: 4, food: 0, clean: 0, tuck: 0, play: 0, any: 0, lv: '', freq: '', review: false, gate: false, days: '', shared: false, vac: '', big: false, bounty: 0, active: true, who: '' }; }
   /* vacation: '' shows it always, 'hide' hides it on vacation (homeOnly), 'only' shows it only on vacation (tripOnly) */
   var VACS = [['', 'Always'], ['hide', 'Hide on vacation'], ['only', 'Only on vacation']];
   function vacOf(c) { return c && c.tripOnly ? 'only' : c && c.homeOnly ? 'hide' : ''; }
@@ -2193,7 +2215,7 @@
       var r = ctRow(c);
       if (!ct.arch && c.active === false && !ct.d[c.id]) return false;
       if (ct.cat && catName(c) !== ct.cat) return false;
-      if (ct.give === 'review' ? !r.review : ct.give === 'days' ? !r.days : ct.give === 'shared' ? !r.shared : ct.give === 'big' ? !r.big : ct.give === 'vac' ? !r.vac : ct.give === 'rated' ? !trim(r.lv) : ct.give === 'only' ? (r.food || r.clean || r.tuck || r.play || r.any) : ct.give && !(r[ct.give] > 0)) return false;
+      if (ct.give === 'review' ? !r.review : ct.give === 'gate' ? !r.gate : ct.give === 'days' ? !r.days : ct.give === 'shared' ? !r.shared : ct.give === 'big' ? !r.big : ct.give === 'vac' ? !r.vac : ct.give === 'rated' ? !trim(r.lv) : ct.give === 'only' ? (r.food || r.clean || r.tuck || r.play || r.any) : ct.give && !(r[ct.give] > 0)) return false;
       return !q || lc(r.name).indexOf(q) >= 0 || lc(r.cat).indexOf(q) >= 0;
     });
   }
@@ -2206,6 +2228,7 @@
       td('lv', '<input type="text"' + at + ' data-f="lv" maxlength="120" aria-label="Levels" placeholder="none" value="' + esc(r.lv) + '">') +
       td('freq', '<select' + at + ' data-f="freq" aria-label="How often">' + freqOpts(r.freq) + '</select>') +
       td('review', '<input type="checkbox"' + at + ' data-f="review" aria-label="Daily review"' + (r.review ? ' checked' : '') + '>') +
+      td('gate', '<input type="checkbox"' + at + ' data-f="gate" aria-label="Unlocks games"' + (r.gate ? ' checked' : '') + '>') +
       td('days', '<input type="text"' + at + ' data-f="days" maxlength="40" aria-label="Days" placeholder="every day"' + (r.days && daysKey(r.days) === null ? ' class="bad"' : '') + ' value="' + esc(r.days) + '">') +
       td('shared', '<input type="checkbox"' + at + ' data-f="shared" aria-label="Shared"' + (r.shared ? ' checked' : '') + '>') +
       td('vac', '<select' + at + ' data-f="vac" aria-label="On vacation">' + VACS.map(function (x) { return '<option value="' + x[0] + '"' + (r.vac === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select>') +
@@ -2228,13 +2251,13 @@
     un.disabled = !n; sv.disabled = !n;
   }
   function renderChoreTable() {
-    var ct = ctState(), list = ctList(), cats = catList(S.chores), st = S.settings, cur = '', NC = 17;
+    var ct = ctState(), list = ctList(), cats = catList(S.chores), st = S.settings, cur = '', NC = 18;
     var rows = list.map(function (c) {
       var head = '';
       if (catName(c) !== cur) { cur = catName(c); head = '<tr class="grp"><td colspan="' + NC + '"><span>' + esc(cur) + '</span></td></tr>'; }
       return head + '<tr' + (c.active === false ? ' class="off"' : '') + '>' + ctCells(c.id, ctRow(c), ctChanged(c)) + '</tr>';
     }).join('');
-    var all = { name: 1, cat: 1, pts: 1, food: 1, clean: 1, tuck: 1, play: 1, any: 1, lv: 1, freq: 1, review: 1, days: 1, shared: 1, vac: 1, big: 1, bounty: 1, active: 1 };
+    var all = { name: 1, cat: 1, pts: 1, food: 1, clean: 1, tuck: 1, play: 1, any: 1, lv: 1, freq: 1, review: 1, gate: 1, days: 1, shared: 1, vac: 1, big: 1, bounty: 1, active: 1 };
     var news = ct.n.map(function (r, i) { return '<tr class="new">' + ctCells('+' + i, r, all) + '</tr>'; }).join('');
     view.innerHTML = '<section class="stack tight ct">' +
       '<div class="wrap"><button class="btn" type="button" data-act="ctClose">&lsaquo; Setup</button><h2 class="grow">All chores</h2></div>' +
@@ -2259,7 +2282,7 @@
       '<button class="btn" type="button" data-act="ctBulkLv"' + (list.length ? '' : ' disabled') + '>Rate them</button><button class="btn" type="button" data-act="ctBulkLvOff"' + (list.length ? '' : ' disabled') + '>No levels</button></div>' +
       '<div class="wrap end ct-bulk"><span class="note">On vacation, for all shown:</span><div class="field w-md"><select id="ctBVac" aria-label="On vacation for all shown">' + VACS.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + '</option>'; }).join('') + '</select></div>' +
       '<button class="btn" type="button" data-act="ctBulkVac"' + (list.length ? '' : ' disabled') + '>Apply</button></div>' +
-      '<div class="ct-wrap"><table class="ct-t"><thead><tr><th>Chore</th><th>Category</th>' + CT_NUM.map(function (k) { return '<th>' + CT_HEAD[k] + '</th>'; }).join('') + '<th>Levels</th><th>How often</th><th>Daily review</th><th>Days</th><th>Shared</th><th>On vacation</th><th>Big job</th><th>Bounty $</th><th>On</th></tr></thead><tbody>' +
+      '<div class="ct-wrap"><table class="ct-t"><thead><tr><th>Chore</th><th>Category</th>' + CT_NUM.map(function (k) { return '<th>' + CT_HEAD[k] + '</th>'; }).join('') + '<th>Levels</th><th>How often</th><th>Daily review</th><th>Games</th><th>Days</th><th>Shared</th><th>On vacation</th><th>Big job</th><th>Bounty $</th><th>On</th></tr></thead><tbody>' +
       (rows || '<tr><td colspan="' + NC + '" class="empty">No chores match.</td></tr>') + (news ? '<tr class="grp"><td colspan="' + NC + '"><span>New chores</span></td></tr>' + news : '') + '</tbody></table></div>' +
       '<div class="wrap"><button class="btn" type="button" data-act="ctAdd">Add a chore row</button></div>' +
       '<p class="note">Who does each chore, big jobs and travel settings are in each chore’s editor (Setup → Chores → Edit); the spreadsheet also has a column per person (1 = they do it). Rows you delete from the spreadsheet are left alone; to retire a chore, set Active to no.</p>' +
@@ -2269,7 +2292,7 @@
   function upTo(el, tag) { while (el && el.tagName !== tag) el = el.parentNode; return el; }
   function ctEdit(t) {
     var key = t.getAttribute('data-ct'), f = t.getAttribute('data-f'), ct = ctState(), v;
-    if (f === 'active' || f === 'review' || f === 'shared' || f === 'big') v = t.checked;
+    if (f === 'active' || f === 'review' || f === 'gate' || f === 'shared' || f === 'big') v = t.checked;
     else if (CT_NUM.indexOf(f) >= 0) v = t.value === '' ? 0 : Math.max(0, Math.round(Number(t.value) || 0));
     else if (f === 'bounty') { v = parseMoney(t.value); if (isNaN(v)) { t.classList.add('bad'); return; } t.classList.remove('bad'); }
     else v = t.value;
@@ -2314,6 +2337,7 @@
       if (ch.lv !== undefined) d.levels = parseLevels(ch.lv);
       if (ch.freq !== undefined) d.freq = ch.freq;
       if (ch.review !== undefined) d.review = ch.review;
+      if (ch.gate !== undefined) d.gate = ch.gate;
       if (ch.days !== undefined) { var dk = daysKey(ch.days); if (dk === null) { bad.push(c.name + ': days "' + ch.days + '" should look like Mon, Thu or weekdays'); return; } d.days = dk; }
       if (ch.shared !== undefined) d.shared = ch.shared;
       if (ch.vac !== undefined) { d.homeOnly = ch.vac === 'hide'; d.tripOnly = ch.vac === 'only'; }
@@ -2326,7 +2350,7 @@
     ctNew().forEach(function (r) {
       var name = trim(r.name), cat = trim(r.cat || ''), rw = rwFromRow(r);
       noteCat(cat);
-      ops.push({ t: 'set', c: 'chores', id: DB.newId('chores'), d: { name: name, pts: Math.max(0, Math.round(Number(r.pts) || 0)), cat: cat, rw: rw, need: compatNeed(rw), coins: rw.food || rw.clean || 0, levels: parseLevels(r.lv), freq: r.freq || '', review: !!r.review, bountyCents: r.bounty || 0,
+      ops.push({ t: 'set', c: 'chores', id: DB.newId('chores'), d: { name: name, pts: Math.max(0, Math.round(Number(r.pts) || 0)), cat: cat, rw: rw, need: compatNeed(rw), coins: rw.food || rw.clean || 0, levels: parseLevels(r.lv), freq: r.freq || '', review: !!r.review, gate: !!r.gate, bountyCents: r.bounty || 0,
         who: r.who ? r.who.split(',') : activePeople().map(function (p) { return p.id; }), active: r.active !== false, order: ++order, major: !!r.big, majorEach: false, majorDays: [], travel: false, homeOnly: r.vac === 'hide', tripOnly: r.vac === 'only',
         days: daysKey(r.days || '') || [], shared: !!r.shared } });
     });
@@ -2341,10 +2365,10 @@
   function csvCell(s) { s = String(s == null ? '' : s); return /[",;\t\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
   function ctDownload() {
     var ppl = activePeople();
-    var lines = [['ID', 'Chore', 'Category'].concat(CT_NUM.map(function (k) { return CT_HEAD[k]; }), ['Levels', 'How often', 'Daily review', 'Days', 'Shared', 'On vacation', 'Big job', 'Bounty', 'Active']).concat(ppl.map(function (p) { return p.name; })).map(csvCell).join(',')];
+    var lines = [['ID', 'Chore', 'Category'].concat(CT_NUM.map(function (k) { return CT_HEAD[k]; }), ['Levels', 'How often', 'Daily review', 'Unlocks games', 'Days', 'Shared', 'On vacation', 'Big job', 'Bounty', 'Active']).concat(ppl.map(function (p) { return p.name; })).map(csvCell).join(',')];
     ctOrder().forEach(function (c) {
       var r = ctRow(c), who = r.who ? r.who.split(',') : [];
-      lines.push([c.id, trim(r.name), trim(r.cat)].concat(CT_NUM.map(function (k) { return r[k] || 0; }), [levelsText(parseLevels(r.lv)), freqOf(r) ? freqText(freqOf(r)).toLowerCase() : 'any time', r.review ? 'yes' : '', r.days || 'every day', r.shared ? 'yes' : '', r.vac === 'hide' ? 'hide' : r.vac === 'only' ? 'only' : 'always', r.big ? 'yes' : '', r.bounty ? dollars(r.bounty) : '', r.active ? 'yes' : 'no'])
+      lines.push([c.id, trim(r.name), trim(r.cat)].concat(CT_NUM.map(function (k) { return r[k] || 0; }), [levelsText(parseLevels(r.lv)), freqOf(r) ? freqText(freqOf(r)).toLowerCase() : 'any time', r.review ? 'yes' : '', r.gate ? 'yes' : '', r.days || 'every day', r.shared ? 'yes' : '', r.vac === 'hide' ? 'hide' : r.vac === 'only' ? 'only' : 'always', r.big ? 'yes' : '', r.bounty ? dollars(r.bounty) : '', r.active ? 'yes' : 'no'])
         .concat(ppl.map(function (p) { return who.indexOf(p.id) >= 0 ? 1 : ''; })).map(csvCell).join(','));
     });
     try {
@@ -2391,7 +2415,7 @@
       id: col(['id']), name: col(['chore', 'name', 'chorename', 'chores', 'quest', 'quests']), cat: col(['category', 'cat', 'group']),
       pts: col(['chorecoins', 'chorecoin', 'points', 'pts', 'point']), food: col(['foodcoins', 'foodcoin', 'food']), clean: col(['cleancoins', 'cleancoin', 'clean']),
       tuck: col(['tuckin', 'tuckins', 'tuck', 'tuckinpct', 'tuckinpercent']), play: col(['play', 'plays', 'playtime', 'playpct', 'playpercent']), any: col(['needsmost', 'needmost', 'any']),
-      lv: col(['levels', 'level', 'grades', 'rating']), freq: col(['howoften', 'often', 'frequency', 'freq', 'limit']), review: col(['dailyreview', 'review', 'inreview', 'checkin']), days: col(['days', 'day', 'onlyon', 'whichdays', 'ondays']), shared: col(['shared', 'sharedchore', 'oneforall']),
+      lv: col(['levels', 'level', 'grades', 'rating']), freq: col(['howoften', 'often', 'frequency', 'freq', 'limit']), review: col(['dailyreview', 'review', 'inreview', 'checkin']), gate: col(['unlocksgames', 'unlockgames', 'games', 'gate', 'neededforgames', 'needforgames', 'gametime']), days: col(['days', 'day', 'onlyon', 'whichdays', 'ondays']), shared: col(['shared', 'sharedchore', 'oneforall']),
       vac: col(['onvacation', 'vacation', 'hideonvacation', 'hidevacation', 'homeonly', 'notonvacation', 'novacation', 'hideontrips']), big: col(['bigjob', 'bigjobs', 'big', 'major']), bounty: col(['bounty', 'bountyusd', 'bountydollars']), active: col(['active', 'on', 'enabled']), who: col(['who', 'assigned', 'assignedto', 'people', 'kids']),
       gives: col(['gives', 'give', 'cointype', 'reward', 'petgame']), coins: col(['coins', 'coin', 'petcoins', 'amount'])
     };
@@ -2426,7 +2450,7 @@
       if (C.freq >= 0) { var fs = get(C.freq), fk = freqKey(fs); if (fk === null) warn.push('Row ' + line + ' (' + name + '): how often "' + fs + '" should look like any time, once a day, 2 a day or once a week'); else v.freq = fk; }
       if (C.review >= 0) v.review = /^(1(\.0+)?|y|yes|x|true|✓|✔)$/i.test(get(C.review));
       if (C.days >= 0) { var ds = get(C.days), dk = daysKey(ds); if (dk === null) warn.push('Row ' + line + ' (' + name + '): days "' + ds + '" should look like Mon, Thu or weekdays or every day'); else v.days = dk.length ? daysText(dk) : ''; }
-      ['shared', 'big'].forEach(function (k) { if (C[k] >= 0) v[k] = /^(1(\.0+)?|y|yes|x|true|✓|✔)$/i.test(get(C[k])); });
+      ['shared', 'big', 'gate'].forEach(function (k) { if (C[k] >= 0) v[k] = /^(1(\.0+)?|y|yes|x|true|✓|✔)$/i.test(get(C[k])); });
       if (C.vac >= 0) { var vs = get(C.vac), vk = vacKey(vs); if (vk === null) warn.push('Row ' + line + ' (' + name + '): on vacation "' + vs + '" should be always, hide or only'); else v.vac = vk; }
       if (C.bounty >= 0) { var bc = parseMoney(get(C.bounty)); if (isNaN(bc)) warn.push('Row ' + line + ' (' + name + '): bounty "' + get(C.bounty) + '" should look like 5.00'); else v.bounty = bc; }
       if (C.active >= 0) { var as = lc(get(C.active)); v.active = !/^(n|no|false|0|off|archived?|retired?|x)$/.test(as); }
@@ -2489,7 +2513,8 @@
         '<div class="field"><span>Counts as a big job on these days (none ticked = every day)</span><div class="checks days">' + [1, 2, 3, 4, 5, 6, 0].map(function (i) {
           return '<label><input type="checkbox" name="mday" value="' + i + '"' + (c && c.majorDays && c.majorDays.indexOf(i) >= 0 ? ' checked' : '') + '>' + DAYN[i] + '</label>';
         }).join('') + '</div></div></div></fieldset>' +
-      '<fieldset><legend>Extras</legend><div class="checks"><label><input type="checkbox" id="ceReview"' + (c && c.review ? ' checked' : '') + '>Show it in the daily review (parents rate it for every kid at the end of the day)</label></div>' +
+      '<fieldset><legend>Extras</legend><div class="checks"><label><input type="checkbox" id="ceReview"' + (c && c.review ? ' checked' : '') + '>Show it in the daily review (parents rate it for every kid at the end of the day)</label>' +
+        '<label><input type="checkbox" id="ceGate"' + (c && c.gate ? ' checked' : '') + '>Needed to unlock games: on the kids’ tablets, games stay locked until it’s approved that day</label></div>' +
         '<div class="wrap end"><label class="field w-sm" for="ceBounty"><span>Bounty ($)</span><input type="text" id="ceBounty" inputmode="decimal" placeholder="0.00" value="' + (c && c.bountyCents ? dollars(c.bountyCents) : '') + '"></label></div></fieldset>' +
       '<p class="note">A bounty pays money when approved. People who do it together choose how to split it.</p>' +
       '<div class="wrap"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="cancelEdit">Cancel</button>' +
@@ -2558,11 +2583,22 @@
       case 'adminClose': S.adminOpen = false; schedule(); break;
       case 'pick': S.picking = true; S.adminOpen = false; if (S.admin) setAdmin(null); schedule(); break;
       case 'choose':
-        if (isPerson(S.me)) S.prevKid = S.me;
-        S.me = d('pid'); S.lastMe = S.me; LS.set('cl.me', S.me); S.picking = false; S.bankPid = null; S.quest = null;
-        if (window.Pets) window.Pets.reset();
-        if (S.me === '@parent') { if (!S.admin) openAdmin(); } else if (S.admin) setAdmin(null);
-        S.tab = S.me === '@parent' ? S.tab : 'log'; go(); pushRefresh(); break;
+        var cp = d('pid');
+        if (launcher() && cp !== '@parent' && kidPinOf(cp)) { S.kidPin = cp; S.picking = true; schedule(); break; }
+        chooseMe(cp); break;
+      case 'kidPinCancel': S.kidPin = null; schedule(); break;
+      case 'gameDay':
+        if (!needAdmin()) break;
+        var gp = person(d('pid')), gm = d('mode');
+        if (gp) DB.commit([{ t: 'update', c: 'people', id: gp.id, d: { gameDay: gm === 'auto' ? null : { date: today(), mode: gm } } }]).then(function () {
+          toast(gm === 'open' ? 'Games are open for ' + gp.name + ' today.' : gm === 'closed' ? 'Games are locked for ' + gp.name + ' today.' : gp.name + '’s games follow the chores again.');
+        }, fail);
+        break;
+      case 'tabPinOff':
+        if (!needAdmin()) break;
+        var tpp = person(d('pid'));
+        if (tpp) DB.commit([{ t: 'update', c: 'people', id: tpp.id, d: { tabPin: null } }]).then(function () { toast(tpp.name + ' doesn’t need a PIN on the tablets now.'); }, fail);
+        break;
       case 'sel': S.sel = d('pid'); S.quest = null; schedule(); break;
       case 'give': S.give = S.give === d('k') ? '' : d('k'); schedule(); break;
       case 'cat': S.cat = d('cat'); updateLogList(); break;
@@ -2822,6 +2858,26 @@
     e.preventDefault();
     var f = e.target, kind = f.getAttribute('data-form');
     if (window.Pets && window.Pets.onSubmit(f, kind)) return;
+    if (window.Gate && window.Gate.onSubmit && window.Gate.onSubmit(f, kind)) return;
+    if (kind === 'kidpin') {
+      var kp = kidPinOf(S.kidPin), kpin = val('kidPin');
+      if (kp && sha256(kp.salt + ':' + kpin) === kp.hash) chooseMe(S.kidPin);
+      else { toast('That’s not the PIN. Try again, or ask a parent.', true); var ki = $('#kidPin'); if (ki) { ki.value = ''; ki.focus(); } }
+      return;
+    }
+    if (kind === 'gameset') {
+      if (!needAdmin()) return;
+      saveSettings({ gameEnd: val('gEnd') || '', gameMin: Math.max(0, parseInt(val('gMin'), 10) || 0), readMin: Math.max(0, parseInt(val('rMin'), 10) || 0) }).then(function () { toast('Saved'); }, fail);
+      return;
+    }
+    if (kind === 'tabpin') {
+      if (!needAdmin()) return;
+      var tpid = f.getAttribute('data-pid'), tpin = val('tp_' + tpid), tpp2 = person(tpid);
+      if (!/^[0-9]{4,8}$/.test(tpin || '')) { toast('Use 4 to 8 digits.', true); return; }
+      var tsalt = DB.newId('meta');
+      DB.commit([{ t: 'update', c: 'people', id: tpid, d: { tabPin: { salt: tsalt, hash: sha256(tsalt + ':' + tpin) } } }]).then(function () { toast((tpp2 ? tpp2.name : 'Their') + ' PIN is set.'); }, fail);
+      return;
+    }
     if (kind === 'login') {
       var em = val('lgEmail'), pw = val('lgPw');
       if (!em || !pw) { toast('Enter the email and password.', true); return; }
@@ -2882,7 +2938,7 @@
       var mdays = $$('input[name=mday]', f).filter(function (x) { return x.checked; }).map(function (x) { return Number(x.value); });
       var cdays = $$('input[name=cday]', f).filter(function (x) { return x.checked; }).map(function (x) { return Number(x.value); }).sort();
       if (cdays.length === 7) cdays = [];
-      var data = { name: cname, pts: pts, who: who, cat: cat, rw: rw, need: compatNeed(rw), coins: rw.food || rw.clean || 0, levels: levels, hideLv: hideLv, freq: val('ceFreq') || '', review: $('#ceReview').checked, bountyCents: bounty, major: $('#ceMajor').checked, majorEach: $('#ceEach').checked, majorDays: mdays, travel: $('#ceTrip').checked, homeOnly: val('ceVac') === 'hide', tripOnly: val('ceVac') === 'only', days: cdays, shared: $('#ceShared').checked };
+      var data = { name: cname, pts: pts, who: who, cat: cat, rw: rw, need: compatNeed(rw), coins: rw.food || rw.clean || 0, levels: levels, hideLv: hideLv, freq: val('ceFreq') || '', review: $('#ceReview').checked, gate: $('#ceGate').checked, bountyCents: bounty, major: $('#ceMajor').checked, majorEach: $('#ceEach').checked, majorDays: mdays, travel: $('#ceTrip').checked, homeOnly: val('ceVac') === 'hide', tripOnly: val('ceVac') === 'only', days: cdays, shared: $('#ceShared').checked };
       var op = cid ? { t: 'update', c: 'chores', id: cid, d: data }
         : { t: 'set', c: 'chores', id: DB.newId('chores'), d: assign(data, { active: true, order: S.chores.reduce(function (m, c) { return Math.max(m, c.order || 0); }, 0) + 1 }) };
       var eff = catList(S.chores).filter(function (x) { return x !== 'Other'; });
@@ -2923,6 +2979,7 @@
   document.addEventListener('touchstart', function () { S.lastActive = Date.now(); }, true);
   /* Shared devices: back to the profile picker after 5 idle minutes. */
   function maybeRepick() {
+    if (launcher()) return;   /* the tablet asks again when its screen wakes up (gate.js) */
     if (MODE !== 'family' || S.phase !== 'app' || S.picking || !S.me) return;
     if (Date.now() - S.lastActive > IDLE_PICK_MS) {
       S.me = null; S.quest = null; if (S.admin) setAdmin(null);
@@ -2972,11 +3029,128 @@
   };
   DB.onAuthChange = function () { if (DB.needsLogin()) { S.phase = 'login'; schedule(); } };
 
+  /* ================= games on the kids' tablets (cl-v42) =================
+     A chore marked gate ("Needed to unlock games") has to be approved that day before that kid's games open on a tablet
+     where Chore Quest is the home screen. Games are open from morning (nightEnd) to gameEnd (default: when night starts).
+     A parent can open or lock one kid's games for today (people.gameDay = {date, mode: 'open' | 'closed'}). */
+  function gameWindow(date) {
+    var st = S.settings, d0 = parseD(date).getTime();
+    function at(str, def) { var m = /^(\d{1,2}):(\d{2})/.exec(str || '') || /^(\d{1,2}):(\d{2})/.exec(def); return d0 + (+m[1] * 60 + +m[2]) * 60000; }
+    var open = st.nightOff ? d0 : at(st.nightEnd, '06:30');
+    var endS = st.gameEnd || (st.nightOff ? '' : st.nightStart || '20:00'), close = endS ? at(endS, '20:00') : d0 + 864e5;
+    if (close <= open) close = d0 + 864e5;
+    return [open, close];
+  }
+  function gateChores(pid, date) {
+    var vac = window.ADV && ADV.onVacation();
+    return S.chores.filter(function (c) { return c.gate && c.active !== false && (c.who || []).indexOf(pid) >= 0 && vacShow(c, vac) && dayOk(c, date); });
+  }
+  function gateStatus(pid, date) {
+    date = date || today();
+    var p = person(pid); if (!p) return null;
+    var rows = gateChores(pid, date).map(function (c) {
+      var es = S.entries.filter(function (e) { return e.cid === c.id && e.date === date && (e.pid === pid || c.shared); });
+      var ok = es.some(function (e) { return e.status === 'approved' && e.lvPct !== 0; });
+      var wait = !ok && es.some(function (e) { return e.status === 'pending' && e.pid === pid; });
+      return { id: c.id, name: c.name, st: ok ? 'ok' : wait ? 'wait' : 'todo' };
+    });
+    var done = rows.filter(function (r) { return r.st === 'ok'; }).length, w = gameWindow(date), now = Date.now();
+    var ov = p.gameDay && p.gameDay.date === date ? p.gameDay.mode : '', choresOk = rows.length > 0 && done === rows.length;   /* no unlock chores due = locked, not open */
+    var open, until = 0;
+    if (ov === 'open') { open = true; until = now < w[1] ? w[1] : parseD(date).getTime() + 864e5; }
+    else { open = ov !== 'closed' && choresOk && now >= w[0] && now < w[1]; if (open) until = w[1]; }
+    return { pid: pid, rows: rows, done: done, total: rows.length, choresOk: choresOk, override: ov, open: open, until: until, hours: w, early: now < w[0], late: now >= w[1], readMin: +S.settings.readMin || 0, gameMin: +S.settings.gameMin || 0 };
+  }
+  function gateLine(gs) {
+    if (!gs) return '';
+    if (gs.override === 'closed') return 'Locked for today by a parent';
+    if (gs.open) return 'Open until ' + hm(gs.until) + (gs.override === 'open' ? ' (opened by a parent)' : ', all ' + gs.total + ' approved');
+    if (!gs.total) return 'Locked: no chores are set to unlock games today';
+    if (gs.late) return 'Closed for the night' + (gs.total ? ' (' + gs.done + ' of ' + gs.total + ' approved)' : '');
+    if (gs.early) return 'Opens at ' + hm(gs.hours[0]) + (gs.total ? ', after ' + gs.total + ' chore' + (gs.total === 1 ? '' : 's') : '');
+    return 'Locked: ' + gs.done + ' of ' + gs.total + ' approved';
+  }
+  function gamesSetupHtml() {
+    var ks = kids(), st = S.settings, gc = S.chores.filter(function (c) { return c.gate && c.active !== false; });
+    var w = gameWindow(today());
+    return '<section class="stack tight games-setup"><h2>Games on the kids’ tablets</h2>' +
+      '<p class="note">On a tablet where Chore Quest is the home screen, a kid’s games stay locked until their chores marked <b>Unlocks games</b> are approved that day. Chore Quest, Lit Town and any app set to Always stay open. A parent can open or lock games for one kid for today.</p>' +
+      '<div class="list">' + ks.map(function (p) {
+        var gs = gateStatus(p.id), ov = gs.override || 'auto';
+        return '<div class="srow gate-row ' + pCls(p) + '"><span class="dot"></span><div class="grow"><b>' + esc(p.name) + '</b><div class="note">' + esc(gateLine(gs)) + '</div></div>' +
+          '<div class="seg small" role="group" aria-label="Games today for ' + esc(p.name) + '">' + [['auto', 'By chores'], ['open', 'Open'], ['closed', 'Locked']].map(function (m) {
+            return '<button type="button" data-act="gameDay" data-pid="' + esc(p.id) + '" data-mode="' + m[0] + '" aria-pressed="' + (ov === m[0]) + '">' + m[1] + '</button>';
+          }).join('') + '</div></div>';
+      }).join('') + '</div>' +
+      '<p class="note">Open and Locked last for today only. <b>Chores that unlock games (' + gc.length + '):</b> ' + (gc.length ? esc(gc.map(function (c) { return c.name; }).join(', ')) : '<b>none yet, so games stay locked</b> (a parent can still open a day)') +
+      '. Tick <b>Needed to unlock games</b> in a chore’s editor, or use the Games column in Edit all in a table. On a day a kid has none of them due (vacation, a day off), games stay locked unless you open the day.</p>' +
+      '<form class="wrap end" data-form="gameset"><label class="field w-sm" for="gEnd"><span>Games close at</span><input type="time" id="gEnd" value="' + esc(st.gameEnd || '') + '"></label>' +
+      '<label class="field w-sm" for="gMin"><span>Games per day (minutes)</span><input type="number" id="gMin" min="0" step="5" placeholder="no limit" value="' + (st.gameMin ? +st.gameMin : '') + '"></label>' +
+      '<label class="field w-sm" for="rMin"><span>Reading apps per day (minutes)</span><input type="number" id="rMin" min="0" step="5" placeholder="no limit" value="' + (st.readMin ? +st.readMin : '') + '"></label>' +
+      '<button class="btn" type="submit">Save</button></form>' +
+      '<p class="note">Today games can open from ' + hm(w[0]) + ' to ' + hm(w[1]) + '. Leave Games close at empty to close them when night starts (Pet night above). The daily minutes count the time an app is actually on screen, per kid, on each tablet; when they’re used up the app goes back to Chore Quest. Reading apps are the ones set to Always on the Tablet tab (Lit Town, Teach Your Monster).</p>' +
+      '<h3>Tablet PINs (optional)</h3><p class="note">With a PIN, a kid types it after tapping their name on a tablet, so nobody can play as a brother or sister whose chores are done.</p>' +
+      '<div class="list">' + ks.map(function (p) {
+        return '<form class="srow wrap end" data-form="tabpin" data-pid="' + esc(p.id) + '"><div class="grow">' + esc(p.name) + (kidPinOf(p.id) ? ' <span class="tag plain">PIN set</span>' : '') + '</div>' +
+          '<label class="field w-sm" for="tp_' + esc(p.id) + '"><span>' + (kidPinOf(p.id) ? 'New PIN' : 'PIN') + '</span><input type="password" id="tp_' + esc(p.id) + '" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="8"></label>' +
+          '<button class="btn small" type="submit">Set</button>' + (kidPinOf(p.id) ? '<button class="btn small" type="button" data-act="tabPinOff" data-pid="' + esc(p.id) + '">Remove</button>' : '') + '</form>';
+      }).join('') + '</div>' +
+      (launcher() ? '<p class="note">This tablet’s own settings (who uses it, which apps are games) are on the <b>Tablet</b> tab.</p>' : '') + '</section>';
+  }
+  function chooseMe(pid) {
+    if (isPerson(S.me)) S.prevKid = S.me;
+    S.me = pid; S.lastMe = S.me; LS.set('cl.me', S.me); S.picking = false; S.bankPid = null; S.quest = null; S.kidPin = null;
+    if (window.Pets) window.Pets.reset();
+    if (S.me === '@parent') { if (!S.admin) openAdmin(); } else if (S.admin) setAdmin(null);
+    S.tab = S.me === '@parent' ? (launcher() ? 'home' : S.tab) : launcher() ? 'home' : 'log'; go(); pushRefresh();
+  }
+  /* nobody is playing (the tablet woke up after a while): back to "Who's playing?" */
+  function repick() {
+    stopAll();
+    S.me = null; S.quest = null; S.kidPin = null; S.picking = false; S.adminOpen = false;
+    if (S.admin) setAdmin(null);
+    if (window.Pets) window.Pets.reset();
+    go();
+  }
+  function setTab(t) {
+    S.tab = t; LS.set(MODE === 'bank' ? 'cl.ptab' : 'cl.tab', t);
+    S.edit = null; S.bankForm = null; S.bankPid = null; S.picking = false; S.quest = null; S.avEditFor = null; S.txEdit = null;
+    if (window.Pets) window.Pets.reset();
+    go();
+  }
+  /* end any game, adventure or shop that is open (the Home button, or the tablet asking who's playing) */
+  function stopAll() {
+    ['Caverns', 'IceCream', 'Defense', 'BedDefense'].forEach(function (k) { var m = window[k]; if (m && m.active && m.active()) { try { m.quit(); } catch (e) {} } });
+    if (window.Games && window.Games.active && window.Games.active()) { try { window.Games.stop(); } catch (e) {} }
+  }
+  /* the Android back button (kids' app): close the top thing that's open, else go back to the first tab */
+  var CLOSERS = ['[data-wact="closeCard"]', '[data-iact="quit"]', '[data-cact="quit"]', '[data-dact="quit"]', '[data-bact="quit"]', '[data-pact="leave"]', '[data-wact="leave"]', '[data-act="kidPinCancel"]', '[data-act="cancelEdit"]', '[data-act="ctClose"]'];
+  function closeTop() {
+    for (var i = 0; i < CLOSERS.length; i++) {
+      var els = document.querySelectorAll(CLOSERS[i]);
+      for (var j = 0; j < els.length; j++) if (els[j].offsetParent !== null) { els[j].click(); return true; }
+    }
+    return false;
+  }
+  function onBack() {
+    if (S.adminOpen && !S.admin) { S.adminOpen = false; schedule(); return; }
+    if (closeTop()) return;
+    var first = S.phase === 'app' && S.me ? (tabsFor()[0] || [])[0] : null;
+    if (first && S.tab !== first) { setTab(first); return; }
+    if (S.picking && S.me) { S.picking = false; schedule(); return; }
+    if (!launcher() && window.Capacitor && window.Capacitor.nativePromise) window.Capacitor.nativePromise('App', 'minimizeApp', {})['catch'](function () {});
+  }
+  if (APP && window.Capacitor && window.Capacitor.addListener) {
+    try { window.Capacitor.addListener('App', 'backButton', function () { onBack(); }); } catch (e) {}
+  }
+
   /* Shared helpers for the pet game (js/pets.js). */
   window.CL = {
     S: S, schedule: schedule, go: go, toast: toast, fail: fail, esc: esc, money: money, today: today, addDays: addDays, daysBetween: daysBetween,
     fmtDate: fmtDate, person: person, pname: pname, pIndex: pIndex, pCls: pCls, pColor: pColor, isPerson: isPerson, isDad: isDad, isAdult: isAdult, kids: kids, activePeople: activePeople,
-    txOps: txOps, accountHtml: accountHtml, needAdmin: needAdmin, logTarget: logTarget, confirmTap: confirmTap, bankName: bankName
+    txOps: txOps, accountHtml: accountHtml, needAdmin: needAdmin, logTarget: logTarget, confirmTap: confirmTap, bankName: bankName,
+    APP: APP, launcher: launcher, gateStatus: gateStatus, gateLine: gateLine, gameWindow: gameWindow, kidPinOf: kidPinOf, chooseMe: chooseMe, repick: repick, setTab: setTab,
+    stopAll: stopAll, closeTop: closeTop, saveSettings: saveSettings, hm: hm, tabsFor: tabsFor
   };
 
   DB.start(window.CL_CONFIG).then(function () {
@@ -2985,7 +3159,7 @@
   }, function (e) { S.phase = 'error'; S.err = (e && e.message) || 'Unknown error'; schedule(); });
   schedule();
 
-  if ('serviceWorker' in navigator && location.protocol === 'https:' && window.CL_CONFIG && window.CL_CONFIG.offline !== false) {
+  if (!APP && 'serviceWorker' in navigator && location.protocol === 'https:' && window.CL_CONFIG && window.CL_CONFIG.offline !== false) {
     try { navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) {}
   }
 })();
