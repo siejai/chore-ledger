@@ -145,7 +145,7 @@
   Store.newProfile = function (name) {
     var start = (RA.Engine && RA.Engine.flameConfig) ? RA.Engine.flameConfig().startingFlames : 0;
     return {
-      v: 7,                      // saved-progress format (see Engine.migrateProfile)
+      v: 8,                      // saved-progress format (see Engine.migrateProfile)
       id: U.id('kid'),
       name: name || 'Reader',
       created: U.today(),
@@ -250,7 +250,13 @@
       for (k in p.look) {
         if (!p.look.hasOwnProperty(k)) { continue; }
         var v = String(p.look[k]);
-        if (/color$|^(skin|hair|top2|bot2)$/i.test(k) ? !HEX.test(v) : (k !== 'name' && !ID.test(v))) { delete p.look[k]; }
+        if (/^(height|width|skinTint|hairTint)$/.test(k)) {
+          // body sliders and shade sliders are small numbers
+          var num = parseFloat(v);
+          if (isNaN(num) || num < -1 || num > 2) { delete p.look[k]; } else { p.look[k] = num; }
+          continue;
+        }
+        if (/color$|^(skin|hair|top2|bot2|eye|skinBase|hairBase)$/i.test(k) ? !HEX.test(v) : (k !== 'name' && !ID.test(v))) { delete p.look[k]; }
       }
     }
     if (p.font !== 'dyslexic') { p.font = 'andika'; }

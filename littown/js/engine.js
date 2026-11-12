@@ -993,7 +993,7 @@
     (world.locations || []).forEach(function (l) { out.push({ key: 'loc:' + l.id, kind: 'loc', ref: l, cost: 0, location: l.id }); });
     (world.items || []).forEach(function (it) { out.push({ key: 'item:' + it.id, kind: 'item', ref: it, cost: it.cost || 0, location: it.location }); });
     (world.characters || []).forEach(function (c) { out.push({ key: 'char:' + c.id, kind: 'char', ref: c, cost: c.cost || 0, location: c.location }); });
-    (world.outfits || []).forEach(function (o) { out.push({ key: 'outfit:' + o.slot + '/' + o.part, kind: 'outfit', ref: o, cost: o.cost || 0, slot: o.slot }); });
+    (world.outfits || []).forEach(function (o) { out.push({ key: 'outfit:' + o.slot + '/' + o.part, kind: 'outfit', ref: o, cost: o.cost || 0, slot: o.slot, location: o.location }); });
     // house upgrades: the deluxe and premium versions of each thing (junk is hers from the start, fixed is free at its lesson)
     E.chains().forEach(function (ch) {
       (ch.tiers || []).forEach(function (t) {
@@ -1072,7 +1072,7 @@
     if (E.isUnlocked(profile, key)) { return 'owned'; }
     if ((e.kind === 'loc' || e.kind === 'upgrade') && e.ref.comingSoon) { return 'soon'; }
     if (e.kind === 'loc') { return 'lesson'; }
-    if ((e.kind === 'item' || e.kind === 'char' || e.kind === 'upgrade') && e.location && !E.isUnlocked(profile, 'loc:' + e.location)) { return 'place'; }
+    if ((e.kind === 'item' || e.kind === 'char' || e.kind === 'upgrade' || e.kind === 'outfit') && e.location && !E.isUnlocked(profile, 'loc:' + e.location)) { return 'place'; }
     if (e.kind === 'upgrade' && !E.chainFixed(profile, e.ref.chain)) { return 'lesson'; }
     if (e.kind === 'item' && e.ref.word && !E.written(profile, e.ref.word)) { return 'write'; }
     if ((profile.flames || 0) < e.cost) { return 'flames'; }
@@ -1274,12 +1274,13 @@
 
   /** Bring an older saved profile up to date (safe to call every time). Returns true if changed. */
   E.migrateProfile = function (profile) {
-    if (!profile || profile.v >= 7) { return false; }
-    if (profile.v === 6) { toV7(profile); return true; }
-    if (profile.v === 5) { toV6(profile); toV7(profile); return true; }
-    if (profile.v === 4) { toV5(profile); toV6(profile); toV7(profile); return true; }
-    if (profile.v === 3) { toV4(profile); toV5(profile); toV6(profile); toV7(profile); return true; }
-    if (profile.v === 2) { toV3(profile); toV4(profile); toV5(profile); toV6(profile); toV7(profile); return true; }
+    if (!profile || profile.v >= 8) { return false; }
+    if (profile.v === 7) { toV8(profile); return true; }
+    if (profile.v === 6) { toV7(profile); toV8(profile); return true; }
+    if (profile.v === 5) { toV6(profile); toV7(profile); toV8(profile); return true; }
+    if (profile.v === 4) { toV5(profile); toV6(profile); toV7(profile); toV8(profile); return true; }
+    if (profile.v === 3) { toV4(profile); toV5(profile); toV6(profile); toV7(profile); toV8(profile); return true; }
+    if (profile.v === 2) { toV3(profile); toV4(profile); toV5(profile); toV6(profile); toV7(profile); toV8(profile); return true; }
     profile.owned = profile.owned || {};
     // v1 (lesson-unlock rewards): everything she had unlocked stays hers
     var old = profile.unlocks || {}, k;
@@ -1294,8 +1295,37 @@
     toV5(profile);
     toV6(profile);
     toV7(profile);
+    toV8(profile);
     return true;
   };
+
+  /* v8: characters move to the style C art (more hairstyles, a face builder, body sliders). Her look keeps
+     everything it can: hairstyles that were renamed get the nearest new one (pixie → short crop, afro → curly,
+     curly → long curls, bun → high bun, buzz → shaved) and the old face becomes the matching expression.
+     Puffs, braids, buzz and bun are free now, so she gets back the flames she spent on them (prices from v7). */
+  var V7_HAIR_COST = { puffs: 3, braids: 3, buzz: 2, bun: 3 };
+  var V7_HAIR_NEW = { pixie: 'crop', afro: 'curly', curly: 'longcurly', bun: 'highbun', buzz: 'shaved' };
+  var V7_FACE = { smile: ['happy', 'm2'], grin: ['happy', 'm1'], wow: ['surprised', 'm8'] };
+  function toV8(profile) {
+    var owned = profile.owned = profile.owned || {}, back = 0, k;
+    for (k in V7_HAIR_COST) {
+      if (V7_HAIR_COST.hasOwnProperty(k) && owned['outfit:hair/' + k]) {
+        if (owned['outfit:hair/' + k] !== 'kept') { back += V7_HAIR_COST[k]; }
+        delete owned['outfit:hair/' + k];
+      }
+    }
+    if (back) {
+      profile.flames = (profile.flames || 0) + back;
+      profile.spent = Math.max(0, (profile.spent || 0) - back);
+    }
+    var lk = profile.look;
+    if (lk) {
+      if (V7_HAIR_NEW[lk.hairStyle]) { lk.hairStyle = V7_HAIR_NEW[lk.hairStyle]; }
+      if (lk.face && V7_FACE[lk.face] && !lk.expr) { lk.expr = V7_FACE[lk.face][0]; lk.mouth = lk.mouth || V7_FACE[lk.face][1]; }
+      delete lk.face;
+    }
+    profile.v = 8;
+  }
 
   /* v7: two markers. Highest lesson reached = what she had passed (or been placed at); working
      lesson = the lesson she was on. No step-backs, no placement check pending. */

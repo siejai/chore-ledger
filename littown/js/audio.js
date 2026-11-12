@@ -117,7 +117,8 @@
     if (ctx) { return; }
     var AC = w.AudioContext || w.webkitAudioContext;
     if (!AC) { return; }
-    try { ctx = new AC(); } catch (e) { ctx = null; }
+    // "playback" latency: on some Android phones a default (interactive) context makes the speech clips crackle
+    try { ctx = new AC({ latencyHint: 'playback' }); } catch (e) { try { ctx = new AC(); } catch (e2) { ctx = null; } }
     if (ctx && ctx.state === 'suspended' && ctx.resume) { ctx.resume(); }
   };
 

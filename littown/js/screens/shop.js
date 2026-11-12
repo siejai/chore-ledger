@@ -7,7 +7,8 @@
 
   var TAB_ICONS = { hair: 'ui-hanger', clothes: 'ui-hanger', home: 'ui-decor' };
   var TAB_LABELS = { hair: 'Hair', clothes: 'Clothes', home: 'Home' };
-  var LOOK_KEY = { hair: 'hairStyle', top: 'top', bot: 'bot', shoes: 'shoes', acc: 'acc' };
+  var LOOK_KEY = { hair: 'hairStyle', top: 'top', bot: 'bot', shoes: 'shoes', acc: 'acc', eyecolor: 'eye' };
+  var CROP = { hair: 'head', eyecolor: 'head' };
 
   function tabs() {
     var t = (E.world().shop && E.world().shop.tabs) || [
@@ -21,8 +22,9 @@
     var d = U.el('div.shop-art' + (big ? '.big' : ''));
     if (entry.kind === 'outfit') {
       var look = U.clone(p.look || {});
-      look[LOOK_KEY[entry.slot]] = entry.ref.part;
-      d.appendChild(UI.avatar(look, 'shop-av shop-av-' + entry.slot));
+      look[LOOK_KEY[entry.slot]] = entry.slot === 'eyecolor' ? ART.part('eyecolor', entry.ref.part).hex : entry.ref.part;
+      if (entry.slot === 'acc') { look.acc = entry.ref.part; }
+      d.appendChild(UI.avatar(look, 'shop-av shop-av-' + entry.slot, { crop: CROP[entry.slot] }));
     } else if (entry.kind === 'upgrade') {
       // a version of something in her house (deluxe, premium), with a wrench badge
       d.innerHTML = ART.svg(upgradeArt(entry));
@@ -67,7 +69,8 @@
         E.shopList(p, tab).filter(function (e) {
           // a word item joins the shop once she has written its word in a lesson
           if (e.kind === 'item') { return E.isUnlocked(p, 'loc:' + e.location) && ART.has(e.ref.sprite) && E.canBuy(p, e.key) !== 'write'; }
-          if (e.kind === 'outfit') { return !!ART.part(e.slot, e.ref.part); }
+          // hairstyles and eye colours sold at a place go on sale once that place is lit
+          if (e.kind === 'outfit') { return !!ART.part(e.slot, e.ref.part) && (!e.location || E.isUnlocked(p, 'loc:' + e.location)); }
           // house versions go on sale only once that thing has been fixed up in front of her (and is drawn)
           if (e.kind === 'upgrade') { return E.isUnlocked(p, 'loc:' + e.location) && !e.ref.comingSoon && E.chainFixed(p, e.ref.chain) && ART.has(upgradeArt(e)); }
           return false;

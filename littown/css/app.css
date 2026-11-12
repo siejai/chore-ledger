@@ -120,8 +120,22 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .dress-opts { -webkit-flex: 1; flex: 1; background: #FFFDF7; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; -webkit-align-content: flex-start; align-content: flex-start; overflow-y: auto; padding: 8px; border-radius: 0 18px 0 0; min-height: 0; }
 .dress-opt { width: 96px; height: 112px; margin: 4px; border-radius: 16px; background: #F7F2EA; overflow: hidden; border: 4px solid transparent; }
 .dress-opt.on { border-color: #3D8BFD; }
-.dress-opt .avatar.thumb { width: 100%; height: 150%; }
-.dress-opt .thumb-shoes, .dress-opt .thumb-bot { margin-top: -55%; }
+.dress-opt .avatar.thumb { width: 100%; height: 100%; }
+.dress-opt .avatar.thumb-full { height: 150%; }
+.dress-opt.face-opt { width: 88px; height: 88px; }
+.dress-opts.sliders { -webkit-flex-direction: column; flex-direction: column; -webkit-flex-wrap: nowrap; flex-wrap: nowrap; padding: 14px 18px; }
+.dress-sub { width: 100%; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; margin-bottom: 4px; }
+.sub-chip { min-height: 48px; padding: 4px 14px; margin: 3px; border-radius: 24px; background: #F7F2EA; font-size: 18px; font-weight: 700; color: #6F6880; }
+.sub-chip.on { background: #3B2F45; color: #FFFDF7; }
+.dress-slider { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; width: 100%; min-height: 72px; }
+.slider-label { width: 120px; font-size: 20px; font-weight: 700; color: #3B2F45; }
+.slider { -webkit-flex: 1; flex: 1; height: 56px; margin: 0 8px; -webkit-appearance: none; appearance: none; background: transparent; }
+.slider::-webkit-slider-runnable-track { height: 16px; border-radius: 8px; background: #E8DCC8; }
+.slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 44px; height: 44px; margin-top: -14px; border-radius: 22px; background: #3D8BFD; border: 4px solid #FFFDF7; box-shadow: 0 0 0 2px #2F6FD0; }
+.swatch-row { width: 100%; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+.swatch-row.small .swatch { width: 38px; height: 38px; margin: 3px; }
+.dress-colors .dress-slider { min-height: 56px; }
+.dress-preview .avatar.big svg { overflow: visible; }
 .dress-opt .none-x { font-size: 48px; line-height: 104px; color: #B8B2C2; }
 .locked-note { width: 96px; height: 112px; margin: 4px; border-radius: 16px; border: 3px dashed #D8CFBE; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; color: #6F6880; font-size: 22px; }
 .dress-colors { background: #FFFDF7; padding: 6px 8px 10px; border-radius: 0 0 18px 18px; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; }

@@ -108,9 +108,10 @@
     return box;
   };
 
-  UI.avatar = function (look, cls) {
+  /** A character. opts.crop: 'head' (face and hair), 'body' or 'feet', for thumbnails. */
+  UI.avatar = function (look, cls, opts) {
     var d = U.el('div.avatar' + (cls ? '.' + cls : ''));
-    d.innerHTML = RA.Avatar.svg(look || {});
+    d.innerHTML = RA.Avatar.svg(look || {}, opts);
     return d;
   };
 

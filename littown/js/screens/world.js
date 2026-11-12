@@ -7,8 +7,16 @@
 
   var SCENE_W = 1000, SCENE_H = 600;
   var CHAR_W = 120, CHAR_H = 180, CHAR_SCALE = 0.6;
-  var HEAD = { x: 100 * CHAR_SCALE, y: 76 * CHAR_SCALE };   // where a worn hat's bottom-center sits
-  var HAND = { x: 144 * CHAR_SCALE, y: 214 * CHAR_SCALE };  // held item center
+  var HEAD = { x: 100 * CHAR_SCALE, y: 76 * CHAR_SCALE };   // where a worn hat's bottom-center sits (normal body)
+  var HAND = { x: 144 * CHAR_SCALE, y: 214 * CHAR_SCALE };  // held item center (normal body)
+  /* a stretched (taller or wider) character has its head and hand somewhere else */
+  function anchorsOf(ch) {
+    if (!ch.anch) {
+      var a = RA.Avatar.anchors ? RA.Avatar.anchors(ch.def.look || {}) : null;
+      ch.anch = a ? { head: { x: a.head.x * CHAR_SCALE, y: a.head.y * CHAR_SCALE }, hand: { x: a.hand.x * CHAR_SCALE, y: a.hand.y * CHAR_SCALE } } : { head: HEAD, hand: HAND };
+    }
+    return ch.anch;
+  }
 
   var World = RA.World = {};
 
@@ -727,8 +735,9 @@
     item.on = ch.id;
     var host = slot === 'head' ? ch.headSlot : ch.handSlot;
     host.appendChild(item.el);
-    var left = (slot === 'head' ? HEAD.x : HAND.x) - item.w / 2;
-    var top = slot === 'head' ? HEAD.y - item.h : HAND.y - item.h * 0.6;
+    var an = anchorsOf(ch);
+    var left = (slot === 'head' ? an.head.x : an.hand.x) - item.w / 2;
+    var top = slot === 'head' ? an.head.y - item.h : an.hand.y - item.h * 0.6;
     setXY(item.el, left, top);
     item.el.style.zIndex = '1';
     U.addClass(item.el, 'attached');
@@ -745,7 +754,7 @@
     if (ch) {
       detachFrom(item, ch);
       // convert to scene coordinates
-      var slot = item.def.wear === 'head' ? HEAD : HAND;
+      var slot = item.def.wear === 'head' ? anchorsOf(ch).head : anchorsOf(ch).hand;
       item.x = ch.x - CHAR_W / 2 + slot.x;
       item.y = ch.y - CHAR_H + (item.def.wear === 'head' ? slot.y : slot.y + item.h * 0.4);
     }

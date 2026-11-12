@@ -116,20 +116,32 @@
     }
   };
 
-  /* ================= character maker / dress-up ================= */
-
+  /* ================= character maker / dress-up =================
+   * Style C characters (www/js/avatar-render.js + lit-style.js). Tabs:
+   *   Body  height and width sliders (only the body stretches), skin colour + shade slider
+   *   Face  eyes (incl. anime eyes), eye colour, brows, nose, mouth, cheeks, freckles, mood
+   *   Hair  hairstyle, colour + shade slider
+   *   Top / Bottom / Shoes / Extras  the clothes she owns, each with its colours
+   * Thumbnails are drawn a few at a time so the Fire 7 stays responsive. */
   var TABS = [
-    { id: 'skin', label: 'Skin', color: 'skin', palette: 'skin' },
-    { id: 'hair', label: 'Hair', slot: 'hair', key: 'hairStyle', color: 'hair', palette: 'hair' },
-    { id: 'top', label: 'Top', slot: 'top', key: 'top', color: 'topColor', palette: 'clothes' },
-    { id: 'bot', label: 'Bottom', slot: 'bot', key: 'bot', color: 'botColor', palette: 'clothes' },
-    { id: 'shoes', label: 'Shoes', slot: 'shoes', key: 'shoes', color: 'shoeColor', palette: 'clothes' },
-    { id: 'acc', label: 'Extras', slot: 'acc', key: 'acc', color: 'accColor', palette: 'clothes' }
+    { id: 'body', label: 'Body' },
+    { id: 'face', label: 'Face' },
+    { id: 'hair', label: 'Hair', slot: 'hair', key: 'hairStyle', crop: 'head' },
+    { id: 'top', label: 'Top', slot: 'top', key: 'top', color: 'topColor', color2: 'top2', crop: 'body' },
+    { id: 'bot', label: 'Bottom', slot: 'bot', key: 'bot', color: 'botColor', color2: 'bot2', crop: 'body' },
+    { id: 'shoes', label: 'Shoes', slot: 'shoes', key: 'shoes', color: 'shoeColor', crop: 'feet' },
+    { id: 'acc', label: 'Extras', slot: 'acc', key: 'acc', color: 'accColor', crop: 'head' }
   ];
+  var FACE_PARTS = [
+    { id: 'eyes', label: 'Eyes' }, { id: 'brows', label: 'Brows' }, { id: 'nose', label: 'Nose' }, { id: 'mouth', label: 'Mouth' },
+    { id: 'cheeks', label: 'Cheeks' }, { id: 'freckles', label: 'Freckles' }, { id: 'expr', label: 'Mood' }
+  ];
+  var MOODS = ['happy', 'silly', 'surprised', 'sleepy', 'determined'];
 
   var DEFAULT_PALETTES = {
-    skin: ['#FFE0CC', '#F8CBA8', '#EDB48A', '#D99A6C', '#C17F4F', '#A0663D', '#7D4A2A', '#5B3420'],
-    hair: ['#2B1E1A', '#5A3825', '#8B5A2B', '#C8843A', '#E8C170', '#F2E3B3', '#B6413A', '#7A7480', '#F76CA8', '#8E6CEF', '#3D8BFD', '#4CC27A'],
+    skin: ['#FDE7D6', '#F5D0B0', '#EDB48A', '#DDA071', '#C68552', '#A0663D', '#7A4A2A', '#5A3622'],
+    hair: ['#2A2026', '#5A3825', '#8A5A3B', '#A2482C', '#E9C46A', '#B9B4BD', '#F28DB8', '#6FA8F2', '#9B7BE0', '#7FD6B5'],
+    eye: ['#6B4A2F', '#3B2A22', '#8A7A3A', '#3F8F5B', '#3D7FD6', '#7D8A99', '#B8741A'],
     clothes: ['#E5484D', '#FF7A6B', '#FF9EC4', '#F76CA8', '#FF9F43', '#FFD23F', '#4CC27A', '#2E9E63', '#7CC8F8', '#3D8BFD', '#2F4C9C', '#8E6CEF', '#C9B6FF', '#FFFDF7', '#3B2F45', '#C98B5A']
   };
 
@@ -152,9 +164,21 @@
     return n;
   }
 
+  /* eye colours: the natural ones, plus fantasy colours she bought */
+  function eyeColors(p) {
+    var out = palette('eye').slice();
+    unlockedParts(p, 'eyecolor').forEach(function (id) { var d = w.ART.part('eyecolor', id); if (d && d.hex) { out.push(d.hex); } });
+    return out;
+  }
+
+  function kitList(kind) {
+    var k = (w.LAB && w.LAB.KIT && w.LAB.KIT[kind]) || [];
+    return k.map(function (x) { return x[0]; });
+  }
+
   function editor(root, p, onDone) {
     var look = RA.Avatar.merge(p.look || randomStart(p));
-    var tab = TABS[1];
+    var tab = TABS[2], facePart = FACE_PARTS[0], alive = 0;   // opens on Hair, the fun part
     var wrap = U.el('div.dress');
     var preview = U.el('div.dress-preview');
     var side = U.el('div.dress-side');
@@ -162,45 +186,117 @@
     var opts = U.el('div.dress-opts');
     var colors = U.el('div.dress-colors');
 
-    function redraw() {
-      preview.innerHTML = '';
-      var av = UI.avatar(look, 'big');
-      preview.appendChild(av);
+    var redrawTimer = null;
+    function redraw(now) {
+      clearTimeout(redrawTimer);
+      function go() { U.clear(preview); preview.appendChild(UI.avatar(look, 'big')); }
+      if (now) { go(); } else { redrawTimer = setTimeout(go, 40); }
+    }
+
+    /* option buttons: drawn a few per tick */
+    function optionGrid(list, makeLook, isOn, onPick, crop, extraCls) {
+      var mine = ++alive, queue = [];
+      list.forEach(function (val) {
+        var b = U.el('button.dress-opt' + (extraCls ? '.' + extraCls : '') + (isOn(val) ? '.on' : ''), { type: 'button' });
+        if (val === 'none') { b.appendChild(U.el('span.none-x', { text: '–' })); }
+        else { queue.push({ b: b, val: val }); }
+        U.tap(b, function () { onPick(val); RA.Sfx.play('pop'); redraw(true); drawTab(); });
+        opts.appendChild(b);
+      });
+      (function next() {
+        if (mine !== alive || !queue.length) { return; }
+        queue.splice(0, 3).forEach(function (q) { q.b.appendChild(UI.avatar(makeLook(q.val), 'thumb thumb-' + (crop || 'full'), { crop: crop })); });
+        setTimeout(next, 0);
+      })();
+    }
+
+    function swatchRow(list, cur, onPick, small) {
+      var row = U.el('div.swatch-row' + (small ? '.small' : ''));
+      list.forEach(function (c) {
+        var sw = U.el('button.swatch' + (cur === c ? '.on' : ''), { type: 'button', style: 'background:' + c });
+        U.tap(sw, function () { onPick(c); RA.Sfx.play('tap'); redraw(); drawTab(); });
+        row.appendChild(sw);
+      });
+      colors.appendChild(row);
+    }
+
+    /* a big, easy slider (-50..50 or 85..120) */
+    function slider(label, icon, min, max, val, onMove) {
+      var row = U.el('div.dress-slider');
+      row.appendChild(U.el('span.slider-label', { text: label }));
+      var input = U.el('input.slider', { type: 'range', min: String(min), max: String(max), step: '1', value: String(val) });
+      function move() { onMove(parseInt(input.value, 10)); redraw(); }
+      input.addEventListener('input', move);
+      input.addEventListener('change', function () { move(); RA.Sfx.play('tap'); });
+      row.appendChild(input);
+      return row;
+    }
+
+    function shadeOf(key) { return Math.round((look[key + 'Tint'] || 0) * 100); }
+    function setShade(key, v) {
+      look[key + 'Tint'] = v / 100;
+      look[key] = RA.Avatar.tint(look[key + 'Base'] || look[key], look[key + 'Tint']);
+    }
+    function pickBase(key, hex) {
+      look[key + 'Base'] = hex;
+      look[key] = look[key + 'Tint'] ? RA.Avatar.tint(hex, look[key + 'Tint']) : hex;
     }
 
     function drawTab() {
+      alive++;
       U.clear(tabs); U.clear(opts); U.clear(colors);
+      U[tab.id === 'body' ? 'addClass' : 'removeClass'](opts, 'sliders');
       TABS.forEach(function (t) {
         var b = U.el('button.dress-tab' + (t === tab ? '.on' : ''), { type: 'button', text: t.label });
         U.tap(b, function () { tab = t; RA.Sfx.play('tap'); drawTab(); });
         tabs.appendChild(b);
       });
-      if (tab.slot) {
-        var parts = unlockedParts(p, tab.slot);
-        if (tab.slot === 'acc') { parts = ['none'].concat(parts); }
-        parts.forEach(function (part) {
-          var test = U.clone(look);
-          test[tab.key] = part;
-          var b = U.el('button.dress-opt' + (look[tab.key] === part ? '.on' : ''), { type: 'button' });
-          if (part === 'none') { b.appendChild(U.el('span.none-x', { text: '–' })); }
-          else { b.appendChild(UI.avatar(test, 'thumb thumb-' + tab.slot)); }
-          U.tap(b, function () { look[tab.key] = part; RA.Sfx.play('pop'); redraw(); drawTab(); });
-          opts.appendChild(b);
-        });
-        // more styles are in the shop (bought with flames)
-        if (p.look && lockedCount(p, tab.slot)) {
-          var more = U.el('button.locked-note', { type: 'button', 'aria-label': 'Shop' });
-          more.appendChild(UI.icon('ui-shop'));
-          more.appendChild(UI.flame(false, 'tiny'));
-          U.tap(more, function () { RA.Sfx.play('tap'); UI.go('shop', tab.slot === 'hair' ? 'hair' : 'clothes'); });
-          opts.appendChild(more);
-        }
+
+      if (tab.id === 'body') {
+        opts.appendChild(slider('Tall', 'height', 85, 120, Math.round(look.height * 100), function (v) { look.height = v / 100; }));
+        opts.appendChild(slider('Wide', 'width', 85, 120, Math.round(look.width * 100), function (v) { look.width = v / 100; }));
+        opts.appendChild(slider('Skin shade', 'shade', -40, 40, shadeOf('skin'), function (v) { setShade('skin', v); }));
+        swatchRow(palette('skin'), look.skinBase || look.skin, function (c) { pickBase('skin', c); });
+        return;
       }
-      palette(tab.palette).forEach(function (c) {
-        var sw = U.el('button.swatch' + (look[tab.color] === c ? '.on' : ''), { type: 'button', style: 'background:' + c });
-        U.tap(sw, function () { look[tab.color] = c; if (tab.id === 'top' && look.top2 === c) { look.top2 = '#FFFDF7'; } RA.Sfx.play('tap'); redraw(); drawTab(); });
-        colors.appendChild(sw);
+
+      if (tab.id === 'face') {
+        var sub = U.el('div.dress-sub');
+        FACE_PARTS.forEach(function (fp) {
+          var c = U.el('button.sub-chip' + (fp === facePart ? '.on' : ''), { type: 'button', text: fp.label });
+          U.tap(c, function () { facePart = fp; RA.Sfx.play('tap'); drawTab(); });
+          sub.appendChild(c);
+        });
+        opts.appendChild(sub);
+        var list = facePart.id === 'expr' ? MOODS : kitList(facePart.id);
+        optionGrid(list, function (v) { var t = U.clone(look); t[facePart.id] = v; return t; },
+          function (v) { return look[facePart.id] === v; }, function (v) { look[facePart.id] = v; }, 'head', 'face-opt');
+        if (facePart.id === 'eyes') { swatchRow(eyeColors(p), look.eye, function (c) { look.eye = c; }); }
+        return;
+      }
+
+      var parts = unlockedParts(p, tab.slot);
+      if (tab.slot === 'acc') { parts = ['none'].concat(parts); }
+      optionGrid(parts, function (v) { var t = U.clone(look); t[tab.key] = v; return t; },
+        function (v) { return look[tab.key] === v; }, function (v) { look[tab.key] = v; }, tab.crop);
+      // more styles are in the shop (bought with flames)
+      if (p.look && lockedCount(p, tab.slot)) {
+        var more = U.el('button.locked-note', { type: 'button', 'aria-label': 'Shop' });
+        more.appendChild(UI.icon('ui-shop'));
+        more.appendChild(UI.flame(false, 'tiny'));
+        U.tap(more, function () { RA.Sfx.play('tap'); UI.go('shop', tab.slot === 'hair' ? 'hair' : 'clothes'); });
+        opts.appendChild(more);
+      }
+      if (tab.id === 'hair') {
+        swatchRow(palette('hair'), look.hairBase || look.hair, function (c) { pickBase('hair', c); });
+        colors.appendChild(slider('Shade', 'shade', -40, 40, shadeOf('hair'), function (v) { setShade('hair', v); }));
+        return;
+      }
+      swatchRow(palette('clothes'), look[tab.color], function (c) {
+        look[tab.color] = c;
+        if (tab.color2 && look[tab.color2] === c) { look[tab.color2] = c === '#FFFDF7' ? '#3B2F45' : '#FFFDF7'; }
       });
+      if (tab.color2) { swatchRow(palette('clothes'), look[tab.color2], function (c) { look[tab.color2] = c; }, true); }
     }
 
     side.appendChild(tabs);
@@ -216,17 +312,19 @@
       onDone();
     }, 'done-btn');
     root.appendChild(ok);
-    redraw();
+    redraw(true);
     drawTab();
     U.later(function () { RA.Audio.line('pick-look'); }, 300);
   }
 
   function randomStart(p) {
     var look = U.clone(RA.Avatar.DEFAULT);
-    look.skin = U.pick(DEFAULT_PALETTES.skin);
-    look.hair = U.pick(DEFAULT_PALETTES.hair.slice(0, 8));
+    look.skinBase = look.skin = U.pick(DEFAULT_PALETTES.skin);
+    look.hairBase = look.hair = U.pick(DEFAULT_PALETTES.hair.slice(0, 6));
+    look.eye = U.pick(DEFAULT_PALETTES.eye);
     var hs = unlockedParts(p, 'hair');
-    if (hs.length) { look.hairStyle = U.pick(hs); }
+    if (hs.length) { look.hairStyle = U.pick(hs.slice(0, 15)); }
+    look.eyes = U.pick(['e9', 'e9', 'e4', 'a1', 'a2', 'e11']);
     look.topColor = U.pick(DEFAULT_PALETTES.clothes.slice(0, 13));
     look.botColor = U.pick(['#2F4C9C', '#3B2F45', '#8E6CEF', '#2E9E63', '#E5484D']);
     return look;

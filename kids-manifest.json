@@ -1,5 +1,5 @@
 {
-"version": "cl-v51",
+"version": "cl-v52",
 "files": {
 "adventure.js": {
 "size": 42222,
@@ -83,8 +83,8 @@
 "sha256": "92f85d49af5b3acda21605aa5863beffdb7a7d2ebec0851b542e6f0fab6a4215"
 },
 "littown/art/characters.js": {
-"size": 12728,
-"sha256": "aa9ad7058cb0685a686d756d2b38010d22568b18fe07df4097c18939af79aed0"
+"size": 2936,
+"sha256": "85dd28f4f96afcdee927f8855ecfb5d92f63680b5a536bb2821e87e6158f356b"
 },
 "littown/art/home-bath.js": {
 "size": 18633,
@@ -138,9 +138,2829 @@
 "size": 15164,
 "sha256": "2170a9af5675cef58d4adc8eb8e40b89afce5140c3091ff3ef6105a3fdf1a210"
 },
+"littown/audio/i/blend.mp3": {
+"size": 24469,
+"sha256": "a93d9ca3e522ba0403ce6e062633230a45fcba89e665f1048bd8557483d5a59b"
+},
+"littown/audio/i/bought.mp3": {
+"size": 7124,
+"sha256": "a3e039d9ab8d84f0865f33586bbc05a23fac0722946d1939cd91e872c1a453af"
+},
+"littown/audio/i/build-it.mp3": {
+"size": 17155,
+"sha256": "409c4b8deaf0c11b9ca3ad094b2fbca4bccf44cac9bb777df791546af848d914"
+},
+"littown/audio/i/buy-it.mp3": {
+"size": 7333,
+"sha256": "fc5177ba771e1c39eabfb1684801813451cc21eb931e057a31b6fde75c0a6ce4"
+},
+"littown/audio/i/c-capitals.mp3": {
+"size": 44531,
+"sha256": "47c5980235defa302e6ded4f3b65529fd51621812f05e29eabf47f45ccedbb3a"
+},
+"littown/audio/i/clue-game.mp3": {
+"size": 23006,
+"sha256": "e519d277dab9a5acdb0495d82d2b6ba5b735f2d69475f6c3f398404d328386b7"
+},
+"littown/audio/i/color-free.mp3": {
+"size": 11303,
+"sha256": "a0106530272adba3fb3cb11c13917f1c55678e73158c7af184797a85408dfd0c"
+},
+"littown/audio/i/coming-soon.mp3": {
+"size": 20081,
+"sha256": "e55a45a37c2bf6807e7865e13025304f83249a55d9e5ba0eed042ab7f902ff6a"
+},
+"littown/audio/i/decorate.mp3": {
+"size": 22170,
+"sha256": "16d6e41be3f9b8fe74ebd447eec3ba85d8d8ede3d86f0d295431af848915c6f5"
+},
+"littown/audio/i/desk-cleared.mp3": {
+"size": 21752,
+"sha256": "b063e26f97d5ca32e7596b1e5e0c5210246147613188426507b1c6cdf42d38da"
+},
+"littown/audio/i/desk-free.mp3": {
+"size": 10468,
+"sha256": "0b079a9b84c3810a04f178213dd88e17898f3ac95a4586df5d7515f1cad02037"
+},
+"littown/audio/i/desk-hello.mp3": {
+"size": 20708,
+"sha256": "b8d78408e2a9befcdda2d14903e09de133b7a9d291b04ce00785baa063958709"
+},
+"littown/audio/i/desk-name.mp3": {
+"size": 7333,
+"sha256": "fe7049c079338c023d0b6c1c1fd068ec399958c39c857de9547c79e5e37305d3"
+},
+"littown/audio/i/desk-no-name.mp3": {
+"size": 17573,
+"sha256": "6ec508fe66f7e500b12247a62d6ab9c3a38ec83fdc26502a04d98859392be859"
+},
+"littown/audio/i/desk-pile.mp3": {
+"size": 11303,
+"sha256": "56c66165caa78aa0951970216d5fe71466f2127e835a090a3ada014fa4c6d0d4"
+},
+"littown/audio/i/door-open.mp3": {
+"size": 18618,
+"sha256": "94ffd939b32732fb63afc7dbe8c018cb8009b8bfd05be4649917a11e945e5436"
+},
+"littown/audio/i/find-in-text.mp3": {
+"size": 16737,
+"sha256": "65d7477786ed67f23deb2e8deba3794632c5feabbd4e53c01249c4e7d07068cb"
+},
+"littown/audio/i/find-sound.mp3": {
+"size": 14647,
+"sha256": "6eb2ffef730d42bb86367e142ec59cc5a16e2322aaab8c76c1159e9444be6cc4"
+},
+"littown/audio/i/find-word.mp3": {
+"size": 9632,
+"sha256": "f646669b72ffa73b5402d534b741fbe19e4764c6ee9b4063032abbe8699c1876"
+},
+"littown/audio/i/finish-it.mp3": {
+"size": 18618,
+"sha256": "e239365ee33a35293916f8b4643994cecb5e002e45489b937ac86ab654744bb1"
+},
+"littown/audio/i/fixed.mp3": {
+"size": 12975,
+"sha256": "14264c4d6653581912f6f4ed73346c12fa0e37b38a337d79dc8f6330bac2b8c0"
+},
+"littown/audio/i/flames-earned.mp3": {
+"size": 10259,
+"sha256": "58f5cee78c42749ba0358c0f29abaecd5b3179d3a8371397e7070198c2a93a7b"
+},
+"littown/audio/i/follow-it.mp3": {
+"size": 8587,
+"sha256": "8a8a087ec21be3ae75a76c290794e886d43241900f259baac8b49b5c5509f8aa"
+},
+"littown/audio/i/go-play.mp3": {
+"size": 6706,
+"sha256": "1768f60672feb4225059667a78d30eece64306bb31a4d110518f3d162b05404e"
+},
+"littown/audio/i/great-1.mp3": {
+"size": 6706,
+"sha256": "1124c5d947b70f05febf831a9c2f6d024467b636ce16afb506a3ca0df573ae2a"
+},
+"littown/audio/i/great-2.mp3": {
+"size": 5034,
+"sha256": "dbd4751fdd1b0adddc923c88b445e5a9c0c15977f98a8bce0b15f465ff3a4261"
+},
+"littown/audio/i/great-3.mp3": {
+"size": 7333,
+"sha256": "5d7d4ef820a92d709920543da7fe96713e591835b16a19587f1d8805fcf7dd4e"
+},
+"littown/audio/i/great-4.mp3": {
+"size": 10885,
+"sha256": "f72cd9b6f567a5466a916c8351f91c60919fe3a2d9927077bfa28096e0350ca7"
+},
+"littown/audio/i/great-5.mp3": {
+"size": 5661,
+"sha256": "5ffa81487902cae97e0501275a2bd87591a4cd422b514b82d4f6c2d6cb58a176"
+},
+"littown/audio/i/great-6.mp3": {
+"size": 6915,
+"sha256": "34df437941eb0aa4eb365310b48f96fc02098e0a6fbb00d94d94e4515edcb81a"
+},
+"littown/audio/i/grownup-check.mp3": {
+"size": 10259,
+"sha256": "91ef79b1b6d1172dda7da19c57673f29c82dc0953cacac6712a3fa760d3a7206"
+},
+"littown/audio/i/hello.mp3": {
+"size": 19454,
+"sha256": "327830befbb6e8e72a1f32f499d0852eb2de0b1e24cd4d5aa1ebbcb07a50a4d1"
+},
+"littown/audio/i/keep-fixing.mp3": {
+"size": 17573,
+"sha256": "60de8025ccbb260cd5aa37594299d0c55ae8be56e46d9f9b66ecb15cdb58e227"
+},
+"littown/audio/i/keep-reading.mp3": {
+"size": 17573,
+"sha256": "1a195f10f76121ac52475cbc4ebf610e99dd664da341cf8dc2dce15de1b6fd66"
+},
+"littown/audio/i/lesson-pass.mp3": {
+"size": 13184,
+"sha256": "b600ff723a46693911327cdea3a339abbf7921efafa0dcae5184e0d73c0edce2"
+},
+"littown/audio/i/lesson-practice.mp3": {
+"size": 37844,
+"sha256": "dd40cd8dead24aaf0b7e132ce20f02d2cd87abe3f90e921731244f9a6da25da6"
+},
+"littown/audio/i/lesson-start.mp3": {
+"size": 6915,
+"sha256": "1966cd7a03feee009e19888eeb61cef5693d217b28f74a6c10ba7a77fcfdf5b6"
+},
+"littown/audio/i/lit-up.mp3": {
+"size": 6915,
+"sha256": "8041ee402741534e6821ae8cad4afdbe333b4e3e12c15f6b2e493f91cab0efdf"
+},
+"littown/audio/i/make-character.mp3": {
+"size": 10676,
+"sha256": "0aa6e6f07dbdbdf34dc9c8fd4b8f1364db37d4424539717af1da07a296f0c3c3"
+},
+"littown/audio/i/make-sense.mp3": {
+"size": 16319,
+"sha256": "2fe26674d3c1a37eaf5549cffb51aa4396e5b7677f1588ccd4f3d035fca5e75c"
+},
+"littown/audio/i/match-case.mp3": {
+"size": 19663,
+"sha256": "886ef409ace4ec9db5228b482b261ff78117d1bf7bae01505ebf6659e4eded39"
+},
+"littown/audio/i/match-pic.mp3": {
+"size": 14229,
+"sha256": "6f45dd10c2a01c45cee7fcbc90dfc81c3b7950071a2aee80aa9841fb6a7e418e"
+},
+"littown/audio/i/need-more.mp3": {
+"size": 25723,
+"sha256": "1f77e950a8a475b6874bc001ecc1be0cc25d54ac764f322840fd0f3562e8db60"
+},
+"littown/audio/i/new-concept.mp3": {
+"size": 8796,
+"sha256": "cf0af6e96d9636c6f65ec7d2b311848e0cfb5a1a259034086685bd55aeb05323"
+},
+"littown/audio/i/new-in-shop.mp3": {
+"size": 18827,
+"sha256": "c309416521c98b7e021e41a7f5ea63b7b296a2f4226ac1627793175192a9fd6f"
+},
+"littown/audio/i/new-place.mp3": {
+"size": 11094,
+"sha256": "374eab51f594db94fc1a2e1380fdf81cb291200463aae0282be77d34b5208378"
+},
+"littown/audio/i/new-sight.mp3": {
+"size": 14647,
+"sha256": "ada336f947f8f9a2818864244542e10530e7f670652adb69317c876c84da776e"
+},
+"littown/audio/i/new-sound.mp3": {
+"size": 14438,
+"sha256": "d65c22213e71bb599691a701d59e3925f13b332128ab7dc0c42fc6de84a5706f"
+},
+"littown/audio/i/new-to-pick.mp3": {
+"size": 21961,
+"sha256": "77c2bdd7156ea8a00bd18819eae911e5997184bddb672f6069a0559deb006b0a"
+},
+"littown/audio/i/new-tricky.mp3": {
+"size": 16946,
+"sha256": "3bd4f1ccad86bf2d0b3622557137cef624883d3aa8a074f45a2050b16b49d826"
+},
+"littown/audio/i/perfect.mp3": {
+"size": 21125,
+"sha256": "f31bf93bb23c3233deee7435fb35d97c9122b5105907ff892c4717dd0dfdb92b"
+},
+"littown/audio/i/pic-check.mp3": {
+"size": 17573,
+"sha256": "07b73071230e48aaf7abfa1af0a2a524073771e8be15ff06e37c3cb3b5ed2915"
+},
+"littown/audio/i/pick-color.mp3": {
+"size": 9005,
+"sha256": "83922cd8900c7310e33fba86701660ae8f095beac3e2496bbe056cfeab98f80f"
+},
+"littown/audio/i/pick-look.mp3": {
+"size": 6288,
+"sha256": "a8cbe470f3e075cf9a0be4a2c4c4cca2251b9f44daea564e891a57d78963bb0a"
+},
+"littown/audio/i/pick-one.mp3": {
+"size": 9423,
+"sha256": "447fca122fa7cac7710694465b942717955e7f67243936e583a75fbce66b85c6"
+},
+"littown/audio/i/pick-start.mp3": {
+"size": 20290,
+"sha256": "2974df4f1a46d7453e13fd470231b302ebe72b98635183dc135ac5a35e538b4f"
+},
+"littown/audio/i/placement-done.mp3": {
+"size": 19663,
+"sha256": "e31420033fc15b5e631e94818b3ee2470deb4e38af6c1f2bada541eb87e45a24"
+},
+"littown/audio/i/placement-hello.mp3": {
+"size": 39516,
+"sha256": "2984d21d117178b0ae95f6cb0bcbff781624b25e9072f0a372bc516d16675b91"
+},
+"littown/audio/i/read-it.mp3": {
+"size": 15483,
+"sha256": "5b276971d6ca629992f056dfc2528b5428775f3a1987e716ac77b6516efe2945"
+},
+"littown/audio/i/shop-hello.mp3": {
+"size": 17155,
+"sha256": "21fd02de6042428a0e8102e838076c8afe9a9a3629063377cda4b6f050d5e0d7"
+},
+"littown/audio/i/show-answer.mp3": {
+"size": 14020,
+"sha256": "230b68302449fdd377049b6bafa94ef606156a7f5dd65c9833a1d71061b76d8c"
+},
+"littown/audio/i/slow-down.mp3": {
+"size": 18409,
+"sha256": "6edc9953a5712bd216f939faf3ee292a658fad9b58a2fb2c4a6350602e474b3e"
+},
+"littown/audio/i/sort-it.mp3": {
+"size": 18200,
+"sha256": "f15b1e83dffd7b087646138bb38fea71901813da9bfd1973097a5d2535b84cab"
+},
+"littown/audio/i/step-back.mp3": {
+"size": 14856,
+"sha256": "7af1cfcf46a166a03d68da19922b02d6983f55761d6fbe79822d0568dfdf616f"
+},
+"littown/audio/i/story-question.mp3": {
+"size": 17782,
+"sha256": "42a6f79cd84c0283a9b6d1ace5bf3148eb26ae5fa7c2671de35eebb5c974c03a"
+},
+"littown/audio/i/story-time.mp3": {
+"size": 18618,
+"sha256": "6c2fe309c4468f66692dbe7ba21e3702d6450844f6088f5967cedb3766ae35a3"
+},
+"littown/audio/i/stuck-teach.mp3": {
+"size": 10676,
+"sha256": "15cc48c3ea5915601858f07cf524705a4eb08a170f4bdea1019c711b60f467b1"
+},
+"littown/audio/i/stuck.mp3": {
+"size": 23633,
+"sha256": "55e143677fa8ec5f2231afc612578df8d5f8ee1e8b98f7c337f4f74fbd08b3b8"
+},
+"littown/audio/i/tap-and-say.mp3": {
+"size": 11094,
+"sha256": "bc22d9261b84720152bf39ca3d2d2dceab881a5c459f8be63dd09d596b195812"
+},
+"littown/audio/i/thanks.mp3": {
+"size": 5661,
+"sha256": "b837629c7eea8b37e92fad565ca5dde28bb7d70a2f2894dacd4a8268c6c47d43"
+},
+"littown/audio/i/town-lit.mp3": {
+"size": 16946,
+"sha256": "7db1c344acde0b9833d0d1336c6633d74b96866e3546704bea69d735039e539f"
+},
+"littown/audio/i/trace-again.mp3": {
+"size": 9005,
+"sha256": "f0520ec90189397a85893ec05c361c825d0d8babaf76c85561692d4c9033841f"
+},
+"littown/audio/i/trace-beside.mp3": {
+"size": 11512,
+"sha256": "8eadbccd2ad7e999fc0bf4fe92ccbf96080b090bde6bf2edcd9f440b323f8c79"
+},
+"littown/audio/i/trace-dotted.mp3": {
+"size": 19036,
+"sha256": "1b8652bbe8aea45d3024c7ba47c4aa291fd5e8a701455bdd8953b302d7a5a4dd"
+},
+"littown/audio/i/trace-flip.mp3": {
+"size": 34500,
+"sha256": "11c775020f14d84e3daac5cfbd69f12f213a773c1e075b9abbccaac1310e575c"
+},
+"littown/audio/i/trace-free.mp3": {
+"size": 11721,
+"sha256": "52478084f3b6168498d55e51441026e5d3eb35f279b4e6a7454086042eabcf6e"
+},
+"littown/audio/i/trace-watch.mp3": {
+"size": 21961,
+"sha256": "cf85c190f486ca4c48ccbd7faf757326df75c88db1e39de851f6515a29bda9fd"
+},
+"littown/audio/i/trace-word.mp3": {
+"size": 18827,
+"sha256": "aadab817e23bd343b5b654abbf25399e0a633a97d2ec2f2d4c2df2e9135fae24"
+},
+"littown/audio/i/tricky-shelf-empty.mp3": {
+"size": 28022,
+"sha256": "09dc8e7ead8e245b3930731b8c7faae7b61769492eb4870e7ae14b10ae485ba4"
+},
+"littown/audio/i/tricky-shelf.mp3": {
+"size": 16110,
+"sha256": "3b168e6e8a7fc118f78480e473538203cee3e5ad6fa5ecea812d381376dc452e"
+},
+"littown/audio/i/try-again.mp3": {
+"size": 11094,
+"sha256": "475a83b7283bf9ae9c892da0df3e7702a57a9734f34e084a6c1d54ce6e108256"
+},
+"littown/audio/i/warmup.mp3": {
+"size": 7751,
+"sha256": "1d94451e23068a5d51d71811d9be2e3dc005e7bfb35ad95b1851d9dd341122a7"
+},
+"littown/audio/i/where-to.mp3": {
+"size": 8796,
+"sha256": "997183899932424e105dd026c97f60770070359b9e5ea09c2d7a000da712e4ff"
+},
+"littown/audio/i/write-time.mp3": {
+"size": 9214,
+"sha256": "5ef20b97017d575ca24079e7a6964a66473da99c8bfdd6803bed46e5a3814988"
+},
+"littown/audio/i/yes-or-no.mp3": {
+"size": 13602,
+"sha256": "b8356527f2dd02d5c590a26c2a282539898bbb36494dc6e3aeb27582dde7a612"
+},
 "littown/audio/manifest.json": {
-"size": 25,
-"sha256": "3b2ee661f11643a02e21cc62482cd127df55c4c91ec0aa821a5f987094e9bfb9"
+"size": 15058,
+"sha256": "05026d1c7577a3af69be30ef5a0126e5969a5e92642b5ea094b2b4764e198258"
+},
+"littown/audio/ph/a.mp3": {
+"size": 4616,
+"sha256": "4ebb17a94b2d8fad6c29ae0b28c30854526a57bc6cda86057fec687056dee5a9"
+},
+"littown/audio/ph/air.mp3": {
+"size": 4616,
+"sha256": "5d0d1f9fcd2518a13f11b6b5617c190f3998bfbcabbf76bfcc2f58d96468f47b"
+},
+"littown/audio/ph/ar.mp3": {
+"size": 4198,
+"sha256": "5025d2dbbaeb33adc995923cb9eeea43b5183d87de3193b6ec42d7731c10034b"
+},
+"littown/audio/ph/aw.mp3": {
+"size": 5034,
+"sha256": "51f98d940babdf78f8cd8165abb745c060acade707f3cefb1219bb3027df5f34"
+},
+"littown/audio/ph/ay.mp3": {
+"size": 4407,
+"sha256": "2b15dcf92ba7e0336e8c434ee2e0427c917762735ff440e39f19aab8b72aef52"
+},
+"littown/audio/ph/b.mp3": {
+"size": 1690,
+"sha256": "87b84d183aa6c4ab431a1bdb9dd86989dcce3327cad29712639dd69419027567"
+},
+"littown/audio/ph/ch.mp3": {
+"size": 2317,
+"sha256": "d7da6d8258f7e95bc9c2324197ad69f20e13da7fd6b9c1d8b63192ecaec04d2c"
+},
+"littown/audio/ph/d.mp3": {
+"size": 1690,
+"sha256": "eb0e1c469c6514ce5c542914b58f47fece9282d40c66c843c1c82d2fbdca3da1"
+},
+"littown/audio/ph/dh.mp3": {
+"size": 4616,
+"sha256": "10b087b2899ed87aa37773fcf60f19347b6014e58efd0d074dfd547c3ecde0bc"
+},
+"littown/audio/ph/e.mp3": {
+"size": 3989,
+"sha256": "8870cf5c4dea82d4f94c47e13e012f30e99f6c761a4a8fb313862bf5adde3821"
+},
+"littown/audio/ph/ear.mp3": {
+"size": 4407,
+"sha256": "3067e8011fb1fb6fca869e0e100c8e4785814941551ec85cfa269642196e95f7"
+},
+"littown/audio/ph/ee.mp3": {
+"size": 4198,
+"sha256": "f64a5adb15263f834390cb1eaf379205cf8e23f5732df4e4d15c1f1f510aa0de"
+},
+"littown/audio/ph/er.mp3": {
+"size": 3989,
+"sha256": "5f946654a9b12eca5cf36636f426727922e553660f67fd1b96a3038bd4e0bbe4"
+},
+"littown/audio/ph/f.mp3": {
+"size": 6288,
+"sha256": "8b33391960903d32e72121ca3579d58eca049687c235b32e2f677caedf607a5f"
+},
+"littown/audio/ph/g.mp3": {
+"size": 1690,
+"sha256": "87490a354e063e78d2551cdb1ba651606aca5a8c6cf739b92fb6e1e3fda0dcd4"
+},
+"littown/audio/ph/h.mp3": {
+"size": 6079,
+"sha256": "38c599ca56f8c9558a69b2a3d0b8f4da633f76cbb69aec51966fad152e848e14"
+},
+"littown/audio/ph/i.mp3": {
+"size": 3780,
+"sha256": "c357c8f6c2950272ed082de7c801abdeaf150eeddada9fa9e58f4bae6bc11014"
+},
+"littown/audio/ph/igh.mp3": {
+"size": 4198,
+"sha256": "1fbe07c346b0488407674a3606660572e63679fa0230a8577349059bdc0b401a"
+},
+"littown/audio/ph/j.mp3": {
+"size": 2317,
+"sha256": "ef90991736ea0831763d43908c82bd818b35491182f333b57515d43ae30d2d46"
+},
+"littown/audio/ph/k.mp3": {
+"size": 1690,
+"sha256": "7a2c70b0b9c989b0e4a4fcff70553c14c1bc6343d06c82139e6ddf30b7976395"
+},
+"littown/audio/ph/ks.mp3": {
+"size": 3989,
+"sha256": "a2cca7c534795687e06b098e949b098359cac6ae8b31cfbdf33804cf5ac9e026"
+},
+"littown/audio/ph/kw.mp3": {
+"size": 3153,
+"sha256": "1442608e3f01e4fa56cd0bcad77dd0a55d9fabe5b63c4830d7e3a5860eec3d45"
+},
+"littown/audio/ph/l.mp3": {
+"size": 6079,
+"sha256": "6236160df55cc0300186cb12cafa1473dc376e46f8ee833c6996a290463594b2"
+},
+"littown/audio/ph/m.mp3": {
+"size": 6706,
+"sha256": "19f0eba115dca97b5a0613e9977f3c48b9d5d717cfc022e9a05f5efc007021f1"
+},
+"littown/audio/ph/n.mp3": {
+"size": 9423,
+"sha256": "c30d7d5eacd55c7237503a86d282d834786ff581084a02afeefccf93a11d7b3b"
+},
+"littown/audio/ph/ng.mp3": {
+"size": 4825,
+"sha256": "e687adbf211108a5dca03ce2c2c6213edc92d4df9be21deb27d244239443614b"
+},
+"littown/audio/ph/nk.mp3": {
+"size": 6706,
+"sha256": "d86f0c1a174c533b9e8703d1f4e0a3cfbde0445ef79fb81ba0d314275dd66fbd"
+},
+"littown/audio/ph/o.mp3": {
+"size": 3989,
+"sha256": "49936eaa455f17afca4e16b10e212773cdf56172bc4595c46ffac53ba0d730ea"
+},
+"littown/audio/ph/oa.mp3": {
+"size": 4616,
+"sha256": "62aeeb76e5fc6e4849929ef3450e5da3f20e6d7f0827a74cb9c7adc7b62653f2"
+},
+"littown/audio/ph/oo.mp3": {
+"size": 4407,
+"sha256": "d35cc23f36977a161f81180e1eefe4c1823cfeac9e447a7487a3396c0e758330"
+},
+"littown/audio/ph/or.mp3": {
+"size": 4198,
+"sha256": "3b6aff615552848a86c0158f5237e1f13dc564b8dc6151792f8b7ad59dc2df03"
+},
+"littown/audio/ph/ow.mp3": {
+"size": 4616,
+"sha256": "050639e556782069071b4c2d080499a0a0865b334cb9fe55145fd8df5298611e"
+},
+"littown/audio/ph/oy.mp3": {
+"size": 3989,
+"sha256": "91e5f0e42b39c12acc11729b577ed89a295f042ecea656bf63400ccdd610fe1a"
+},
+"littown/audio/ph/p.mp3": {
+"size": 1690,
+"sha256": "0e668b666abb53e845458a6060c4c24a56a269f00126cc4a2f5e3378a637121c"
+},
+"littown/audio/ph/r.mp3": {
+"size": 3989,
+"sha256": "a2344e9ddc9c27d25698d1f3a2c3e672e4dbf72f0b09d50ab5582e8a425b74d2"
+},
+"littown/audio/ph/s.mp3": {
+"size": 7124,
+"sha256": "664ba504ef3d68b25fd9710859442d4833a7576789e8b05ceb581368a69c4462"
+},
+"littown/audio/ph/schwa.mp3": {
+"size": 3571,
+"sha256": "c1ab661840252fc44b613612f190bbff9dad904b251b10127dd9db85d6ba6264"
+},
+"littown/audio/ph/sh.mp3": {
+"size": 6915,
+"sha256": "07f6a927aec2714a60946d3b55b07bc6763ebd5473921dfba6da57e8323e2b7a"
+},
+"littown/audio/ph/shun.mp3": {
+"size": 5452,
+"sha256": "b06006a59f74c72bd13d9c2a275ed76289d0baec2b39af0d9ede67ef6ff4ce04"
+},
+"littown/audio/ph/t.mp3": {
+"size": 1690,
+"sha256": "c1e2ebd955100e74d5bd35be2f61e7a3de2321406f7614b9bc0dda131f86fa5d"
+},
+"littown/audio/ph/th.mp3": {
+"size": 4198,
+"sha256": "81178bf46a145cacbd54fd560edd0f724ed161133a57bb23583a74cb0b51f398"
+},
+"littown/audio/ph/u.mp3": {
+"size": 3571,
+"sha256": "2c5b843ed91f1a3936b7c8ec1a679f303856d211e671999f9430d0fd804fab77"
+},
+"littown/audio/ph/uu.mp3": {
+"size": 3780,
+"sha256": "d4216e9e1113e3ff8a8ada275047883d2e1ac30a12eec8769a58dc62810d3b58"
+},
+"littown/audio/ph/v.mp3": {
+"size": 2317,
+"sha256": "0ac0e1c4eeefd91e62863bed6d261b549849f303adf15f897961ddd3afd00b4d"
+},
+"littown/audio/ph/w.mp3": {
+"size": 5870,
+"sha256": "aa97d5626dcf2164f6835639ab97c474a2757a258b4df2dd212ee83abbb903b4"
+},
+"littown/audio/ph/y.mp3": {
+"size": 6079,
+"sha256": "aca6d71c674dea5c053aeec45f9717bfbc47fd4a71c36cff37c61c3da8a86ce5"
+},
+"littown/audio/ph/yoo.mp3": {
+"size": 4616,
+"sha256": "66e89c776f6de51ac97cc42c452d27c290eeffc84ae68759a7533a5ea214712b"
+},
+"littown/audio/ph/z.mp3": {
+"size": 2317,
+"sha256": "184a2b5f5dbc39c9f9b5684a9ed91459926cd8f1f9ecd8a39a92272f3a814f30"
+},
+"littown/audio/ph/zh.mp3": {
+"size": 4407,
+"sha256": "13319eacf5d531f8c4f729bb09cc658afb38160aaf02467a7dfb8bba0255ded7"
+},
+"littown/audio/s/a-cat-is-in-the-camp-8o0nh0.mp3": {
+"size": 12348,
+"sha256": "55085109aba42acb556bc0234ce1f47c50a6d818607be7ae8fe8c34b99240583"
+},
+"littown/audio/s/a-cup-of-nuts-is-a-mtw6a0.mp3": {
+"size": 14856,
+"sha256": "dddf967f9ffcb00150da4f68cf6e48bb0b2d75404afe5b0095503b54e1cc1a56"
+},
+"littown/audio/s/a-dog-can-dig-6y1784.mp3": {
+"size": 10468,
+"sha256": "6d8154822de9edbb1b3e7e519ca2eaeb0b1600294159b50bfb46c4bf3140b963"
+},
+"littown/audio/s/a-duck-is-on-the-dock-v1m4vd.mp3": {
+"size": 12766,
+"sha256": "4a359d143fc361f09a0b105bfb383067fc2851c0e289636f90d9850f3d79a893"
+},
+"littown/audio/s/a-mat-45472g.mp3": {
+"size": 6079,
+"sha256": "b525713b52e9a8615c5c2af70f24a6ee775132cb1681029014c0cbd81a784c55"
+},
+"littown/audio/s/a-mitt-is-a-mat-728vg1.mp3": {
+"size": 11303,
+"sha256": "e64f5c36a18e22c28219c1e35be28f83540558cb85dc186d8b7b50ab5956e61c"
+},
+"littown/audio/s/a-pet-is-in-the-tent-msg4n3.mp3": {
+"size": 12139,
+"sha256": "645478484e47ae488e9a1fb6e4fd44001887763a1613552f3b28f40e5c5c78da"
+},
+"littown/audio/s/a-pig-and-a-dog-dig-552ej8.mp3": {
+"size": 17573,
+"sha256": "f0a21c691f7e1f28a0c184fe4308605ea19a2b353a25428e5fd9964fb87d8497"
+},
+"littown/audio/s/a-pot-a-pan-and-a-s7m96a.mp3": {
+"size": 15065,
+"sha256": "4fce30c2e594b965ad27eb5c91dea591328fa01904e0c5a67289b265218930f5"
+},
+"littown/audio/s/a-pot-sits-on-the-mat-5fs3my.mp3": {
+"size": 12766,
+"sha256": "5ac22b032a14053c8d967e214ae06c74f526db02c791f0e3c48d233c002db435"
+},
+"littown/audio/s/a-rat-ran-on-the-rug-j53pt4.mp3": {
+"size": 11094,
+"sha256": "9d7ce5d7dd10125df9226e3a1e5517f63c95041922d5ec744730bbf2b0415ecd"
+},
+"littown/audio/s/an-ant-is-on-the-mat-836a9g.mp3": {
+"size": 12557,
+"sha256": "e1a84009ac64c063b3c74756d226db9f99c5a9e1235cd9a2d14cca9e238a4597"
+},
+"littown/audio/s/an-ant-on-the-mat-ptnnp3.mp3": {
+"size": 11094,
+"sha256": "77e3eee0d10478cb3eadeb83fe36b0208b1708fd7fa0158724e323b3ff441236"
+},
+"littown/audio/s/and-pip-pip-can-nap-fusrej.mp3": {
+"size": 15692,
+"sha256": "460b8f6b39f1723e8b87caa4205cdb013077356813fda8f2189e6352442b4027"
+},
+"littown/audio/s/and-the-ant-is-on-the-hqykui.mp3": {
+"size": 14438,
+"sha256": "4932e6382a3e52f073887406ad4ffe5f2ff9f41051cfb0a00eac805b7fe0d50c"
+},
+"littown/audio/s/are-the-pups-wet-awjqc5.mp3": {
+"size": 10050,
+"sha256": "cb1128cd91cfdf14f3270aacf1317bb405e8838e9ebe09abed9f5dc3ba89d685"
+},
+"littown/audio/s/bean-bag-ewumqt.mp3": {
+"size": 7124,
+"sha256": "dd1d809039b928132d086a9a2a1509d6d8d93645718586a534035be0016db865"
+},
+"littown/audio/s/camp-cat-2u59i6.mp3": {
+"size": 7960,
+"sha256": "e7ed8c477bdba036fa664e1379bec5e90ee246db89f31d5ae72a2d913a1b263f"
+},
+"littown/audio/s/can-a-big-bus-stop-dikyux.mp3": {
+"size": 11512,
+"sha256": "144c8244ed6a0b7115900b918df6894d3887fd6a89eb9dbb8ec0b3e5c0f16077"
+},
+"littown/audio/s/can-a-bus-fit-in-a-b1le84.mp3": {
+"size": 12766,
+"sha256": "c6379406242058674384cc93517b9513ef6d6f998338f99cb659267fd48b7e40"
+},
+"littown/audio/s/can-a-bus-get-on-a-ulmbey.mp3": {
+"size": 12348,
+"sha256": "c5c7fa2f53548500fcaec3bd2a3c39f6ead12a3aefdd54cf4115e5fe6951b23e"
+},
+"littown/audio/s/can-a-cap-sit-on-a-a3870x.mp3": {
+"size": 13184,
+"sha256": "60f60a6d8c86add8ac0819cade776db2461864a61e682f7e66ac1aff47eb2bd8"
+},
+"littown/audio/s/can-a-cat-sit-on-a-e7oyeb.mp3": {
+"size": 12766,
+"sha256": "b9a6329a56c5d2daa456d7409adf5b59ca73982b8be54b8f774ab91890b80f5f"
+},
+"littown/audio/s/can-a-cot-pop-9icqjw.mp3": {
+"size": 9841,
+"sha256": "9c63478cce4ed90457fc70cdde65b7d3255acf1675435ccddbdf06c9ff744ded"
+},
+"littown/audio/s/can-a-dog-tag-a-cat-ilivnq.mp3": {
+"size": 13184,
+"sha256": "57593f545395df6b35af1e56a0fc0c231b22c405f082217e3b16e920608ea079"
+},
+"littown/audio/s/can-a-duck-get-stuck-in-8hzqyu.mp3": {
+"size": 15901,
+"sha256": "af9c5e172926c875887b1ea0a631f8a0f47e56ff1a00b04b616fa0765735070c"
+},
+"littown/audio/s/can-a-fox-jump-la54gw.mp3": {
+"size": 11303,
+"sha256": "22393da135a4b6ae0caca514068d811302006b2f1af4f1b0fe79c82d54f753e6"
+},
+"littown/audio/s/can-a-hat-hop-9dwy6z.mp3": {
+"size": 9632,
+"sha256": "682ac8e5923c12e9c677676dcb3d86fc0097dacfdf7ac89eca886f9d3f4f9639"
+},
+"littown/audio/s/can-a-jet-jog-cu26be.mp3": {
+"size": 10259,
+"sha256": "1b1613ea9e16f2e58e97f20cdb7622889682d66d8af9c7279a7e3cc0ad06a913"
+},
+"littown/audio/s/can-a-log-flip-t4bvz8.mp3": {
+"size": 9632,
+"sha256": "c028729d7fa60f3c288d0e77b702757ffc18077f2056a4ac5f1763d6e451e7df"
+},
+"littown/audio/s/can-a-pet-get-in-a-qk1ulv.mp3": {
+"size": 13602,
+"sha256": "3372aaf0188cbaf8cb6926a56bc47af011ea738e5e8e9a113f13e4f40511a4b1"
+},
+"littown/audio/s/can-a-pig-dig-etevaj.mp3": {
+"size": 9214,
+"sha256": "055a14bb0b090b30219a042c896bc05f6fd59bad6f60734f4d07a39848a29ff6"
+},
+"littown/audio/s/can-a-pig-spin-a-pan-9u12k1.mp3": {
+"size": 13811,
+"sha256": "af4d0ab4fb6b72222f3128f3719bcfea96ad93858309d8597f4d7dee87f1c539"
+},
+"littown/audio/s/can-a-pig-spin-a-pan-j5vgb5.mp3": {
+"size": 12766,
+"sha256": "c21b24118ff7351344c5f2f646e04ae1f9f500afbbdbba53d3dea9845eb636bc"
+},
+"littown/audio/s/can-a-pup-dig-up-a-f4g199.mp3": {
+"size": 13184,
+"sha256": "4b8c16564f62a916e36393180b3a681b0a6e1bf2ab2a9af688b5416e6ced3edb"
+},
+"littown/audio/s/can-a-truck-run-on-a-0gud6p.mp3": {
+"size": 12766,
+"sha256": "0975c3d7bc3b2f16def1108c82a557bf5dc8eb31bec4fc01f2f02a20509541b8"
+},
+"littown/audio/s/can-a-wig-swim-rlblj2.mp3": {
+"size": 11303,
+"sha256": "61083e40457f6ef809f1429359ce8bf279d3ea6ff1458289e6f791bce2923fff"
+},
+"littown/audio/s/can-an-ox-fit-in-a-gl2zsg.mp3": {
+"size": 15274,
+"sha256": "8fbb4932acfabbce2cde8b73df9c056f76da21264b728899916328daa38c97b7"
+},
+"littown/audio/s/can-dot-dig-d7kk1d.mp3": {
+"size": 9423,
+"sha256": "95c3d9b28ebe96bc440cd1dd4108af31b1add38217b5377b224465f3bf1f2ee1"
+},
+"littown/audio/s/can-sid-spin-a-top-cid2as.mp3": {
+"size": 12975,
+"sha256": "68a28d8a7608abe0315acc736ecd30069859ecea86207647519be977220bae32"
+},
+"littown/audio/s/can-you-get-the-bus-ji11ku.mp3": {
+"size": 10259,
+"sha256": "247d233edca18f55e0f4da2c07f1eb1d9ad1831abad9bc527dfe425370c0a7db"
+},
+"littown/audio/s/can-you-get-the-gift-4c7jcu.mp3": {
+"size": 11094,
+"sha256": "d9cdadfd73674ce80f17549d952424d342c8736636c1041448d453dbe668c754"
+},
+"littown/audio/s/can-you-get-the-muffin-v54ly1.mp3": {
+"size": 11094,
+"sha256": "d8a15ea695f67e65d2b73ba489b5ba681d113fe3de6f9f39cdca6fa5fb01470b"
+},
+"littown/audio/s/can-you-hop-fast-3at6w8.mp3": {
+"size": 11721,
+"sha256": "719829811d8254b1a998b64f7b5464cb1ef168345ab9ccae9eb256ce63efd461"
+},
+"littown/audio/s/clap-clap-he-did-it-w6qz4e.mp3": {
+"size": 13393,
+"sha256": "4293f66c2f5c62aff061c38a976d365013134aabd52d8dd3e02d5e9dda271e44"
+},
+"littown/audio/s/dad-and-i-can-camp-npdyln.mp3": {
+"size": 12348,
+"sha256": "a5e6b34814afc324819970ec7e0eb0adef41722692ec8f0c65aba5472d284100"
+},
+"littown/audio/s/dad-and-i-get-the-tent-liz000.mp3": {
+"size": 14020,
+"sha256": "048b088f30e91566947ff977d20a2dbf58b6b3816edcdecb473bd587a609ef9f"
+},
+"littown/audio/s/dad-and-i-sit-on-a-h95mau.mp3": {
+"size": 19245,
+"sha256": "02c3953df8cc397df601b1c501e52384c5e8aac526ef84f7632f8452bc35badd"
+},
+"littown/audio/s/dad-and-i-sit-on-the-qbsix8.mp3": {
+"size": 14856,
+"sha256": "3ff7292bcbcc65ff4a4805826380101560381ee620eb5d14768e45ed94f7adfe"
+},
+"littown/audio/s/dad-dad-can-you-spot-the-bmodot.mp3": {
+"size": 17991,
+"sha256": "9b983841d491021a84ed351c34cb4eddcbe21811c4d1f90d03d078c4c6a07b98"
+},
+"littown/audio/s/dad-gets-a-big-fan-puff-qb8n4z.mp3": {
+"size": 24260,
+"sha256": "0262964f2249818b51bdc2c80e992b516bdd53be0592604e5694fe5a3f196e99"
+},
+"littown/audio/s/dad-had-a-hug-and-a-khm48l.mp3": {
+"size": 16737,
+"sha256": "e7c4c2b69646baa99510756283ceb3fdc6cce06c59d66954bd4c704ba9e716b1"
+},
+"littown/audio/s/did-a-dog-get-in-the-ifr6wz.mp3": {
+"size": 13811,
+"sha256": "c63724d789dcb609206c4d1242534cce71f30877416a14149d83a6871dc997dd"
+},
+"littown/audio/s/did-a-hen-hop-up-1u7ie5.mp3": {
+"size": 12139,
+"sha256": "a8484547c892a88380c7ebc2e0a84f03416676b6646c49ed29a86e3c4fff13ba"
+},
+"littown/audio/s/did-dot-jump-on-a-rock-ihxulh.mp3": {
+"size": 14856,
+"sha256": "27b406177732795a4f88d8273e930102ab95e48ba5f91edd7a781c68b5c7e44a"
+},
+"littown/audio/s/did-pip-and-dad-set-up-r9dt2f.mp3": {
+"size": 17573,
+"sha256": "acccb0d93e897b84197d2daa832fca85879064e5f9299dadb4459d00f12a32ce"
+},
+"littown/audio/s/did-sid-slip-ho5hql.mp3": {
+"size": 9632,
+"sha256": "05285243ddcca26d4a49fb1cc539814c47fc2d06aef4264d81780a8f70f50695"
+},
+"littown/audio/s/did-tam-cut-the-bun-myznzd.mp3": {
+"size": 12975,
+"sha256": "df56da8d2918c3043d9f0a52a569ab7d5b0db201d413172860ce03a90d9853d7"
+},
+"littown/audio/s/did-tam-get-a-red-drum-2s28vf.mp3": {
+"size": 14020,
+"sha256": "12039972cb21597beb452c0e7d33a6bbf48829c24d4b1bffdf507ae04ac2f05c"
+},
+"littown/audio/s/did-the-cat-sit-on-the-wed44i.mp3": {
+"size": 14229,
+"sha256": "d70750e24dfbdd87079f9ab01dec92dc9c324e4e409586a164f9c00adf844c8d"
+},
+"littown/audio/s/did-the-duck-get-the-snack-vqm5m6.mp3": {
+"size": 12557,
+"sha256": "da292062cc02912932b57ce832bedecee6447af307411bbc125ecc4e25612704"
+},
+"littown/audio/s/did-the-pig-tag-the-dog-6mniy5.mp3": {
+"size": 12975,
+"sha256": "dca20ea4f373e24880dc5768bcf00cb9646d1dbc4ea42979b1efe3a7e2d81bd5"
+},
+"littown/audio/s/did-the-twins-swim-ewr3rf.mp3": {
+"size": 11512,
+"sha256": "7ad5df0898fcc97584ee77c666ecb0770892992b48cc6dbc98b9f7bc99f65a58"
+},
+"littown/audio/s/dot-and-pip-are-twins-zktxab.mp3": {
+"size": 13184,
+"sha256": "bf9bbd08b69064065b9331e479fa033d4676d7d1b02da962635fee68109926dc"
+},
+"littown/audio/s/dot-and-pip-get-to-the-2z4di4.mp3": {
+"size": 30739,
+"sha256": "6261c106cf3b0d5202a3f55e1c6c34c21e2ba3547b6f7f7b1c773531c64ecd89"
+},
+"littown/audio/s/dot-and-pip-went-to-the-8kbpex.mp3": {
+"size": 15065,
+"sha256": "a0245120126425d29f658fada2f356c4bc58798ad63ae5cb581546eb0ce12415"
+},
+"littown/audio/s/dot-can-dig-7tdssg.mp3": {
+"size": 9005,
+"sha256": "b36c90914dcf7525e9019a26e0b4d756b2819e2734de68f8c123075ccfb50c90"
+},
+"littown/audio/s/dot-can-dig-in-the-sand-cex5su.mp3": {
+"size": 14647,
+"sha256": "a5d6eea834af9e6f8b26c4bce5b75bdf500792aca3c8557f9513014ac3415bb2"
+},
+"littown/audio/s/dot-can-flip-on-the-mat-7vwz07.mp3": {
+"size": 14020,
+"sha256": "6ef8060283323830d0b6cec333c3f0f605936400bacedc353cf3fe62c937a4ed"
+},
+"littown/audio/s/dot-can-jump-8yt614.mp3": {
+"size": 9005,
+"sha256": "c29fdfe1ff40c8d7ab3897c7b12ffb04dd43da650538462544d86491ff5ee1ec"
+},
+"littown/audio/s/dot-ran-in-is-it-a-brqgvy.mp3": {
+"size": 19036,
+"sha256": "7b10a8941a06bdf343c5cc663162e96b16e270d77926bb543b6f7b6f92a10e75"
+},
+"littown/audio/s/dot-said-can-i-get-a-g961fb.mp3": {
+"size": 17782,
+"sha256": "dc693fa14b7e5928062d52c4e4081674bd401b6bd28197a7b11611e9391bd490"
+},
+"littown/audio/s/fog-at-camp-iscpbr.mp3": {
+"size": 9841,
+"sha256": "6fa323f7c04f551f7d18ed5001089b06700d0ed85fa029c4fd95013bd24600a8"
+},
+"littown/audio/s/fog-pip-can-not-spot-the-rmpiny.mp3": {
+"size": 21125,
+"sha256": "b7f25d2b22998e27c9210dc39ebd4e30b7322fb4e306e679bcc7034e3a047c2f"
+},
+"littown/audio/s/get-the-bag-d7mfku.mp3": {
+"size": 7751,
+"sha256": "09ba2a07dafe02dec53d1de0b230b39133292e3c20daaf46f65e3866fdfc091f"
+},
+"littown/audio/s/get-the-bat-d7mfwr.mp3": {
+"size": 7124,
+"sha256": "ced89df368494dce11a7eca0f616c1ebcaa4d964a1a04590ca4680c66ac04a7e"
+},
+"littown/audio/s/get-the-bun-d7mwk9.mp3": {
+"size": 7751,
+"sha256": "3aa3ea6ad3505e194be1a6d44a4593e8898c8fcbada0364e7b8daaaa8c13ffad"
+},
+"littown/audio/s/get-the-cat-d7n7n0.mp3": {
+"size": 7751,
+"sha256": "5b3f470f4483e2a438ccbe34344935025cd09c85ed3b69d6d7b5fb8dddbb4bc8"
+},
+"littown/audio/s/get-the-cup-d7nocc.mp3": {
+"size": 6497,
+"sha256": "93146bb63213e86e7aae44ce716f9dcdb5e934d159b4187a082c20bf968da21d"
+},
+"littown/audio/s/get-the-duck-9uq56j.mp3": {
+"size": 8169,
+"sha256": "4a4c9f5dcd06518834d9e2c27b4e215e921ad63a3799c345e035fa3958578091"
+},
+"littown/audio/s/get-the-eggs-9v4vlm.mp3": {
+"size": 8169,
+"sha256": "58fbee6c23c24d0f03e9e0c9e1b0efbcfb5281be18bc9a52680dbd2f716ac888"
+},
+"littown/audio/s/get-the-frog-9w2y39.mp3": {
+"size": 8378,
+"sha256": "972a5ae18be5c168da1a1de2fa814208b1a19e2c9695e78c36806e4b5c20b615"
+},
+"littown/audio/s/get-the-hen-d7r5hr.mp3": {
+"size": 7542,
+"sha256": "6a5f4e9223ad03e1baebd9b592fae0b2f617dfb342e58ef8c5babc7d0d94066e"
+},
+"littown/audio/s/get-the-net-d7vs0r.mp3": {
+"size": 7751,
+"sha256": "06eec95996f8958cc5c9183901a90eb495c1725857995d822ac96f226745e30b"
+},
+"littown/audio/s/get-the-red-hat-ncmjsc.mp3": {
+"size": 10050,
+"sha256": "1ac583630e85f675e421bf7a45c6740bc17d2f31122b26b39044b91ec2871707"
+},
+"littown/audio/s/get-the-sock-a56sqf.mp3": {
+"size": 7960,
+"sha256": "92c9d96de3977d8e5406f9ad148c09e9fd690bb54a4325def60ff4d8833a3288"
+},
+"littown/audio/s/he-can-flip-on-the-mat-ifiry5.mp3": {
+"size": 11930,
+"sha256": "b26ac46f9d4b9de31d006d24f149c4979d7da8ffab41ee14429cb41035fd907c"
+},
+"littown/audio/s/he-slips-bump-3wh54j.mp3": {
+"size": 10259,
+"sha256": "46872d6401d4bedcdd6a52cd9e92d6a387b946ce7727e5b5dc4b03eea8b2378c"
+},
+"littown/audio/s/hot-cocoa-si8jqt.mp3": {
+"size": 8169,
+"sha256": "00475ac6f695049366274808c336ac07d75441cce6e14749e87f265293ee5f03"
+},
+"littown/audio/s/i-can-camp-tkzv3j.mp3": {
+"size": 7751,
+"sha256": "9c6b0d213398e2d9eea2ecd3a03f0cface617c68641205e114711e6fe22d16b9"
+},
+"littown/audio/s/i-can-kick-a-sock-1fybkx.mp3": {
+"size": 11094,
+"sha256": "a554932b7381a4b18fd00db350bc801cda07e4998cbb9058b0008be6ab3fdb97"
+},
+"littown/audio/s/i-can-kick-it-qbzq8d.mp3": {
+"size": 8587,
+"sha256": "9413aa78465f5a81506f4156c0a05b7437f12dcb05c0f1991d288971ad38a2f0"
+},
+"littown/audio/s/i-cut-a-nut-ojmxxc.mp3": {
+"size": 8378,
+"sha256": "40c295276475c8a7cc4446338b6d741fe3926fe5a2443b9cbde64083c15832ef"
+},
+"littown/audio/s/i-did-it-h6b6wt.mp3": {
+"size": 6706,
+"sha256": "efa8cb536659d3a59ad3e0647ce462c85467aad12245bdeca947000319109cd6"
+},
+"littown/audio/s/i-get-a-cup-and-a-ydp3ad.mp3": {
+"size": 11512,
+"sha256": "8a657b59898ce3f3de749e85e54aa021f47ad9041b1ba28cf947e59c74190efb"
+},
+"littown/audio/s/i-get-in-the-tent-i-mnyp77.mp3": {
+"size": 24260,
+"sha256": "568654dadf9316bf63d19d130fc80819914099425839d5afe985ff07237c0efe"
+},
+"littown/audio/s/i-pack-a-snack-qlpg3w.mp3": {
+"size": 9214,
+"sha256": "78807e668ac4c355c6edd4a9daeec1dc317f831148996606bc05ba8133be9e7b"
+},
+"littown/audio/s/i-set-the-net-on-the-pbbhqh.mp3": {
+"size": 12766,
+"sha256": "82b00c3988f24e43f447e01b9bbe142c397bdd8c9067c3466ae9e72db16ecb1c"
+},
+"littown/audio/s/i-sit-on-the-dock-i-7ni3bn.mp3": {
+"size": 23842,
+"sha256": "dd06dec16026de6f7ec69e48127fd762fb78a46c1aca70b3462f8c3136c8e0e9"
+},
+"littown/audio/s/i-tap-the-cat-the-cat-uzoosc.mp3": {
+"size": 24887,
+"sha256": "7f0edb8a72cf2a17479bd6a48f951c0e344039410f0369e78d8c67285d39984f"
+},
+"littown/audio/s/i-tug-and-tug-it-is-rr8f5f.mp3": {
+"size": 19245,
+"sha256": "8e2139c69781f3ac29ae96dc19d5aaf1cb3ebe43d52bbfcb87756852227357b2"
+},
+"littown/audio/s/i-will-win-said-dot-i-kc58d7.mp3": {
+"size": 30112,
+"sha256": "e8136b84d84c39977a5777dea63d387cf1b537e2393493194e7754ba243f9e08"
+},
+"littown/audio/s/is-a-bun-a-bug-fynwh1.mp3": {
+"size": 10468,
+"sha256": "410c7f12fe7ddbaf14a70b3b8925a36e3cc2c55a8ae5b747858149cc02a213bb"
+},
+"littown/audio/s/is-a-gift-fun-imh4ok.mp3": {
+"size": 9214,
+"sha256": "62171bc5691c8d47ef88c1dc73b71fa72827f3e516b4d0dfa7f5c19c8c0b8e43"
+},
+"littown/audio/s/is-a-mop-a-top-ulpty9.mp3": {
+"size": 10259,
+"sha256": "fd8cae95bbe6a021be37029a2e4c503de7d043a19bb1603f5829c5cc27dd5e02"
+},
+"littown/audio/s/is-a-pan-a-pin-im5mw8.mp3": {
+"size": 9841,
+"sha256": "79026edba560f98bc1b521f1d4116e14c7304b567a19b61c33c25e358e73ed08"
+},
+"littown/audio/s/is-a-snack-a-sock-k85yn6.mp3": {
+"size": 11512,
+"sha256": "f1ebcfcb631b7629515372e29488f477861ccacf449979c19a005ccad3094347"
+},
+"littown/audio/s/is-an-egg-a-dog-mdf6ot.mp3": {
+"size": 11303,
+"sha256": "f66b49706d0095c9236ea8043aa6ef6f92102fac154f0a7a8e65aefeb68acb54"
+},
+"littown/audio/s/is-it-a-mat-d4v140.mp3": {
+"size": 8378,
+"sha256": "5cec3d80d2e08a6e1d48a73916c368bc3a2e2f05225c268ad9c6b24397979796"
+},
+"littown/audio/s/is-it-a-mitt-79xw1o.mp3": {
+"size": 7960,
+"sha256": "77b69e799ff8d25dbafb8d40ad0874353beeef402c36d546f50f7b8298a82dde"
+},
+"littown/audio/s/is-it-the-map-xiqon0.mp3": {
+"size": 8169,
+"sha256": "a5199ef87b19005103904525081a9bcb7ecd594f376cdc2cceaa730754be1a55"
+},
+"littown/audio/s/is-the-ant-in-the-pan-ia3onv.mp3": {
+"size": 11512,
+"sha256": "8a02238728c2f6c470841c4486d8f4aafde70d990d9505601eeed2ba4f4d45ac"
+},
+"littown/audio/s/is-the-ant-in-the-pond-z0rz9p.mp3": {
+"size": 12139,
+"sha256": "a988a8cd9874737c0e2791edc8d813aa952c0448bdcfbbd516d34d619dbb8db5"
+},
+"littown/audio/s/is-the-jet-big-xk7g9i.mp3": {
+"size": 8796,
+"sha256": "31befa880dbfb24fcec7e57fa0ff791fd7b3698d03c7ec508be15cc94a6a7fca"
+},
+"littown/audio/s/is-the-lamp-lit-tl6ztg.mp3": {
+"size": 9005,
+"sha256": "ba94621958a887ed587e6f30357718d777d6aa4c59058334eecc3e9c1bf446fa"
+},
+"littown/audio/s/is-the-map-a-mat-sn05s2.mp3": {
+"size": 10885,
+"sha256": "2eb98f96373796aa9db09884fe046c84863ff3c63e39d4f556caff56d7232761"
+},
+"littown/audio/s/is-the-pond-damp-oa5k0k.mp3": {
+"size": 10468,
+"sha256": "ba01a5fcde46509eac674d2df34b0a68ac88a009f6b1cf0b0543dd2d045e4024"
+},
+"littown/audio/s/is-the-pond-on-the-pad-de7qbp.mp3": {
+"size": 11721,
+"sha256": "8377623ac160987170ecadcf357cf562fb6bfcf463ab58254e12dd5441616949"
+},
+"littown/audio/s/is-the-rug-red-2y1y96.mp3": {
+"size": 8796,
+"sha256": "3ecf86eb7c2852dbfab0e98d6457b6e4f34fc0853dd612b25e8ec86c3224b546"
+},
+"littown/audio/s/is-the-spot-on-the-mop-bh5vkh.mp3": {
+"size": 11512,
+"sha256": "3c17be3c28e3e7735d58aa6ed123f52cf95ca94b85f31772aa647fa130c164dd"
+},
+"littown/audio/s/is-the-sun-a-cup-hgcisg.mp3": {
+"size": 10676,
+"sha256": "f4a3fb5ba9d29efd0d1ac9abe27a8bd9d260a50643e4e36058e25835df1a1fcb"
+},
+"littown/audio/s/is-the-sun-hot-1zqqiq.mp3": {
+"size": 7960,
+"sha256": "c5c0ddfaf29cec632aaf9d4472c694a80faa9a3cf9169836bf57915d77f6bfc5"
+},
+"littown/audio/s/is-the-top-on-the-pot-yztzz9.mp3": {
+"size": 11721,
+"sha256": "10b3f488b056dccf3bb8105f24118e4f48979a708711977fbbebb6fb96ee26e1"
+},
+"littown/audio/s/it-can-dig-in-the-sand-pdyoc4.mp3": {
+"size": 12557,
+"sha256": "5323848d9c0cdba5bd7b9fb9771dcdf520d67d70f0827df41a39ac0aa6cddaa3"
+},
+"littown/audio/s/it-can-get-in-a-pan-hy3z89.mp3": {
+"size": 11930,
+"sha256": "d3d244f422b41492025b722d1a5aa748f430129be4814bb78f5890254d7334b7"
+},
+"littown/audio/s/it-can-hop-quyi3t.mp3": {
+"size": 7124,
+"sha256": "2fe0d4ab7d0451f2fd6754fb13c5a9fe6b82e127146c08a48b5cd401e97b8181"
+},
+"littown/audio/s/it-can-jump-and-run-737v8m.mp3": {
+"size": 11721,
+"sha256": "73bd30d7ef8438f59c19288a6f19786599adac2ba1eb6e7f88f975e9f4528c7a"
+},
+"littown/audio/s/it-can-jump-eiwfwe.mp3": {
+"size": 7333,
+"sha256": "5109c41d48b75326c5fd5c64486cbac51032a487a5e85c5163870f71bf132165"
+},
+"littown/audio/s/it-can-not-jump-plm3gv.mp3": {
+"size": 9423,
+"sha256": "b35000a29ad6d51e5feb921ffde39049821a69b70a68f5c04f7b6092c6de9b1d"
+},
+"littown/audio/s/it-can-snap-ep3j9w.mp3": {
+"size": 8796,
+"sha256": "fd2325f15000b93b12d8ba1fcff9ef542b165aa19df99f4bcbc3350957d2be0a"
+},
+"littown/audio/s/it-can-wag-qv9q1t.mp3": {
+"size": 7751,
+"sha256": "a52799cb7eaae54b8b019eaac0821b27bde6ec436fb81302f43a1c6a7de9ec78"
+},
+"littown/audio/s/it-digs-a-big-den-4ek269.mp3": {
+"size": 12139,
+"sha256": "6caee552ea560642ceaac6e2d89ebff875bd16ca147af4544f37d3c6a3d42e01"
+},
+"littown/audio/s/it-digs-in-the-sand-e702t1.mp3": {
+"size": 12139,
+"sha256": "0a70d4b8196db2626f88c444dee9c9c6f94aeb106517cb2cc97efb031e6132b0"
+},
+"littown/audio/s/it-is-a-camp-cat-8uadgm.mp3": {
+"size": 11512,
+"sha256": "9ddf8199ef221c66676d628b3122a89f9c73c8e6918b9aa0910d1b1cd6a74fdf"
+},
+"littown/audio/s/it-is-a-duck-necod0.mp3": {
+"size": 8587,
+"sha256": "6ab3ae078c46a85e4312349727a9ee28ba893460a2a07cc1801f6101d2687a70"
+},
+"littown/audio/s/it-is-a-mat-jm6nqn.mp3": {
+"size": 8587,
+"sha256": "d5714d33af09b989fe57c8af911847043a260313929b818b2c0bdfb545679eb4"
+},
+"littown/audio/s/it-is-a-mop-jm6zeh.mp3": {
+"size": 8169,
+"sha256": "ff8d0948f08f64681a6f00d6439226bc78d5eb6a3684498265fab055921bbab7"
+},
+"littown/audio/s/it-is-a-mud-pup-not-lmed7o.mp3": {
+"size": 19663,
+"sha256": "523ff175572db0495e27aedfabc5de9b4e9484c3fad127f877b5a19bffa4831b"
+},
+"littown/audio/s/it-is-a-pet-b6e01i.mp3": {
+"size": 8169,
+"sha256": "d8fcfc1f546695e806825540e6bc21ededd875312c31ada2d227efa644d2e155"
+},
+"littown/audio/s/it-is-a-pet-jm92ae.mp3": {
+"size": 8587,
+"sha256": "0ebc59407a113faa05d32e1e67d4434baa5a3dfac71e31b3e25b9d12cd2759cf"
+},
+"littown/audio/s/it-is-a-pot-jm9aow.mp3": {
+"size": 8378,
+"sha256": "6f5f2a31f03c3c765bce4acb4fdd8372c5103f5c8c8085f3c758a103fdc30e8a"
+},
+"littown/audio/s/it-is-a-snack-duck-4thz4n.mp3": {
+"size": 12557,
+"sha256": "71879db7dc3c51608fd1c3a072d2ced69f21b54dee38c3c797b284cab055226c"
+},
+"littown/audio/s/it-is-a-sock-notbx9.mp3": {
+"size": 9423,
+"sha256": "5149aff59f2236c22f39b071679ddfb182e467b42e27d2f50fced6dc8f82f276"
+},
+"littown/audio/s/it-is-a-soft-fox-i-07yl8h.mp3": {
+"size": 37008,
+"sha256": "8b52a1545fdfe49b841c21357dbf123ddae4acb77b4f32576730526b91794994"
+},
+"littown/audio/s/it-is-a-top-jmcdi8.mp3": {
+"size": 8378,
+"sha256": "3b9eab3a6c3d0d361de3ab104e7d21f37fa6b34f3d37a7f4408ff40580ec1c5f"
+},
+"littown/audio/s/it-is-a-web-b6jdor.mp3": {
+"size": 7751,
+"sha256": "e997dae2856b8a06d44e9b2d6fa4e4e9311f4a27c4450a24f561c60a93c62faf"
+},
+"littown/audio/s/it-is-a-wig-b6jh6c.mp3": {
+"size": 8378,
+"sha256": "1669623613e0b5b6df4533d73de2d27cecd88cffc8b45262b50570224bf2a3d3"
+},
+"littown/audio/s/it-is-in-a-nest-67i47y.mp3": {
+"size": 10259,
+"sha256": "6a82fe88c98ae68c45440c1588807e8f5103c69dffc786564705d00d990a2b95"
+},
+"littown/audio/s/it-is-in-the-pond-crih5h.mp3": {
+"size": 10468,
+"sha256": "7ede357654220c90e51fce7e505e2cc8ae7f06bf9a8fd4a990f593f3bda2a6d3"
+},
+"littown/audio/s/it-is-not-a-pet-c05chz.mp3": {
+"size": 10885,
+"sha256": "daad20082acb4b9b7a9e55faf5395386ff86ce453f95daad816f31d250316518"
+},
+"littown/audio/s/it-is-not-a-truck-it-jiwmhb.mp3": {
+"size": 26977,
+"sha256": "61d380e99f1b33cb206bac89016be3287b15e91b4e42b49ded61fdb9aee6e09c"
+},
+"littown/audio/s/it-is-red-lu8qtj.mp3": {
+"size": 6915,
+"sha256": "ecc7b9fe89c4fa00c442707fde7d5460b71c46b9c792d76826cb46ea0782e826"
+},
+"littown/audio/s/it-is-the-cat-it-sits-kvaxt7.mp3": {
+"size": 27813,
+"sha256": "aad08dd36a30282c38ad1296ec5cd14deee0ed24a0dbae15b2cd5cb4f6d37d2b"
+},
+"littown/audio/s/it-sits-on-a-pad-in-e18k8f.mp3": {
+"size": 16319,
+"sha256": "7113cf85e257422495e23ef979e987b07d136f3b7a5425f692bccd52a477893d"
+},
+"littown/audio/s/it-sits-on-ten-eggs-eewb25.mp3": {
+"size": 12557,
+"sha256": "0913222adeeaa75b19584fc781da47c56b5b7f0223f987f9136b672771eace58"
+},
+"littown/audio/s/it-was-a-hat-trick-eqe6cp.mp3": {
+"size": 10885,
+"sha256": "ec4d3b38ae43fb11f4eea135467bb83fe6f20f2a5bad8437963d2253542e1c8f"
+},
+"littown/audio/s/it-was-the-best-bun-ml6bcy.mp3": {
+"size": 11512,
+"sha256": "51423a8891906d885da1a5a0191398d0500f14a01709a669d7c4d8be5dc51658"
+},
+"littown/audio/s/mix-the-jam-in-a-cup-xvly8q.mp3": {
+"size": 13393,
+"sha256": "258b92a0110074ae3785c451cb2b8122aad10bfacdd99ece7e1a5b84523ace86"
+},
+"littown/audio/s/mom-helps-fix-it-wij29o.mp3": {
+"size": 11303,
+"sha256": "259388de4ffb2eb7f0317eccb5cf579878b4c2486c79d3397afdc0f38aae7eec"
+},
+"littown/audio/s/mud-on-the-pup-mud-on-9pexty.mp3": {
+"size": 22588,
+"sha256": "2a6267bd23e3f7d45c6654598508aeece9b12b2acc2941eaaad9e8c78cf4a376"
+},
+"littown/audio/s/mud-pup-qt1leo.mp3": {
+"size": 7333,
+"sha256": "fb89373b0e0e3a88221538a12e97ecdcdb13e51b9461b87b406dd5cf00e0b00a"
+},
+"littown/audio/s/my-fox-is-in-a-box-uxjzhy.mp3": {
+"size": 14229,
+"sha256": "d9973e14bac88bbdca9b63981ce833b2e374a5db95c5246f027feae37cf36b9a"
+},
+"littown/audio/s/my-gift-is-in-a-big-cbkor6.mp3": {
+"size": 15065,
+"sha256": "8dbbbe4c46ac1d59a3c6ff7765c8c25a5ef9b5f5af9635b52efc264e4930649b"
+},
+"littown/audio/s/night-light-u49b7b.mp3": {
+"size": 7124,
+"sha256": "1aa71a41bcdf6a5567a8d9d7862e514451618b1eb4e5e28764e39db322c9355f"
+},
+"littown/audio/s/pack-a-snack-and-a-cup-r4y3jz.mp3": {
+"size": 11721,
+"sha256": "27deff21ab54b9a9acb406e55d346e72f4b96b58f91b6f638ab0c5c9da32f2c9"
+},
+"littown/audio/s/pass-the-map-h0elu1.mp3": {
+"size": 8587,
+"sha256": "163ac8706610217c88e0a38ee6a68fccbf823d121eed53be0a5f8c42bbbb8d0a"
+},
+"littown/audio/s/pass-the-mat-h0elxp.mp3": {
+"size": 8587,
+"sha256": "df2b9ed69194201b3371730272d1e7ffedd40143ccee537eec40389b782389bd"
+},
+"littown/audio/s/pass-the-pan-h0gwyy.mp3": {
+"size": 9632,
+"sha256": "59fdbd94fb118b8f886dab6f2dc7d487fe842e4705b21a1a0267e65c92569564"
+},
+"littown/audio/s/pass-the-pin-h0h3oy.mp3": {
+"size": 9214,
+"sha256": "d62058e3497b515eaa23a1aab96689204bde1feb58f99fac7e7cd7d6eacb9ccb"
+},
+"littown/audio/s/pass-the-pot-h0h8vy.mp3": {
+"size": 8587,
+"sha256": "f667c57d64b1403f1195d39e679f1d37d0b01b581a4c97f5e6af7fab5cfb7555"
+},
+"littown/audio/s/pass-the-tin-h0k6ly.mp3": {
+"size": 9423,
+"sha256": "246caabc75a14bb3b6c9e834def5e3d40eb73fdee9e5a5f0d02f9fb90329122a"
+},
+"littown/audio/s/pip-and-dad-set-up-a-y8d0yt.mp3": {
+"size": 14856,
+"sha256": "5f49240abf2880bad85d31936daaaf32a9c7483d63749d93970bc3313e56d84f"
+},
+"littown/audio/s/pip-and-dot-grin-the-hen-ynaey5.mp3": {
+"size": 24887,
+"sha256": "9da8f0d35b14de7c1d1382bdaabb477a8e22cf00723c65d0390af8f961912b3a"
+},
+"littown/audio/s/pip-and-tam-sit-3ruxtt.mp3": {
+"size": 10050,
+"sha256": "e5b50b0758f3e75a603e3debac4ac91c7e5df0361c5103790ef450107b36dd5e"
+},
+"littown/audio/s/pip-can-flip-on-the-mat-n58sl5.mp3": {
+"size": 12557,
+"sha256": "52e51c9090838e19c522c4607d7c26ff0b7c02743ec5906e2ee7f9b6ae6e8479"
+},
+"littown/audio/s/pip-dot-tam-and-sid-mmeyy6.mp3": {
+"size": 15274,
+"sha256": "68e4c23f03f374b7feebe53c36516e205d945abc9a0f8da76af468908b5cab49"
+},
+"littown/audio/s/pip-ran-in-is-it-a-28e6d6.mp3": {
+"size": 21125,
+"sha256": "634c7ce52ad56115d4e44acf54563e3cf8780b255f4e65d6f2b1f38dd79c5e08"
+},
+"littown/audio/s/pip-said-can-i-get-a-b8oy0p.mp3": {
+"size": 17155,
+"sha256": "69d82a5c21122853934ed2441bdd680b9120782d7a5435b43dc37da72280ab16"
+},
+"littown/audio/s/pip-spots-the-tent-it-is-rwicdm.mp3": {
+"size": 25932,
+"sha256": "bedbb3667d08690362a80fc6caf1109f9e2ca62ce737da17af94d76171e897fb"
+},
+"littown/audio/s/pop-in-the-box-is-a-3gfmpo.mp3": {
+"size": 20916,
+"sha256": "6dcaa3d808dce00a6819d673ac887047c9fdb26178efbaba065930ab5c5e78d0"
+},
+"littown/audio/s/red-hat-h6jkjh.mp3": {
+"size": 6497,
+"sha256": "c0b1382483ce77dfdcd78e22b01c78a707a56b8cc836cc4eadb23d2b2655ee91"
+},
+"littown/audio/s/she-can-jump-9b2uw1.mp3": {
+"size": 7960,
+"sha256": "1c3cf67c066650fce89b6e8dc16075a6e47571c53c1ec65f58e40ff014e9512d"
+},
+"littown/audio/s/she-can-not-jump-on-a-10vfyl.mp3": {
+"size": 15274,
+"sha256": "ee788c1b6fd87e589325d5ef110aea684493b25bc9d37c1d4bd0305b63df99b5"
+},
+"littown/audio/s/she-jumps-in-the-pond-plop-1nkley.mp3": {
+"size": 24469,
+"sha256": "e6f3fdb33020ee9873d84f86829469da89fcae7db8a07c3e964f0aad2abb70ed"
+},
+"littown/audio/s/she-jumps-on-a-big-rock-ibh51d.mp3": {
+"size": 14229,
+"sha256": "d7c762387d6a51173c41441b6949409e099f7dd59c70bd1f5462e199c9c69ba1"
+},
+"littown/audio/s/she-jumps-on-the-mat-jump-z71ppr.mp3": {
+"size": 22797,
+"sha256": "bb8ba19e93415cb5cc62556a0ffd43ad646606da09b70028f447887d5b1c5053"
+},
+"littown/audio/s/she-jumps-up-and-up-l33hoy.mp3": {
+"size": 10676,
+"sha256": "9b0bd6300203cd1a932912f51001e7e8bbd3e391f0edce0d89fc1560c3b39b3e"
+},
+"littown/audio/s/sid-can-flip-he-runs-fast-6fyoy8.mp3": {
+"size": 23842,
+"sha256": "6b7df454267c57a3e303799781cc2e6fa8a85460d16c3a2ca6986103549e1cb9"
+},
+"littown/audio/s/sid-can-spin-a-top-rhr7xv.mp3": {
+"size": 12348,
+"sha256": "74b05619c68f25be2a4fbc619d74ae6b0cddfdcb26642c0228fccd199a4ff091"
+},
+"littown/audio/s/sid-gets-up-he-can-flip-v8cd73.mp3": {
+"size": 30948,
+"sha256": "75d10a3fa22be9ae88992e32b3ac261320664dad0def8e71b2700acd59346b72"
+},
+"littown/audio/s/sid-had-a-tan-hat-gmlqzl.mp3": {
+"size": 12348,
+"sha256": "47d3b0dd72a392db4a9d4a35869f15aa7f40b4db24e77b7bddc4d0dea171d51e"
+},
+"littown/audio/s/sid-set-the-hat-on-a-tjnqhp.mp3": {
+"size": 14229,
+"sha256": "a58134392be730d6a7b69f3b09b034299975e1e2a04cd7fb4299a3cc58c2cc50"
+},
+"littown/audio/s/sit-sip-sit-sip-quy4kv.mp3": {
+"size": 15692,
+"sha256": "efa3b5f4822f546dfa79fc1fb476b4be1c582d1a7c664c6897a69078a17ebfa5"
+},
+"littown/audio/s/snack-duck-ovw04c.mp3": {
+"size": 8169,
+"sha256": "e32d401f354b9e44fc24b0a8d4b6a32878e548b57cf3e259687e0bbcc5ad371d"
+},
+"littown/audio/s/stop-a-spot-is-on-the-9z08yp.mp3": {
+"size": 18409,
+"sha256": "ac69c7b94241eada51fc064e91db56fbf7578c82d63869dfa736e895b8adf61c"
+},
+"littown/audio/s/stop-mop-pop-clprtr.mp3": {
+"size": 11094,
+"sha256": "cf34e76b06ddbc63e125b8363d6779bfcfa458be2147f09ac7609969a8e135ca"
+},
+"littown/audio/s/swim-fast-ap65p0.mp3": {
+"size": 9214,
+"sha256": "4bbba97105f39f35240c38643b02c058e36c3a5651a235d223d3242ae0d4a4b2"
+},
+"littown/audio/s/swim-swim-swim-the-wind-is-6a5bkc.mp3": {
+"size": 33455,
+"sha256": "af6ac1d3d8ed5d3a1c084d843f53bf2dbecab14f8c81385863fb624e44002698"
+},
+"littown/audio/s/tag-the-pig-got-the-cap-z8kmpc.mp3": {
+"size": 15483,
+"sha256": "f65c0a4c6829e21ccabfa5a00d410e05fcf1e6c45806385fc9bef1df8475da6b"
+},
+"littown/audio/s/tam-can-pat-a-cat-sk2n51.mp3": {
+"size": 13184,
+"sha256": "75834d1df232e29f5d99c8a68d3c3883425dc077d1342c85741cf4389936f2cb"
+},
+"littown/audio/s/tam-cut-the-bun-in-bits-31omco.mp3": {
+"size": 38471,
+"sha256": "a6c751592d4f0965b8c4aaa832f9adb55089005eeb1a76484d864265ced8dddb"
+},
+"littown/audio/s/tam-got-a-red-drum-xr63bn.mp3": {
+"size": 13184,
+"sha256": "f6c440ab3b94ff0027a6d6b455f987979af7ef46b6d32d271d233d397f91dff8"
+},
+"littown/audio/s/tam-had-a-big-bun-g54qm2.mp3": {
+"size": 11930,
+"sha256": "eba710ed65157f631c2b4c461e2291625c0b2897bba302213ba30a6aff7ee054"
+},
+"littown/audio/s/tam-said-grab-a-bun-a462qj.mp3": {
+"size": 15065,
+"sha256": "029e6150ec8ed6d64dd87f18453c6ca75b7db9bc5238b991cdb16d443ffd5e9c"
+},
+"littown/audio/s/tan-hat-li7t1h.mp3": {
+"size": 7333,
+"sha256": "f515041466a813fc6671844d0f66236db1f37af387c2a36f21573ce154b84428"
+},
+"littown/audio/s/tap-it-mop-it-tap-tap-m4llnf.mp3": {
+"size": 32201,
+"sha256": "32b9d287e2694f428b028c3b86c4fafeb1d2e4bf1633f5edd58e6dbaa94b190c"
+},
+"littown/audio/s/tap-red-tap-the-tent-vislsy.mp3": {
+"size": 16737,
+"sha256": "98af6136ceab67131b100f2c5a5584e4e366dd26ddb806531679c565890bc68c"
+},
+"littown/audio/s/tap-snap-spin-165ajz.mp3": {
+"size": 15901,
+"sha256": "3157921dc1004fe541f25bbe571aada09ca650abb8cdfec60444fce613d4766b"
+},
+"littown/audio/s/tap-tap-tap-up-hops-a-nfjhyh.mp3": {
+"size": 23842,
+"sha256": "ebd25d1f34bcef169de6fd2abd57e25731bd818567613fcf7647035f3d5cd326"
+},
+"littown/audio/s/tap-the-ant-9pxwn0.mp3": {
+"size": 8796,
+"sha256": "b4a80fbf5c519ae53eeac73accf4e1aefcf8d7aade329e379e80ce6a7a9f06e9"
+},
+"littown/audio/s/tap-the-map-9q6ud3.mp3": {
+"size": 8169,
+"sha256": "2ee7ff9ff051ce13b7612f2afb20e90d07f82e4dfabea64c0bd31f66d4c6b51d"
+},
+"littown/audio/s/tap-the-mat-9q6ugr.mp3": {
+"size": 7751,
+"sha256": "8d69fc387009efa0b16b27aae05401e56a41516741abf8ea21fdcecace67ae56"
+},
+"littown/audio/s/tap-the-pan-9q95i0.mp3": {
+"size": 8378,
+"sha256": "b3a406d36b43ec5bfe71ab5f75dd93e6f4362247d59ea5392d781784eb34d801"
+},
+"littown/audio/s/tap-the-pond-n0ave2.mp3": {
+"size": 9005,
+"sha256": "99385669827bb2212eb51d0d095f0c5f4b272c5f0aa8665519dce5bf24e84ec4"
+},
+"littown/audio/s/tap-the-pot-9q9hf0.mp3": {
+"size": 7751,
+"sha256": "76f29af933bac7478726310fc09acf5f908061ebb2fff4cb4c06c1123de5205f"
+},
+"littown/audio/s/tap-the-rock-n1pgg8.mp3": {
+"size": 8796,
+"sha256": "85908c6bdfbec422e6ebe9a863d22f3b1adb045969e3e1c1c3279c84651064c1"
+},
+"littown/audio/s/tap-the-sun-1agv8v.mp3": {
+"size": 9005,
+"sha256": "9d9440a85cc80de1de0f3674bc08b32b3b1f5b39e85efd487c227a9615f63821"
+},
+"littown/audio/s/ten-eggs-sit-in-a-nest-ktj676.mp3": {
+"size": 14438,
+"sha256": "35898ab02d79f54a3df6bc66e6e4606d10447001431ceefb9abb71d7ba004713"
+},
+"littown/audio/s/the-ant-is-in-the-pan-5uzpwd.mp3": {
+"size": 29067,
+"sha256": "3cd507c55abdcd726201ce70b535dee511507e03c063cd0b5ae246a1ce7bbfe1"
+},
+"littown/audio/s/the-ant-is-in-the-pan-umcwsq.mp3": {
+"size": 12766,
+"sha256": "541344d1cd8962ce8e38eb4f38755938f6df4411ca3fb5990406546219424989"
+},
+"littown/audio/s/the-big-bun-9kmblp.mp3": {
+"size": 8587,
+"sha256": "54c079f1e7e67c152f67ea5d50f9b75bef10603543201fe0160e2efca2838bed"
+},
+"littown/audio/s/the-big-flip-c96cpv.mp3": {
+"size": 8587,
+"sha256": "7a768e20a244e93d814a5d7bf3c19883508039196913989a0d55c67a97333485"
+},
+"littown/audio/s/the-cat-sat-on-the-cot-avo0b8.mp3": {
+"size": 23006,
+"sha256": "cce49b0f360695690560fe24a5f83d0a9336a3c1ea014699fecfe3fcc9dfbdea"
+},
+"littown/audio/s/the-dog-can-swim-kfwao0.mp3": {
+"size": 12766,
+"sha256": "724ce4284aa8d04b4feb20bcfbadb90a273c88d2bd9540dcf3509397a4558640"
+},
+"littown/audio/s/the-dog-digs-a-pit-is-vtf58h.mp3": {
+"size": 32619,
+"sha256": "78087a11c8106176d1e5d6ad3b548f80bd893084ae95255fe5a3fbe96ddaecfd"
+},
+"littown/audio/s/the-dog-got-a-cap-idecrk.mp3": {
+"size": 13184,
+"sha256": "a2e2aa95f7c680a58fbd6c030cd51eb61f335814a5c59eec3eb63d33251b4a30"
+},
+"littown/audio/s/the-duck-pecks-at-the-snack-uosd2x.mp3": {
+"size": 30112,
+"sha256": "267679fc918531f0d6a2a4c5499b4bfc4637f8cd2b0d9a3fe538d0ee3f12386d"
+},
+"littown/audio/s/the-fox-box-s6xs64.mp3": {
+"size": 11303,
+"sha256": "05986894bd4d0121e0ddb060428fbeb2f892a4e72343330d2fed5f262aac55ea"
+},
+"littown/audio/s/the-frog-sat-on-a-raft-mcstbp.mp3": {
+"size": 14438,
+"sha256": "f2eb45d5c9cd46d2a333354e54fe76c872d80406b0015231be5332f300a0e62b"
+},
+"littown/audio/s/the-hat-trick-vq795s.mp3": {
+"size": 8796,
+"sha256": "964c2abd099ccb5f36a5538eb8b0f646c8b8e2fed8d7665a78b74240a0506eb4"
+},
+"littown/audio/s/the-hen-hid-in-a-hut-f0nn71.mp3": {
+"size": 12766,
+"sha256": "5dc2b98c56c97a1a55e8154b116c5c9c53890245cbbcffc9c8a1772738ee8a18"
+},
+"littown/audio/s/the-pot-is-on-the-mat-5qiihv.mp3": {
+"size": 12766,
+"sha256": "6137f0ca8e8eb1405d8e1d11461eb524b02c7e27001979db17b6030942800617"
+},
+"littown/audio/s/the-pup-dug-in-the-mud-sz0mak.mp3": {
+"size": 25932,
+"sha256": "a414be71c58ee828257f418d948817979fb973cfd9056a082e59d77088516bf0"
+},
+"littown/audio/s/the-pup-was-in-the-mud-nh6qzp.mp3": {
+"size": 12766,
+"sha256": "f786e03f910eb6be014bebb519d90b7521e60624d1220cfaba88b208bb03b604"
+},
+"littown/audio/s/the-pup-was-in-the-sun-nhbdmq.mp3": {
+"size": 12766,
+"sha256": "b77c55c38023767c57292319091e703383b71f9f87d86aa5b20f5158dbf0dbe2"
+},
+"littown/audio/s/the-red-drum-ebnm1l.mp3": {
+"size": 9423,
+"sha256": "81b4e5731c7c4c456b195aa9983a98b18e922c24000345989d474943cd7659ce"
+},
+"littown/audio/s/the-spot-giw4i4.mp3": {
+"size": 7124,
+"sha256": "351c166a75f3684bb07f12f3b44e053f4bb0322b8bf0f58b08a55640568070d8"
+},
+"littown/audio/s/the-spot-is-not-on-the-mf9sgs.mp3": {
+"size": 28022,
+"sha256": "3b58e1d96e225ed4cb8a88793569e5d74f9721950e582f63e5aea67e08b5de56"
+},
+"littown/audio/s/the-tent-giwmyp.mp3": {
+"size": 6706,
+"sha256": "75892574a3bb443a5b31a1586a9e4fa784da84c2b74ba9262e1030820b0bb8ad"
+},
+"littown/audio/s/the-twins-swim-fast-gcq2vr.mp3": {
+"size": 13393,
+"sha256": "393fdec9912c6ef819d2b0b878f878f22aaf4a69fb0912be1428d09ba0f62dec"
+},
+"littown/audio/s/the-twins-swim-in-the-pond-vcy94i.mp3": {
+"size": 14229,
+"sha256": "caa594446c4ddf23aae98dc4097081ecd84c956bc5e057614ae632d4f73287a7"
+},
+"littown/audio/s/toy-box-us6kx6.mp3": {
+"size": 7333,
+"sha256": "b085ad7baa1fc18164c38c6781c6cb2527852c0718b504b8edfa0610684a18af"
+},
+"littown/audio/s/tum-tum-tum-tam-can-drum-4tbpmi.mp3": {
+"size": 22797,
+"sha256": "f1e1eacb94cd50d166f5e3bd0ea9f65e0a1a8621aaf5620d120c567dd681dc85"
+},
+"littown/audio/s/was-a-fox-in-the-box-x10xcu.mp3": {
+"size": 12975,
+"sha256": "79d18014db032ea2c702e4d21dd810295c80ec9617dc04b674f2439ae07e11e1"
+},
+"littown/audio/s/was-the-pup-in-the-mud-4jj9s3.mp3": {
+"size": 12139,
+"sha256": "865ce5b137fcac60bd27718567fc5b11ad14106ac796ed3b2084c7c590519699"
+},
+"littown/audio/w/a.mp3": {
+"size": 3153,
+"sha256": "8a7abac529784e53122ffbe03dc3c9a8d950a8f0d427a191f65a90e18ff82821"
+},
+"littown/audio/w/act.mp3": {
+"size": 4616,
+"sha256": "0ec0b9b7954503bfb730d99dc408e7a54b5774a1a910a235c2ab8476fc628bdf"
+},
+"littown/audio/w/am.mp3": {
+"size": 3780,
+"sha256": "db2133240d0c5ba2d95cc4113dedf3b918423097728fc1374aec7384ff1867a6"
+},
+"littown/audio/w/an.mp3": {
+"size": 3780,
+"sha256": "c50df5a5b58e852cde61d7f8d801c4aabbe73ae0b33b91895791d041f4826422"
+},
+"littown/audio/w/and.mp3": {
+"size": 3780,
+"sha256": "0fc32137f92719f5e86d948c746b598492a6e1c476dbcffefaa2eedb0bc7b7c4"
+},
+"littown/audio/w/ant.mp3": {
+"size": 4407,
+"sha256": "c24b4b9106b59b2a92786c0d4cfe6432898c29daf1a25b1ac8a39cb04fcd02ac"
+},
+"littown/audio/w/ants.mp3": {
+"size": 5452,
+"sha256": "a01b17567c3db7f12d5fafc7512402a43342e77ce03dcd9f9b38903f3f30cd79"
+},
+"littown/audio/w/apple.mp3": {
+"size": 4825,
+"sha256": "fbfbba592ea68b0ae9a774314f1d3a8f4ccb30e5dbfec8b3e7e720935e91366f"
+},
+"littown/audio/w/are.mp3": {
+"size": 3780,
+"sha256": "2c6e47f1dcdee51acc1ba661a6df83f356aaa3459ef3985e2271284fa3503d3e"
+},
+"littown/audio/w/at.mp3": {
+"size": 3571,
+"sha256": "946f4bd68746df0d1296596d8f9747275073c45c2aeb64344098cfce1c192545"
+},
+"littown/audio/w/bag.mp3": {
+"size": 5243,
+"sha256": "6c6933820f63a4beed762bf1e7f176ed5945d3ca948592151332aee498b23647"
+},
+"littown/audio/w/bakery.mp3": {
+"size": 6079,
+"sha256": "3121d6460633d14f72df20e7cd919b38becb019df3ec0e8de93e8d3facb9cb06"
+},
+"littown/audio/w/ball.mp3": {
+"size": 5452,
+"sha256": "6169fbcab64f95d698bc5dd4aec8f8bad4b894d7096a55bc16794370c645cf7c"
+},
+"littown/audio/w/banana.mp3": {
+"size": 6079,
+"sha256": "9933ebd3522c884b4d784dd4c3d14ffed32bebae205e20253dcaafa0d21d7d93"
+},
+"littown/audio/w/basket.mp3": {
+"size": 6706,
+"sha256": "d9a7af5ff066d9c54e67577cbe72588011ec7b5540717ea178dad1309793de24"
+},
+"littown/audio/w/bat.mp3": {
+"size": 5243,
+"sha256": "74e2bea918f57c77d3839152325277312e755ab03fabd1755667108ad0e5ef7e"
+},
+"littown/audio/w/bean.mp3": {
+"size": 6079,
+"sha256": "13a0cbd1b4c0c744306d94804b6621c5cc4ba1308ea654ae799ed31d8ab2a18b"
+},
+"littown/audio/w/bed.mp3": {
+"size": 4407,
+"sha256": "665045cf7ba5ab6654713cc266d3a6c8e52a6970f04824f41ce2a75f0fcdbcc3"
+},
+"littown/audio/w/bell.mp3": {
+"size": 5452,
+"sha256": "c2a522f8621b08987310cbd3b86a30da885637b3410d0e946c971e4951caf391"
+},
+"littown/audio/w/best.mp3": {
+"size": 6079,
+"sha256": "34f4cbebdee4eaff4088ba02195c52f9c97f4eb72f5fa329ea1411d71a3f46a4"
+},
+"littown/audio/w/big.mp3": {
+"size": 5452,
+"sha256": "c01c17ee7ac21f7fcd11020f6dc1b663f44e5695237076c6574cba8cb41faa20"
+},
+"littown/audio/w/bike.mp3": {
+"size": 5452,
+"sha256": "790072303625328cf97d9d2cdd0d737b053864a428fd9022e6302cf33367bb2c"
+},
+"littown/audio/w/bit.mp3": {
+"size": 5243,
+"sha256": "1188c6f1390a198519864002359c3e06b5169cdb691b1d2c921bef7511995439"
+},
+"littown/audio/w/bits.mp3": {
+"size": 6079,
+"sha256": "78a2585efc6d7187f0ba09527a29ff34bf8171849bb45fb649b2ee5cc2069633"
+},
+"littown/audio/w/book.mp3": {
+"size": 3989,
+"sha256": "8d994d63cfbd6041d48d8f44af7f8c5da917321ac59d117baef85efa93d2594c"
+},
+"littown/audio/w/books.mp3": {
+"size": 5452,
+"sha256": "22ce1c15a6726812fe003824c815992a528a079a0bf1e8e54f80f2058d0dff0a"
+},
+"littown/audio/w/bowl.mp3": {
+"size": 5870,
+"sha256": "273991e5f44d42ac76eb00c00b9de09b3ee45f941a5144a00f2987c4e35041fe"
+},
+"littown/audio/w/box.mp3": {
+"size": 5870,
+"sha256": "8c992ce09b26d7d4d557858f598395b1a310f54d617a4494dcef41fff8e64ba5"
+},
+"littown/audio/w/boxes.mp3": {
+"size": 7542,
+"sha256": "bb335a933e1f6a7da2d2e0634f4d1273a177f9a273f7c24c3b52717c4a5add05"
+},
+"littown/audio/w/bread.mp3": {
+"size": 5452,
+"sha256": "a6d4df31b59ae7cb4d527ae53d5a53dce50c9e7e8b92bf0261a13a602fe54579"
+},
+"littown/audio/w/bucket.mp3": {
+"size": 5452,
+"sha256": "c1ae9e3d926a558dfd14240f74cc5617a742e933371b03ec3b73c7242d7fb020"
+},
+"littown/audio/w/bug.mp3": {
+"size": 5034,
+"sha256": "b92c520d142e947bd30bb93a78d88f8091a266b3e89cf9fea000f1b745a088df"
+},
+"littown/audio/w/bump.mp3": {
+"size": 4616,
+"sha256": "7a5967d92acfbef9390dbe09927038c85b1b42e9705ecf25b9ecb5731f944f7f"
+},
+"littown/audio/w/bun.mp3": {
+"size": 5034,
+"sha256": "a26862fd9a1e01236f8a30ed025b0eaa70057884d12b63048b10d77fe8c131f1"
+},
+"littown/audio/w/buns.mp3": {
+"size": 6079,
+"sha256": "d6b78947a9269ad223d2daa7fcdeb4a4287b77ac659df8123c7bec9b9c077b83"
+},
+"littown/audio/w/bus.mp3": {
+"size": 5870,
+"sha256": "6590e47bb95875137ab162bdfe0f1a6d9f68d0136002589f01d3f394bf8ebd85"
+},
+"littown/audio/w/cactus.mp3": {
+"size": 6915,
+"sha256": "08e2aa95e2a341f0a43bb039d469296a5218495d637d5d2e82f98d20deb1a8fb"
+},
+"littown/audio/w/cake.mp3": {
+"size": 4825,
+"sha256": "c9b50dd04fb71191840ec0306757366e10ab51463d98720a7fdcef99a053d499"
+},
+"littown/audio/w/camp.mp3": {
+"size": 5034,
+"sha256": "c6e4a26ea37f3b84bfe57711afd61d527a3aafbb4c9b794b67b036defa315e61"
+},
+"littown/audio/w/can.mp3": {
+"size": 4616,
+"sha256": "e2ca88e4a2866927f633a8af0fe7724d17ea7b355ba3fb8c4904bd16973eb467"
+},
+"littown/audio/w/cap.mp3": {
+"size": 4616,
+"sha256": "b99ec5abe3ab36ddc1d2707a03c64847a2bdebfdc502ee621ce4dc55afbd743a"
+},
+"littown/audio/w/caps.mp3": {
+"size": 5452,
+"sha256": "fe2010d06d6bba56215a8bfa49f2646b7ec38731099a3d5d0a784b59b5a4bc30"
+},
+"littown/audio/w/carrot.mp3": {
+"size": 5243,
+"sha256": "79bca9a3af22a21aabba59c12156a116d18c997bd4f263bd2c46d6784f90512e"
+},
+"littown/audio/w/cast.mp3": {
+"size": 5243,
+"sha256": "f2f76c30d3fdc63970b579a5a3910944f356bbbe82e9d5dfc7101aceef2e3b50"
+},
+"littown/audio/w/cat.mp3": {
+"size": 4616,
+"sha256": "da02f24980b972a8ad0e09ee0dfaea0306867cb2756e864f02705281ac3111d0"
+},
+"littown/audio/w/cats.mp3": {
+"size": 5452,
+"sha256": "ed409403960c0ab1bdc45e4ff9b52ba5ebb9548045735487f9a5fef35b42f9f4"
+},
+"littown/audio/w/chair.mp3": {
+"size": 5452,
+"sha256": "13b6513faff882818c977f5f5e1e2b97f71fcf74cbc1db03fbd10a538aeb1d4b"
+},
+"littown/audio/w/cheese.mp3": {
+"size": 5870,
+"sha256": "1eb633227afc45ccd730ce689b8f2806f2458855071da49acfca5ed2758ede4a"
+},
+"littown/audio/w/chop.mp3": {
+"size": 4825,
+"sha256": "cdf3ce13c20d7cbd826927449b2ab2b0b0ab6e13c679e4d40547c092111a874d"
+},
+"littown/audio/w/clap.mp3": {
+"size": 5034,
+"sha256": "746b88caa8711b161db093d58534385b4422d7eb4af26eda0ca99823b3cc6065"
+},
+"littown/audio/w/cocoa.mp3": {
+"size": 5243,
+"sha256": "ab352a4bc750b6d5d92192cc9a8f120574b916c7333e47b04736052f05e78aa7"
+},
+"littown/audio/w/cod.mp3": {
+"size": 4407,
+"sha256": "96b69253d710693b353a8d955e89c8b1a3d3aae93123e8ffe382fc58b9b27f8b"
+},
+"littown/audio/w/cookie.mp3": {
+"size": 4825,
+"sha256": "df8cec8fe068e01e61e0a947a6c88c04cd73121a5abb30464dd96aaff451590a"
+},
+"littown/audio/w/cot.mp3": {
+"size": 4616,
+"sha256": "ed1bbd5969ea12b9eca768502858e9ac45e69815c53b20c79cf17ffd4657f0a5"
+},
+"littown/audio/w/crab.mp3": {
+"size": 4616,
+"sha256": "0a84597b72e2ec472042f5c9feb347f6a17074a3c734fcd5e1908568eea2a020"
+},
+"littown/audio/w/crust.mp3": {
+"size": 6288,
+"sha256": "07eb172298007e8ccb0f2334a4830ba25932c31572ad2b002924cc4f6287ff02"
+},
+"littown/audio/w/cup.mp3": {
+"size": 4407,
+"sha256": "b13a3ad4babbb1e7ffd6cb91d5cac867400c74bd281ed67d528398b949fca794"
+},
+"littown/audio/w/cupcake.mp3": {
+"size": 5870,
+"sha256": "a5558bb772ffbde708e251ed4797474ec5adf0ba308e7413943dc7822123fe54"
+},
+"littown/audio/w/cups.mp3": {
+"size": 5034,
+"sha256": "a4d52f32e286e259825077a850db0c833a5ca3f292ba8ad1cbebc91f4d01ac92"
+},
+"littown/audio/w/cut.mp3": {
+"size": 4198,
+"sha256": "694a4dfb1362adb559d1f435201dd192b578d5a8fed478274f07b2568308526c"
+},
+"littown/audio/w/cute.mp3": {
+"size": 5452,
+"sha256": "802a0c6d4e6c7bec06b3de3363af2b7fdfc01c71c5b90971eab00a8b15f78984"
+},
+"littown/audio/w/dad.mp3": {
+"size": 4825,
+"sha256": "f98a42cbbfa7cc70efc9d9d54a108e343f0e3df9ab3cccf9f9ea0f6236fd85d6"
+},
+"littown/audio/w/damp.mp3": {
+"size": 5452,
+"sha256": "3774c9ec7a341cc4e5a7354cefbf570b5fb76a538ba414a476cd35e54e8e79f2"
+},
+"littown/audio/w/den.mp3": {
+"size": 5243,
+"sha256": "df144de13589e844de0b4fb94f555bc08c675e23a79809f61ffaeb6bdb527119"
+},
+"littown/audio/w/did.mp3": {
+"size": 4825,
+"sha256": "38d73c61d043a452699de2f76dadd69d40caaf8e65534b6386dbaa816628e1fa"
+},
+"littown/audio/w/dig.mp3": {
+"size": 5034,
+"sha256": "767de4adc46b0c3fa0195add0b586bf5dc4da2c29b096d255c28f266b93858bd"
+},
+"littown/audio/w/digs.mp3": {
+"size": 5870,
+"sha256": "39adfe15d71c3e92495e16d139610ed6793098f489ea25c30f65432ebe6bd234"
+},
+"littown/audio/w/dip.mp3": {
+"size": 4407,
+"sha256": "c4bf693a47faf8e51d6575292ade19180bdaf6166f432c8e2c47eaf23a0d7afe"
+},
+"littown/audio/w/dock.mp3": {
+"size": 5452,
+"sha256": "9fea20fafadc2daaa02fd09616535f53b335728096e4052dfdcd104b97cb6ba9"
+},
+"littown/audio/w/dog.mp3": {
+"size": 5034,
+"sha256": "2e25116c67b63e51d947350a020d6b57c06ea459d1bc79bcf4207ae140319196"
+},
+"littown/audio/w/dogs.mp3": {
+"size": 6079,
+"sha256": "792cfe8d4cec3a6e46895004fc68f51e2f17a1501d7ed4a1006d0732e997b6d8"
+},
+"littown/audio/w/doll.mp3": {
+"size": 5243,
+"sha256": "e5ac7cfdcc2ea4c1d2052fbfdf7deece3dc3d00d1a947b640df3563df2c2ca60"
+},
+"littown/audio/w/dot.mp3": {
+"size": 5034,
+"sha256": "d2a6b26cca8895a6a5a64eb5530c8d6094cdc8c30b43d4ebf829407ccbbabfd1"
+},
+"littown/audio/w/dots.mp3": {
+"size": 6288,
+"sha256": "d63be15fd9758452397f32530bb8b1ad0d05c18d3375bfbae7db03a8f4875d59"
+},
+"littown/audio/w/drop.mp3": {
+"size": 4825,
+"sha256": "c327f7602260c25b133c19ed4dc991aa78edaff54b91c6e84313d2fe59976b44"
+},
+"littown/audio/w/drum.mp3": {
+"size": 5034,
+"sha256": "e5a9758b002d2731d53ebe9f62201802fc594055965eda178ff9a34f9f94845d"
+},
+"littown/audio/w/duck.mp3": {
+"size": 5243,
+"sha256": "80b25b313c2121112426561bf8ac6b2c07612981b186987ad21d4da9c27cafda"
+},
+"littown/audio/w/dug.mp3": {
+"size": 5243,
+"sha256": "c8b14c49ec6921a677988030b0139693616ce2514700a379b859ab7ec913bf85"
+},
+"littown/audio/w/easel.mp3": {
+"size": 5034,
+"sha256": "341a1796d0268ba934e46bc3d664e14909b218766e186833d527765ced8ded6d"
+},
+"littown/audio/w/egg.mp3": {
+"size": 3780,
+"sha256": "5a4816bc918b788e27a62bd6de41991458fea13c04ad5685dcf9b8b7a8c7b6d8"
+},
+"littown/audio/w/eggs.mp3": {
+"size": 4825,
+"sha256": "a14cac320a597a29c59a75d7a193acb606165f66acff6f5590ced21dea3db28f"
+},
+"littown/audio/w/end.mp3": {
+"size": 4198,
+"sha256": "3321f7884bbb3c60c998e8b2d80d358097ce2a470e04eff559e1e396491fa066"
+},
+"littown/audio/w/fan.mp3": {
+"size": 4825,
+"sha256": "7e70e5a09115a86005d626d20b2f1524642ceff5f1ebdb7e1ae34869fb62e1dc"
+},
+"littown/audio/w/farm.mp3": {
+"size": 4616,
+"sha256": "30679008c84d3f9d6e9b61953e8d337df69193516996c4a40a1c60e270c3907d"
+},
+"littown/audio/w/fast.mp3": {
+"size": 6288,
+"sha256": "7cea26e140e09327c77de2941c7e0c5b5b6b41a7c8d73a36a4730da9b8d8ff6b"
+},
+"littown/audio/w/fig.mp3": {
+"size": 5243,
+"sha256": "8f9f4f6b35235cf76c7cc487bea7e5c44d504fa2985d48342f2a62a0c7b2e3ad"
+},
+"littown/audio/w/fish.mp3": {
+"size": 6079,
+"sha256": "ef9babad373e994c13fe223ddd7a292dae20e7879358f590234baaf7c37c5279"
+},
+"littown/audio/w/fit.mp3": {
+"size": 4616,
+"sha256": "889f55435d51dc6c39c240bb2bff05b37c2015fe7779853e53c6b64b462401ef"
+},
+"littown/audio/w/fix.mp3": {
+"size": 5661,
+"sha256": "b94e15a432d6931a61fd3289dd4a9d61eb991005944457c82fdd5b0c465c0c83"
+},
+"littown/audio/w/flag.mp3": {
+"size": 5243,
+"sha256": "ca460b0e767126c080285045c9c3625a5ee7bf8382ad4be35574120b1fd58f06"
+},
+"littown/audio/w/flex.mp3": {
+"size": 5661,
+"sha256": "0b9c918fe4ceaad3734c6ae2841bfbe8a5b173ad0000b0cece7e5bb28fedc9a4"
+},
+"littown/audio/w/flip.mp3": {
+"size": 4825,
+"sha256": "8d0743e468e999fb464d9e1ad3c81773f9c3d50d21c131c4e2cf54bf06e0d31d"
+},
+"littown/audio/w/flour.mp3": {
+"size": 5870,
+"sha256": "7cf3bed8964e6f288c09c22ae17c5e5e07700f2d7e66821af13e6df327bbc528"
+},
+"littown/audio/w/flowers.mp3": {
+"size": 6497,
+"sha256": "2d212d510cf011458d9badba84d3181fb34a513f5b7ea457a3655f196dc2b5cd"
+},
+"littown/audio/w/fog.mp3": {
+"size": 4825,
+"sha256": "5493be6c69f4a5c2c4110755abbe1dd82a2156e0fd39c292889815d6be9f895c"
+},
+"littown/audio/w/fox.mp3": {
+"size": 5452,
+"sha256": "08739cb553d3aaed0d9cea2bb9b46b3515198211f4f4eb0e0dfb693121072bd0"
+},
+"littown/audio/w/foxes.mp3": {
+"size": 7124,
+"sha256": "bb93d9363c9e5215be104485ca6443c1ab31ad650bc11fdf19d1fff80044a63b"
+},
+"littown/audio/w/frog.mp3": {
+"size": 5243,
+"sha256": "2f63f292f514a9147dfb086906422d4b562efd1422552b85f53fabf8baf1b5d2"
+},
+"littown/audio/w/fun.mp3": {
+"size": 5452,
+"sha256": "48135e9ce4c65de5de95bc80181915ee982d1e45dcab07c622d61c95dc0cad6e"
+},
+"littown/audio/w/gap.mp3": {
+"size": 5452,
+"sha256": "1aff22a43120511ae312a183bf439110980a1dd4f46147c512f977403c83b69c"
+},
+"littown/audio/w/gasp.mp3": {
+"size": 5870,
+"sha256": "3dc47db6f051e37664a82e2f6b4044c84a4ce94a50473575c729690f882a804c"
+},
+"littown/audio/w/get.mp3": {
+"size": 3989,
+"sha256": "3573bd726dbcb8c3caaee29c8501f85736ff53757cf46f63d4a5e6a41fa34c01"
+},
+"littown/audio/w/gets.mp3": {
+"size": 5452,
+"sha256": "7c1dc1ec47689fbe59d790ef0b4ded4a434f6bf1bb5e2f0c3235781ed2d86498"
+},
+"littown/audio/w/gift.mp3": {
+"size": 5243,
+"sha256": "290674b39c59433991f91138ca1f6b081e9691bbba312ac5a826d1c1c31a3798"
+},
+"littown/audio/w/gig.mp3": {
+"size": 4825,
+"sha256": "eeedf38565c1598d1cdda076bab423ec83f0eec8cc23c69d63d9e219c070c137"
+},
+"littown/audio/w/got.mp3": {
+"size": 4825,
+"sha256": "4fd175db4781ae0cebc5976cadadc63ebd604b8695599a10dcbdd138a6f5814e"
+},
+"littown/audio/w/grab.mp3": {
+"size": 5243,
+"sha256": "b974d4d99275be63d472313979718d0b569bfc7a85efcbf25eff06b0e60a77aa"
+},
+"littown/audio/w/grapes.mp3": {
+"size": 6706,
+"sha256": "b3e5ceb420112767f4430ea9a990f19d835e492f91b27f0763f6de6f47c5f2eb"
+},
+"littown/audio/w/grin.mp3": {
+"size": 5661,
+"sha256": "652677937d8735c2e9ca94c4abd25ff922b7c0c1691cb56248e4ccf7e5c7f896"
+},
+"littown/audio/w/gum.mp3": {
+"size": 5452,
+"sha256": "5e7dda906dfe3de9a0e339dc3c3567097241ad4d722a446548043a1195186c27"
+},
+"littown/audio/w/had.mp3": {
+"size": 4825,
+"sha256": "cc3c7ffde7d2e1d9bb94d1b20774e52812b571d445208faa3b95305c6813da77"
+},
+"littown/audio/w/hand.mp3": {
+"size": 5661,
+"sha256": "2e34eab41454ca62d19097d32b2d78d6f163340b065ee7e1915074d7c45af8f3"
+},
+"littown/audio/w/hat.mp3": {
+"size": 4407,
+"sha256": "58de788de9c202de3498dc16244d2fd55dd152e004389c4681abd800d0913da1"
+},
+"littown/audio/w/hats.mp3": {
+"size": 5661,
+"sha256": "d0217d31e86070daea067ee4d3269c52d872bf459af33921dd3fc0fa7aeb51c3"
+},
+"littown/audio/w/he.mp3": {
+"size": 4198,
+"sha256": "9d2a0cc06af40d01cb881be0f0d14de259df199feb531b73f30f9d2aee5a9528"
+},
+"littown/audio/w/help.mp3": {
+"size": 5034,
+"sha256": "1a01f1bb28e1b3430342f3855391aae7ddea6ff6e8b1573b21f9d0f54b9d1fd0"
+},
+"littown/audio/w/helps.mp3": {
+"size": 5870,
+"sha256": "f80663293b01010075dfe0e19ecacaca4969d92eda38114bf4a8695bc694039c"
+},
+"littown/audio/w/hen.mp3": {
+"size": 5034,
+"sha256": "35fa743660811d50787463eba8cba928fdc09e37eee6b6b4c9f499917912a3ab"
+},
+"littown/audio/w/hid.mp3": {
+"size": 4825,
+"sha256": "d8b135db1562e34a02256df703924d6270e0240f06b70f9cb5558c04085bcb61"
+},
+"littown/audio/w/hip.mp3": {
+"size": 4616,
+"sha256": "e080054fc0f0f7658a3cefd752ff68ea3c7d4e95ea166a3846a0e3ea5bc767aa"
+},
+"littown/audio/w/home.mp3": {
+"size": 5452,
+"sha256": "b4e2af54c60fa511da262baa6c98c28f4cad563a3b99fcaa724416964ffec26e"
+},
+"littown/audio/w/hop.mp3": {
+"size": 4616,
+"sha256": "cc52dc44f8cb2280f3d42108623830371b7d212ec883f06565948c193a7dc7a6"
+},
+"littown/audio/w/hops.mp3": {
+"size": 5452,
+"sha256": "903cc70e58798bb9d3c11bffa94fb8e2f36561c2d66b93823454abe732859a49"
+},
+"littown/audio/w/hot.mp3": {
+"size": 5243,
+"sha256": "bc566fa09accd13c08fbf506810ccb6e7009afefa696ee20b3bf06a698d0bd98"
+},
+"littown/audio/w/hug.mp3": {
+"size": 5243,
+"sha256": "40e52b9d4d64005f10318ec41907511a1f22c3555139a5ba88825ccf72667bee"
+},
+"littown/audio/w/hum.mp3": {
+"size": 4407,
+"sha256": "62e0977875a1913f7ef6a00c99946d04c7e68531332b4f88d089870f4c85b058"
+},
+"littown/audio/w/hums.mp3": {
+"size": 5661,
+"sha256": "84b8fb676c29050142eda86043cc643ea67587777e1f58af25fea60918878fca"
+},
+"littown/audio/w/hunt.mp3": {
+"size": 4616,
+"sha256": "dd357ca0fb3b3f7b50f1f5249099142d16fba0099a9e476e03a1158eeb3aaf11"
+},
+"littown/audio/w/hut.mp3": {
+"size": 5034,
+"sha256": "ac078f32e46d1af7a75ae4e9b0410a1993a2c9ab81674b21ebd7bce70494a93e"
+},
+"littown/audio/w/i.mp3": {
+"size": 3153,
+"sha256": "585bdfe7e7730fd945719381d3a7a69eef59490fa417d85ecf5a693a65131391"
+},
+"littown/audio/w/in.mp3": {
+"size": 3989,
+"sha256": "e879f5eef7b3dd5c207fe189c6bf266daba2fe7e8a083afdd1a428a8f1e747df"
+},
+"littown/audio/w/is.mp3": {
+"size": 4825,
+"sha256": "d5d88aebee258d149a9a98140b065ce4e3ec3af77cc325346f81929c537810d3"
+},
+"littown/audio/w/it.mp3": {
+"size": 3571,
+"sha256": "61fe3dd1eb365ba3c3f39ce8d736ae0fa08ae910e085e625ab074fb0b491be94"
+},
+"littown/audio/w/its.mp3": {
+"size": 4198,
+"sha256": "b6a42a62ec12e353d7749c37ce78392a443631361c8f590039c2619bcc87e553"
+},
+"littown/audio/w/jab.mp3": {
+"size": 5243,
+"sha256": "e83873cc97acb9e6de8f42cdb583cc284a11f27e5b392dd53433dfb8a6522956"
+},
+"littown/audio/w/jam.mp3": {
+"size": 5243,
+"sha256": "9ff67f55f7ed7765d99279d54003d325866f11e45d1f8fe7bfc1b51f4ee14e78"
+},
+"littown/audio/w/jest.mp3": {
+"size": 5870,
+"sha256": "ed61e6e91ec26615173ef275f2a6b6e961fd1f1e95ab7f8ffe2424ffe6f53068"
+},
+"littown/audio/w/jet.mp3": {
+"size": 5243,
+"sha256": "d8c10bcf995f66bc724bd8a9a9e9c8dc10e30b5dd1a2ac7af1e8b15aae95096e"
+},
+"littown/audio/w/jets.mp3": {
+"size": 6288,
+"sha256": "c63fe7b7527a6d36913ef73a3265ebea9e9522c32217c2ab52070b57130c82b9"
+},
+"littown/audio/w/job.mp3": {
+"size": 5034,
+"sha256": "17d712f1c6ada92ad85e746c88ebdb2b45e5c36e2cb3a7ceac457ccc119619f1"
+},
+"littown/audio/w/jog.mp3": {
+"size": 4616,
+"sha256": "82f75786e013faeeddfce40de671892b2a909594ec179fbca37abc66caf34bc3"
+},
+"littown/audio/w/jug.mp3": {
+"size": 4825,
+"sha256": "1b7de2f58289b16497fc5118f14de33719645818e43105d63aaa37ecc90678c9"
+},
+"littown/audio/w/jugs.mp3": {
+"size": 6079,
+"sha256": "f3645b799488dd50b4d5eaa51dc6c3bb426295d7355a9e680d0dbf86f891e997"
+},
+"littown/audio/w/juice.mp3": {
+"size": 5870,
+"sha256": "596c156e400b733594257afd12f80776dd3518158b75ff01fd46be81005cab5b"
+},
+"littown/audio/w/jump.mp3": {
+"size": 4407,
+"sha256": "765f1d9b4e01d4dfbb5fc6b2705125753b041b9364ead482cfc5713e6743bfb1"
+},
+"littown/audio/w/jumps.mp3": {
+"size": 5870,
+"sha256": "b6434a248bff6e7d05899267df37078377a176eeda6219e69183c5bbb5770bab"
+},
+"littown/audio/w/just.mp3": {
+"size": 5870,
+"sha256": "ab536e1ccf70e65dabaef73f800c76340447f58423b6efec0ce12891842a9bc6"
+},
+"littown/audio/w/kick.mp3": {
+"size": 4616,
+"sha256": "4dc4571b1bfced55192a6b50bda19a91af2e2749efab58370acb0034f58fa8ad"
+},
+"littown/audio/w/kid.mp3": {
+"size": 4407,
+"sha256": "e0339ff557ba33984046cdad352d53e09ed2a143acc5a9cf72e92e626819af3c"
+},
+"littown/audio/w/kids.mp3": {
+"size": 6079,
+"sha256": "e2216b0d7966e668b2ae34ca9717dd910e0c104d1377a5145183f5abb9ff541c"
+},
+"littown/audio/w/kit.mp3": {
+"size": 4407,
+"sha256": "53b616bffded15ad0e2b499ec5527ff02d3af1ecc545812074d6ff23cbad8139"
+},
+"littown/audio/w/kite.mp3": {
+"size": 5034,
+"sha256": "e945a7db0783377e25b35e824a4ff0749ecdc2954b1096c4103f3ec97b6554cd"
+},
+"littown/audio/w/lamp.mp3": {
+"size": 5034,
+"sha256": "200ec6084d836addbd74a9ebdb9ec370db9aaec5c557df4c719ee6d712ca87f9"
+},
+"littown/audio/w/lantern.mp3": {
+"size": 6288,
+"sha256": "2776ebd2d5b78f4b14922e7db6c19420b5a39f37ca78878c0bbfd16a9f987954"
+},
+"littown/audio/w/lap.mp3": {
+"size": 5243,
+"sha256": "e258d0fe34517e7d2d145e68897a0a3a007d6ffcbb203367eeceffbd3e225261"
+},
+"littown/audio/w/leg.mp3": {
+"size": 5034,
+"sha256": "c66dcb92eeafb4761b1f4b977639053be99767d89da98d200edcaf71d97ecac3"
+},
+"littown/audio/w/lid.mp3": {
+"size": 4407,
+"sha256": "4e704780039561a5b6f6307e4d3327f327d96e53dd87075bd37001c667040530"
+},
+"littown/audio/w/light.mp3": {
+"size": 5661,
+"sha256": "0bebce7ab199e6322f0167ae48ddb9143179f031a5105dd5d4e083d51ba116e4"
+},
+"littown/audio/w/lip.mp3": {
+"size": 4616,
+"sha256": "4e60bcc10cd50c55d2bcaa8df7647eb2c3b7d67ae2fa2a5da58cd73a8952b0f7"
+},
+"littown/audio/w/lit.mp3": {
+"size": 4616,
+"sha256": "402f75e2af7d0ba1eb702446dee16cb414420fd3c1eb9b5cdbc82b3bf71ae969"
+},
+"littown/audio/w/log.mp3": {
+"size": 4825,
+"sha256": "03729699de216511bc7064130c832a5361f2fe3ec78eb2566a681872e0c34a29"
+},
+"littown/audio/w/made.mp3": {
+"size": 5243,
+"sha256": "9f22bd41229896c4077f6751ad452af02488b230ea22ff01b07a53b08614cfb3"
+},
+"littown/audio/w/map.mp3": {
+"size": 5661,
+"sha256": "16c97fc035504f06eb021e33820e4bc767560feb921612e06198d3ccd9452719"
+},
+"littown/audio/w/maps.mp3": {
+"size": 6079,
+"sha256": "79f437361e678bc17da626737902a94e0f443b050db335adc96d40b26ec35e83"
+},
+"littown/audio/w/mask.mp3": {
+"size": 6288,
+"sha256": "b2a0aed59b6a630d58f24c105d680d765d582a130d2a72519b14527d769e3313"
+},
+"littown/audio/w/mast.mp3": {
+"size": 6497,
+"sha256": "0e2c60c1b0bd25cc6104dbd03a526980d2e3b875815ba2ec93e6e1a4f60d41df"
+},
+"littown/audio/w/mat.mp3": {
+"size": 5661,
+"sha256": "03b5213436540628542e0b6a74b0bdcf46d206a09a5cef8a7c75847cfa490cf7"
+},
+"littown/audio/w/mats.mp3": {
+"size": 6079,
+"sha256": "82605cba0fdb83c986a37c618dd44bb50e951a08d837a0abf2317bc46a3f8248"
+},
+"littown/audio/w/milk.mp3": {
+"size": 5870,
+"sha256": "cfc72b8f256f698b85119530037e15ff9dfafb714f275976aa72a323bfbff63d"
+},
+"littown/audio/w/mint.mp3": {
+"size": 5034,
+"sha256": "3112a2d96f66fcd9f59552a916356140823e4b1d09f7db3a812057bd7b91ba3f"
+},
+"littown/audio/w/mist.mp3": {
+"size": 6288,
+"sha256": "5c8117f4b8b69cd160cf7afa57b8aae13f806a58399e84a2c409121dab1cc269"
+},
+"littown/audio/w/mitt.mp3": {
+"size": 4825,
+"sha256": "e89b89960326d743708ef1ed9b626f5f3663662c236154b93542528a3945066d"
+},
+"littown/audio/w/mitts.mp3": {
+"size": 5661,
+"sha256": "4fa3a99d76441ea90a24836427ac0b2af47b4384e1c550f7164bdefba33a5de1"
+},
+"littown/audio/w/mix.mp3": {
+"size": 6079,
+"sha256": "39a22ca42c4c820f4ea75768b6d33e8cacf2f12aead29913dacc383c0eb36210"
+},
+"littown/audio/w/mom.mp3": {
+"size": 5243,
+"sha256": "aabf93cfe8ffb4f623e43c81b99ac1c639c11a676f8269657559227c96e32dbf"
+},
+"littown/audio/w/mop.mp3": {
+"size": 4825,
+"sha256": "7beaa7e03dc65515e4512f11a5576ce4b56592a4d48904f2cd63514a8e37638d"
+},
+"littown/audio/w/much.mp3": {
+"size": 6079,
+"sha256": "6d7d12becdf4b2cd08b89bfefc84d02f964eea98662887b4378c7f370d8bff67"
+},
+"littown/audio/w/mud.mp3": {
+"size": 5243,
+"sha256": "ab3501ac14d0ce17238d263d5eb1aa78c4ad106c51f5862e591c4356faf186e4"
+},
+"littown/audio/w/muffin.mp3": {
+"size": 5870,
+"sha256": "85e85d7dceb86908015dd5d07952cef3b82b52803f0e80ef61bbc139cb1ed5bf"
+},
+"littown/audio/w/mug.mp3": {
+"size": 5034,
+"sha256": "f4e206d2705c126a25592f4f5282d098c32dd92037cbdee621f1c0e51b1ead39"
+},
+"littown/audio/w/my.mp3": {
+"size": 4825,
+"sha256": "61594317b8d010963ab56f2f6a1597acf61186b81cc8fccaff3b8ef1f7cb7e83"
+},
+"littown/audio/w/nap.mp3": {
+"size": 5243,
+"sha256": "c2c2b102f218285100b3081d233149f31714ef913f56fccd28ce109de0490fd0"
+},
+"littown/audio/w/naps.mp3": {
+"size": 6079,
+"sha256": "cee05e43f6d072021e7060a00792ea3cca6f6c1e3356f97d54eaec546b89ed39"
+},
+"littown/audio/w/nest.mp3": {
+"size": 5452,
+"sha256": "4694ef9acf725b7cf50f5b18190a6bd5649a5aefe6b5491d5620b8cb1b5c6569"
+},
+"littown/audio/w/net.mp3": {
+"size": 4407,
+"sha256": "c70d0d8e64460efcd50292f29f158f4048d783c97feb24e57278cf43c8818838"
+},
+"littown/audio/w/next.mp3": {
+"size": 5661,
+"sha256": "2b1e6b42f3a73e1dbb3f54ac9ed830a2eb134ebae6901065d4661b07193535c5"
+},
+"littown/audio/w/night.mp3": {
+"size": 5243,
+"sha256": "b927380916c2f98ffb30f12c657ae4aa0d6e62bd108c55cf9cc5e9c86c08d270"
+},
+"littown/audio/w/no.mp3": {
+"size": 4407,
+"sha256": "ac65c9a9938c48c66bce719fedec4c8ba672b997d43048f4ad47ca246faac20a"
+},
+"littown/audio/w/nod.mp3": {
+"size": 4825,
+"sha256": "0ce19e50bdda0cdd4de1168a85311af185fc960ad15246429dc0548df15982c5"
+},
+"littown/audio/w/not.mp3": {
+"size": 4825,
+"sha256": "ac621adebe47fcfe073f992bd9cf290726c8a869cec9372b2226561e4d92e9ed"
+},
+"littown/audio/w/nut.mp3": {
+"size": 5034,
+"sha256": "282bda54b3037c9e290312b66b8e50d57d9d77e1dd0f9fa284ac3557a0c4be5e"
+},
+"littown/audio/w/nuts.mp3": {
+"size": 6288,
+"sha256": "ccb675693805358ad8fe3a4e4d764e367080f94110df48b01b6861bfa4769af4"
+},
+"littown/audio/w/octopus.mp3": {
+"size": 7124,
+"sha256": "e09a26f13965ac911a9a8667708a7c069683d9f504d883d47d8f5fad885d16bd"
+},
+"littown/audio/w/of.mp3": {
+"size": 3989,
+"sha256": "69cf33e0725e1a9ba5f0c6e7d3803aa028789f5a8f3d4441127d2e50df99e5ea"
+},
+"littown/audio/w/on.mp3": {
+"size": 3989,
+"sha256": "ec454bea32f94a630b3215681c6016e4ac21172318b3ca7df84ac0ee2af9e045"
+},
+"littown/audio/w/ox.mp3": {
+"size": 5034,
+"sha256": "2d64d1c56ddf63b06892e866d41a311d36f18448557438ea07f5a7a4906d6a49"
+},
+"littown/audio/w/pack.mp3": {
+"size": 5034,
+"sha256": "0ee2d952f4a377cc9b15f0086958fa96e59236ea2da7b226c68f975c24ef72ef"
+},
+"littown/audio/w/pad.mp3": {
+"size": 4198,
+"sha256": "56e29fe429dd5fe0477fc95ab6118dd71316fe79e2061abc549255aef02077f7"
+},
+"littown/audio/w/pan.mp3": {
+"size": 4616,
+"sha256": "af9b3ddf99fb3d491b9cd1cffbf0a19fd968baf21c206142216104d1e6e29daf"
+},
+"littown/audio/w/pant.mp3": {
+"size": 5034,
+"sha256": "e34c488bbff7b5371df57e3bab50f5594565e43634d51a22a1dd0d4d5f13454e"
+},
+"littown/audio/w/park.mp3": {
+"size": 4616,
+"sha256": "9ca91cbef3ff7412e2bd20838665b04a8089eab9c016d7d856a5cbd8716013a4"
+},
+"littown/audio/w/pass.mp3": {
+"size": 5452,
+"sha256": "39ff11e6ce192aba40fae80c58fa528285d035508fa32b50fdbd5e3cc7ef625d"
+},
+"littown/audio/w/past.mp3": {
+"size": 6079,
+"sha256": "f1c53323c9236f2cf8533429363881ac5e3dc2deb186f9d19b49a3b4e0095bc1"
+},
+"littown/audio/w/pat.mp3": {
+"size": 4407,
+"sha256": "1f26691fe83e461d1b96f0179ad8cc56e51e314ae17785abb149d367fa471ed9"
+},
+"littown/audio/w/peck.mp3": {
+"size": 4407,
+"sha256": "aad3f3c76c34ca3d2026dd2955d4797adfd208a7967e71ee12d5116c64e7be6e"
+},
+"littown/audio/w/pecks.mp3": {
+"size": 5243,
+"sha256": "ecfe392a743995ee92c033331a0f1c00e1cb1b79036a1c3369129374446971f6"
+},
+"littown/audio/w/pen.mp3": {
+"size": 4616,
+"sha256": "ffc30dc7987c3e9ba377b01928cdcc0f5467eaa7ab2371d1c44448a1f8a5b6d8"
+},
+"littown/audio/w/pet.mp3": {
+"size": 4616,
+"sha256": "867150142093f02ac117c4f0c3cb7295cc1e403321934bac1926d9f63e0e3695"
+},
+"littown/audio/w/pets.mp3": {
+"size": 5870,
+"sha256": "64045e67d35022d36986e5274708c181c7b9e998f5284b0a2a4fa43f617d5767"
+},
+"littown/audio/w/pick.mp3": {
+"size": 4407,
+"sha256": "c4ac0ce81ca5f5ed5ede0592858b9f8009db32eed4f5caade7bf70efa07a7ef4"
+},
+"littown/audio/w/pie.mp3": {
+"size": 4616,
+"sha256": "0c0c7f1d3f341a7fb96ecc71f93329fda2b99848fd165afdff50ce6db05780eb"
+},
+"littown/audio/w/pig.mp3": {
+"size": 4616,
+"sha256": "455c1334c0670cc0e9eae15b8fbbb389fb9c52a90fb7d81e5f2f42ebb16d67b5"
+},
+"littown/audio/w/pigs.mp3": {
+"size": 5243,
+"sha256": "fa55840ff44aff927980d4c78d0a7139f039614a490403a01b1d506fa61cebaf"
+},
+"littown/audio/w/pin.mp3": {
+"size": 4825,
+"sha256": "394f95d6d471ede41e86cef25e1bb691079c810fbd72c59062bd7b9785146230"
+},
+"littown/audio/w/pine.mp3": {
+"size": 5034,
+"sha256": "e45c8b3c69fbc2e84e740c5b249f10a363fdc6e4af95645c1f9cfd017f10ca1a"
+},
+"littown/audio/w/pink.mp3": {
+"size": 5034,
+"sha256": "9f7fecbe8f5a39cd9b58a85f6e99723700cf323f82035e27b244091d39373fa8"
+},
+"littown/audio/w/pip.mp3": {
+"size": 4616,
+"sha256": "f21cbcda7fc9155104127f19a8adbe4cbafcd9ca6c2d7ecaccf04df933a6658b"
+},
+"littown/audio/w/pit.mp3": {
+"size": 4616,
+"sha256": "b74f422782322d1d4b4c8e219f64b89d0ab7bc3153d65fd3a96a34e414181c85"
+},
+"littown/audio/w/pizza.mp3": {
+"size": 5661,
+"sha256": "597e76b0b9501ee694df90ab4ba9335cc9f28ac05161a9eb18a0c4a3d564a6db"
+},
+"littown/audio/w/plant.mp3": {
+"size": 5243,
+"sha256": "326b4733ce2cb19706fc8f6cd61d85ce24e3a1424052c5b4863b22fbcf463fb5"
+},
+"littown/audio/w/plop.mp3": {
+"size": 4616,
+"sha256": "6f4fdf317184d8115ae03e5a137148d8c5647aec893330cb9780edbff290cffe"
+},
+"littown/audio/w/pond.mp3": {
+"size": 5034,
+"sha256": "cc3424b10248b76a67c0af5b43362665534fcfdfd50d497a522eeb9a0d703610"
+},
+"littown/audio/w/pop.mp3": {
+"size": 4825,
+"sha256": "12a8aa4dd19079de10d544bdcc437962658b9cb90adbb9376329a4f268757ac8"
+},
+"littown/audio/w/pops.mp3": {
+"size": 5452,
+"sha256": "570773d40b7bb22cb866a3bc1ab40e757a699cc4f802c4a8816597b1d4969a98"
+},
+"littown/audio/w/pot.mp3": {
+"size": 4616,
+"sha256": "fda259584ac85fff8efa063ebdf44bd43e29e79d1b6d7ecf4f43b3dcba6b5ac2"
+},
+"littown/audio/w/pots.mp3": {
+"size": 5661,
+"sha256": "8a6692ec1bcabca3472c90b32774129761555ef38b4150463df59dab32f13bf2"
+},
+"littown/audio/w/puff.mp3": {
+"size": 4616,
+"sha256": "4a4240ef3960173582c8997212d80a684777c51bf327e81b3b637bfe187fa0ee"
+},
+"littown/audio/w/pup.mp3": {
+"size": 4825,
+"sha256": "54e4da71e6c80cc1ee160d95c7e53a697cfa59521f6f44095a9a50c2ecf6cf6d"
+},
+"littown/audio/w/pups.mp3": {
+"size": 5870,
+"sha256": "6a8e5bb6c3692630702384e6513c2f1f4f2efd4e8b593eeeb29359cb2567d527"
+},
+"littown/audio/w/quiz.mp3": {
+"size": 4616,
+"sha256": "59ab67aa1b2853cf1f78fbdb68db158099d66c357a79743d40e8539b71b830a8"
+},
+"littown/audio/w/rabbit.mp3": {
+"size": 6288,
+"sha256": "b08f4788f22a2ee8a89a54e7ce9a7c27c961c4dd1cc617c794cc0c9dec72aef7"
+},
+"littown/audio/w/raft.mp3": {
+"size": 6288,
+"sha256": "a01ca3cde9c5dadd9c5072cfb449838612d9d1423c79508589b0effd5e966397"
+},
+"littown/audio/w/ran.mp3": {
+"size": 5452,
+"sha256": "b28b96ba25aa0003ded30df49f6022816648f87d99ca4713b0046093d21202e4"
+},
+"littown/audio/w/rat.mp3": {
+"size": 5452,
+"sha256": "87624106e8ee81775a8ab0c853729e3709cd04515d90ba473f3eb65bc93158b3"
+},
+"littown/audio/w/red.mp3": {
+"size": 4616,
+"sha256": "b2f2ff8a198a3a1601757f4da328e722c179fa9ed73293ef1c5f99b003e3a050"
+},
+"littown/audio/w/rip.mp3": {
+"size": 5034,
+"sha256": "f65691833bad14ed4fb9ca5318cd0e8a07b15726f6560f8108902a24117ea7e7"
+},
+"littown/audio/w/rock.mp3": {
+"size": 5452,
+"sha256": "58a9495041dfa71a3a49678ab34efc41e39ec88b3479055e2dcaea7384d5f4c1"
+},
+"littown/audio/w/rug.mp3": {
+"size": 5034,
+"sha256": "16fa13521bf18ed8c07fd44ecef597ed9558d82d631748099df4c5fbdb10554b"
+},
+"littown/audio/w/run.mp3": {
+"size": 5034,
+"sha256": "ff05b2a2868a4c6ea3ecda674d598b69f93c61a9198204efe432586d5effb79e"
+},
+"littown/audio/w/runs.mp3": {
+"size": 5870,
+"sha256": "f73f99a2c584c2628b990ad212ba598fccc4e51890a823d38638f0a7fa1c9eb3"
+},
+"littown/audio/w/sad.mp3": {
+"size": 5034,
+"sha256": "d193cc87e977b01ccf3876981fc7c3ed74ee126b738ff65f4a64e4397da7ff11"
+},
+"littown/audio/w/said.mp3": {
+"size": 5034,
+"sha256": "d7e964b3e32c0570206fa799e655f3bcb9f8bae69ff0ca9ac6046b09220f3f96"
+},
+"littown/audio/w/sand.mp3": {
+"size": 5870,
+"sha256": "dfe010db707aab15e2cbf06425f9ff196656a811d0cfa9e725e62d0ca7efd20b"
+},
+"littown/audio/w/sandwich.mp3": {
+"size": 6915,
+"sha256": "7d87f25fc9cdead9f6305c2ca16b8bf127485a423efa561b491177d6e972116d"
+},
+"littown/audio/w/sat.mp3": {
+"size": 5243,
+"sha256": "f56c7e700c32505c0394461b6cc226d73e7487178e1a008e385698c6e6f344ec"
+},
+"littown/audio/w/sax.mp3": {
+"size": 5870,
+"sha256": "c5c49fa8fd1fc8a2ae406b996954a22a1db805e714fbda38d1a42d37a8438bd0"
+},
+"littown/audio/w/scan.mp3": {
+"size": 6288,
+"sha256": "406ee573933c330ad1a76175731585159c7404ac54de08af610b472a8de90ba7"
+},
+"littown/audio/w/scat.mp3": {
+"size": 5870,
+"sha256": "b884e6ffa84a72d61f42a1bf13b2f10e649815824f7eda99c89c40c228c82450"
+},
+"littown/audio/w/school.mp3": {
+"size": 5661,
+"sha256": "770dae337f265c914464f41c5f9d3e6add878c6aa825437e573d268390ced42a"
+},
+"littown/audio/w/scooter.mp3": {
+"size": 6079,
+"sha256": "a35536afa2ac1a04204ac692e4c746e71998084be7f757a77be636e604deceeb"
+},
+"littown/audio/w/set.mp3": {
+"size": 5243,
+"sha256": "723c6d84408a70756bd997e1d49dbadf00540deaf81254665231462d3860e276"
+},
+"littown/audio/w/she.mp3": {
+"size": 4407,
+"sha256": "37f685aef6770c59a0b3028a8ba1043f38afafa787a784c9aa4f1c7d3782967d"
+},
+"littown/audio/w/ship.mp3": {
+"size": 4616,
+"sha256": "89e9d49654ed7489ddfdee8feec5b27bd9818a92c97182f2f2c62d78a3cf2320"
+},
+"littown/audio/w/shop.mp3": {
+"size": 4616,
+"sha256": "163a1a5804e877a8fc54597a05d519ee138d639a2c8c19ab27ccccd972c59c46"
+},
+"littown/audio/w/shovel.mp3": {
+"size": 5661,
+"sha256": "8b80dd13586bd3850eac9020ef119e4821a56d54b0e5cce245e8edc7a74125e4"
+},
+"littown/audio/w/sid.mp3": {
+"size": 4825,
+"sha256": "b105b43ee01c56673848d394813fefd40e89da2e510b80d37313b7ba38b8656e"
+},
+"littown/audio/w/sing.mp3": {
+"size": 5661,
+"sha256": "6d771ef65a300c0238371de8733c04818c8c706c4d7dc01ab11fb14a1079442b"
+},
+"littown/audio/w/sip.mp3": {
+"size": 5243,
+"sha256": "359c855f812a2e834094c9c13e3819eb9e71ff5f089ee759b715cd7d9f09487c"
+},
+"littown/audio/w/sit.mp3": {
+"size": 5034,
+"sha256": "b676804ae2b46b327f847fb45e4096cca130465f2d18e66e49d66706d503663f"
+},
+"littown/audio/w/sits.mp3": {
+"size": 5870,
+"sha256": "1464efe3627dfaa9f05b1bd57b5e2aa300470c52c8fb7cfb275ef9697f4fa368"
+},
+"littown/audio/w/six.mp3": {
+"size": 5452,
+"sha256": "2cdb3e13cf20c61126667167b69d61197d78b77d05e6a43a21de5c6a9be91436"
+},
+"littown/audio/w/skip.mp3": {
+"size": 5034,
+"sha256": "61ece66a412437737dab71901b3f1bec307bb8347a445a27a6923dfbe67d6d4b"
+},
+"littown/audio/w/slip.mp3": {
+"size": 5661,
+"sha256": "819fea72275f6c404fed7055784477175aa5ede5bf89830b6e8c705474de681a"
+},
+"littown/audio/w/slips.mp3": {
+"size": 6288,
+"sha256": "ed69c8921bda436b0ad1ae62d65e490abbecccbe88780e1715e385dee8859df9"
+},
+"littown/audio/w/snack.mp3": {
+"size": 6497,
+"sha256": "9aad46f8753c7444843c2bb918248eba6246aeb4fc62db1136d116c290abcc7e"
+},
+"littown/audio/w/snag.mp3": {
+"size": 6706,
+"sha256": "64879347374597852143499c314b81ad3b966bdd2a64303e0ce9a4ffc99a18d0"
+},
+"littown/audio/w/snap.mp3": {
+"size": 5661,
+"sha256": "3ec830a02a43f439e6039740fc8bb4d3e253a708c8e94b30882c4847d81cd497"
+},
+"littown/audio/w/sock.mp3": {
+"size": 5452,
+"sha256": "0b83f29f53ff9cf7f146b19c65ccac0f7df1633b4d4f511c884fe748c5fb2652"
+},
+"littown/audio/w/socks.mp3": {
+"size": 6497,
+"sha256": "0d9e01dec3b733688f11478d11a27b7a73bdc7014a508bca5ed9de610401351b"
+},
+"littown/audio/w/soft.mp3": {
+"size": 5870,
+"sha256": "61bc3c75807f063391fdb9dc02beec4c091b7b5f8844114d9a935afd35615b8e"
+},
+"littown/audio/w/spat.mp3": {
+"size": 5870,
+"sha256": "de9b8cc7ee16c3ab5a0f7c880d8a3e4093443a6184d419e49fc030bef59fb1cd"
+},
+"littown/audio/w/spin.mp3": {
+"size": 5661,
+"sha256": "0494a4d45c8cad0455c9a92f1063042c066c0cda347216def6b53a4f2eb55fdc"
+},
+"littown/audio/w/spit.mp3": {
+"size": 5243,
+"sha256": "3835ff4c5273ebe4397b67f40a696caa2bf2ef3455d1ff50d27bf09f3f6bae0d"
+},
+"littown/audio/w/spot.mp3": {
+"size": 5243,
+"sha256": "eeef4079ae743b1c96b2bc309159d613cbc592c840cd51360ecac7a304bbe170"
+},
+"littown/audio/w/spots.mp3": {
+"size": 6915,
+"sha256": "39686fe19aece80261cd6da1207f14a38749da0b9e862ef3998ed2a05fa355aa"
+},
+"littown/audio/w/stand.mp3": {
+"size": 5870,
+"sha256": "def55644cbebb10d65bb25dc5f543dc8271378a75fb1ed9c9ca3784d605db6b1"
+},
+"littown/audio/w/step.mp3": {
+"size": 5661,
+"sha256": "7c8185f56d5596bc182350f2281a1b1a4afb7ad06e38ade70a75024bd90aefb1"
+},
+"littown/audio/w/stop.mp3": {
+"size": 5870,
+"sha256": "c8cb7daab823f079e7247aec7d9e6615257c7c784f72b22216f34a8d5b53efbf"
+},
+"littown/audio/w/stuck.mp3": {
+"size": 5661,
+"sha256": "e45b2fe0758d9e0032d409bc5acfea04a65d9202a3ce15b95b837bb150e4d522"
+},
+"littown/audio/w/stuff.mp3": {
+"size": 5870,
+"sha256": "9c1066fc127b47ee726e0b6c7e26444b8d40ad267f16ddc0a3f2bb9e670dacca"
+},
+"littown/audio/w/sun.mp3": {
+"size": 5243,
+"sha256": "57d26c86630bc3970fbf83fb07c4746aecea1d154019589540dbb2530469ca5c"
+},
+"littown/audio/w/sunset.mp3": {
+"size": 6915,
+"sha256": "6c4d871e4e126624da257814024763da0821d4f7cd0c7e13d631819b47bf78a8"
+},
+"littown/audio/w/swim.mp3": {
+"size": 5661,
+"sha256": "83e64219b8883c73e5d8c0dbddac4e8aa7e7c965cb51960c34db0f73bfbd0381"
+},
+"littown/audio/w/tag.mp3": {
+"size": 4616,
+"sha256": "0e8f9cfa8c3db8536ba168184f7778e0da24044186dd7259d12d94678a21a45b"
+},
+"littown/audio/w/tam.mp3": {
+"size": 4616,
+"sha256": "b14bf1bf6447a432e3d24e7038e06b0b609169c43ea3298b9b333024030c2b8f"
+},
+"littown/audio/w/tan.mp3": {
+"size": 4825,
+"sha256": "899d15939d59e578f9eb73011e2edb4bbb19db04b030a59fef2e46b7126418a3"
+},
+"littown/audio/w/tap.mp3": {
+"size": 4407,
+"sha256": "8af1ae090f918c97db1e5074486569204633305bef223e7b640d0971092da77c"
+},
+"littown/audio/w/ten.mp3": {
+"size": 4825,
+"sha256": "4c45fcde8ff3d7e2bac217a28e7122a82ef0eae682a33a9b70ca5ca7f3461ff4"
+},
+"littown/audio/w/tent.mp3": {
+"size": 4825,
+"sha256": "7c51e8cf3eaedd4795966c81726183c544e7744b1e68794e6bf9764b929f4cad"
+},
+"littown/audio/w/the.mp3": {
+"size": 3989,
+"sha256": "765254233fc1afe408734c23affc5f1b90d272c27c959580b6d2e386c618de17"
+},
+"littown/audio/w/thin.mp3": {
+"size": 5034,
+"sha256": "12e8568b285f5f7b71383ba4deb807bf73da17fd360fd9e412f0880438311d3f"
+},
+"littown/audio/w/tin.mp3": {
+"size": 5034,
+"sha256": "cfc5aefd5fe911f54bb6c30418b39175538984bfbd9542c7dded89f7aba33c3a"
+},
+"littown/audio/w/tip.mp3": {
+"size": 4407,
+"sha256": "ad853ff6c387837c98471414de7f6565d85c887cdd4a96e05b7d76c6d7171895"
+},
+"littown/audio/w/tips.mp3": {
+"size": 5034,
+"sha256": "9312ef79a9f6060e964650842127ab6435e5839830309c71c62a51147eec65e4"
+},
+"littown/audio/w/to.mp3": {
+"size": 4198,
+"sha256": "a3b2778169e6545a03114f6c990e3bac5113225974c1094fa9069de4dd17727a"
+},
+"littown/audio/w/top.mp3": {
+"size": 4825,
+"sha256": "6f67a44d3062c6effb44d737115fbb487a57a68ec3cb05cd9848b0e29ac7acc0"
+},
+"littown/audio/w/tops.mp3": {
+"size": 5661,
+"sha256": "b0d20b4084cac556878894b51af5f28751ae8d46e10519cf1217011aa088dff3"
+},
+"littown/audio/w/toy.mp3": {
+"size": 4616,
+"sha256": "47c7e85f8b7e1535f8554bfae308b6af8cc0680e50b5a5b48ff3efa076f5ac22"
+},
+"littown/audio/w/tray.mp3": {
+"size": 4616,
+"sha256": "791b972500a4b92d224353308027b8e10e3994848360c38624559517d91a6b15"
+},
+"littown/audio/w/trick.mp3": {
+"size": 5034,
+"sha256": "ebe21d0d504fb75a5b3e1bc328b2e04633d107fef78266fd9e7afcb45fae5b30"
+},
+"littown/audio/w/trip.mp3": {
+"size": 4198,
+"sha256": "534c8fb79517464d99eee35ceb5a8a61c32d4a524b17fdc246b83cf0247a2971"
+},
+"littown/audio/w/truck.mp3": {
+"size": 5034,
+"sha256": "15937a9a2661f6f202102cdcac21ac911f0a94fa0d61ef620c046fa1ecbcfdec"
+},
+"littown/audio/w/tub.mp3": {
+"size": 5034,
+"sha256": "58f1eebf3eec6ebdac29b27d30f6a9b043e01e86e04bbea5fed9278203935564"
+},
+"littown/audio/w/tug.mp3": {
+"size": 4825,
+"sha256": "c41f27a34ad53fcc1d08c4569207b75700b8269f2f360f99b58f4554e8d69bde"
+},
+"littown/audio/w/tum.mp3": {
+"size": 4825,
+"sha256": "587944d7cf5eb3b6e0c613855e6923b2cb1a1543c3f31087f81b40d35dddd792"
+},
+"littown/audio/w/twin.mp3": {
+"size": 5034,
+"sha256": "11641881fafba84305bd0c8d99a80e0afa2931c02901ccdd5a60832015bde189"
+},
+"littown/audio/w/twins.mp3": {
+"size": 5243,
+"sha256": "036488169aa2cb24f5b781a3eeb4ad67e28a39095cde8ce59fcdc22e0fe91d22"
+},
+"littown/audio/w/umbrella.mp3": {
+"size": 6079,
+"sha256": "194969aeee212248d69f0235ae0abd7771c6429c52dd56dbf2ab7241cb8bb93b"
+},
+"littown/audio/w/up.mp3": {
+"size": 3571,
+"sha256": "2371cc9669a09570705ee801f9670c05062b486be026f75877399c0d36a3adf0"
+},
+"littown/audio/w/van.mp3": {
+"size": 5243,
+"sha256": "0396c2d09fdb826bbe2751c367037479b1fc92f3645de2536383737613081e88"
+},
+"littown/audio/w/wag.mp3": {
+"size": 5034,
+"sha256": "2455f564b6cc74905bf3def84a8bc7f35c5d4803f66f058b9206303cbe16941a"
+},
+"littown/audio/w/was.mp3": {
+"size": 5452,
+"sha256": "1a1ab39e1fd4758a77503d1dc580e88a601e19680ed5261593b8d32a5bc6e22b"
+},
+"littown/audio/w/wax.mp3": {
+"size": 6288,
+"sha256": "3552a1d9420ac5c2bcce2c70be6071c1d6504df2ddf9c089880a99ee9821043b"
+},
+"littown/audio/w/web.mp3": {
+"size": 5243,
+"sha256": "60bda46d1f489f9ccaa78ff37a9f36e66fbcf8317f531c83e8899e8e27209b5c"
+},
+"littown/audio/w/well.mp3": {
+"size": 4825,
+"sha256": "979f33f145b3089bc2539e20f4cdb44625c3b9dad58f25e07c00bbc0bceed960"
+},
+"littown/audio/w/went.mp3": {
+"size": 5034,
+"sha256": "fc2cb2a36c75e663b03d6d73581eb028d8569f4ddaa47e260159f9c196897e0a"
+},
+"littown/audio/w/west.mp3": {
+"size": 5870,
+"sha256": "50fa578ef9c4f1ac5490607f7ac4b8db161846bbffc1db8141e11dd8f05b71ca"
+},
+"littown/audio/w/wet.mp3": {
+"size": 5034,
+"sha256": "734845db215cd0e0ac0ec1277ca3e903554e36b94022cfa8a417c9492df15cff"
+},
+"littown/audio/w/whisk.mp3": {
+"size": 5870,
+"sha256": "29c9c68b3137a57aabb2b4f75236ba9d10caf7f937a8153c3209e02b539a5e41"
+},
+"littown/audio/w/wig.mp3": {
+"size": 5243,
+"sha256": "ba9861446cc89bdf1c964a101eb69d0eae4e3fdf0d711ee3a288c5b0010d1fba"
+},
+"littown/audio/w/will.mp3": {
+"size": 4825,
+"sha256": "bfef34cba0d027d8a58179e4e17d639fb7d77ee0f9ba629f5bbea4a5b0faa0b8"
+},
+"littown/audio/w/win.mp3": {
+"size": 5243,
+"sha256": "896526dc65149192bcca3e49f73c92150208a0cfcf148de35a0081a31e029f83"
+},
+"littown/audio/w/wind.mp3": {
+"size": 5452,
+"sha256": "178581e8904fde74a1bcdb49585b059138eb706006dcbe7020fce80d6ef97058"
+},
+"littown/audio/w/yes.mp3": {
+"size": 5661,
+"sha256": "0a7c31c29756a410ac2d2f5d42262d31973d466cb9912ddb8dab3d000661b993"
+},
+"littown/audio/w/you.mp3": {
+"size": 4616,
+"sha256": "91175bd2a4b2ec291a5597bb121b33ae019fd2c4d3ac88c2a55d1aa1af182a3f"
+},
+"littown/audio/w/zip.mp3": {
+"size": 4825,
+"sha256": "c3806790a2639e880ddcf00b64c917ce664c0f56b1d502a76bac5cd61114298b"
 },
 "littown/content/lessons.json": {
 "size": 41595,
@@ -155,12 +2975,12 @@
 "sha256": "d671995d9ebb7d254aaac7f6d2908301f47640d7947d5a44ba97c93aadd2130a"
 },
 "littown/content/world.json": {
-"size": 42890,
-"sha256": "839352d62081e375bd203aa4fc4e4cfdcc5785164197fad5c6fe7ecf01213679"
+"size": 45049,
+"sha256": "d5a3004b536b597c254bbf07b04491939e3cb76c58f9e228bbc8a56bec9ea871"
 },
 "littown/css/app.css": {
-"size": 64049,
-"sha256": "4c1cdd3751ed159f1736cd724d018a97953cd0ecfa8bf45898596d1074162379"
+"size": 65591,
+"sha256": "cb02688ee14b46891fc35c71adcc83dd45395db3b508501ee3ee978fbbd5e36e"
 },
 "littown/css/fonts.css": {
 "size": 979,
@@ -207,8 +3027,8 @@
 "sha256": "dd9fa9c7991113b0dddefe9506a30ad26b48e302b7a8fb91719a4726e8fde85b"
 },
 "littown/index.html": {
-"size": 2178,
-"sha256": "c832fac97f35f8048d277bd9b84e46fd3dd22e51a4e01ce19cec7ba85379f3c3"
+"size": 2218,
+"sha256": "73728e454eef69e271af26eb30c1a145a62b38a10bfea57ce3b250d26aa99802"
 },
 "littown/js/anim.js": {
 "size": 2448,
@@ -223,20 +3043,24 @@
 "sha256": "56dc3df1c4b1bfdf1dac43b8ddd839a07c4f34bda9618fb21f94035f366dbb6b"
 },
 "littown/js/audio.js": {
-"size": 11049,
-"sha256": "e529b8607024d4f495561dfaeb7d39341be2e43dfb2b250c39aed62a42c63120"
+"size": 11228,
+"sha256": "544609e81329159598a8e3e4e16cb10224fd5a8e771a2603bd7f8da5cada5318"
 },
 "littown/js/avatar-render.js": {
-"size": 3480,
-"sha256": "ebd636405c7f12ff7ea6e263a4372ed9abcd753dd2a9e0a1bf0857f9369186e9"
+"size": 6293,
+"sha256": "df21467781fc56ff2dae1334e9d2e86af12d9953724e98ee6915c09ffbaa0e9f"
 },
 "littown/js/engine.js": {
-"size": 83765,
-"sha256": "7f50c0981f8a492f2fc92c4e5fa0a9b83973dfa3d5d34a654bf14b1882c9c101"
+"size": 85449,
+"sha256": "5688cb7ef59ffeb49db7f68b4d62d33deb2522da7609013ff4d949d8677ae7df"
 },
 "littown/js/hub.js": {
 "size": 2191,
 "sha256": "c5ddcda3228183c0e7fdebaf4acc3c69a7a038d283695bb37cbe3601ed5d935a"
+},
+"littown/js/lit-style.js": {
+"size": 148724,
+"sha256": "137eb17eac122f3949065edc0ff3d0a224b0f80da16dd777309a5639f01bbaf1"
 },
 "littown/js/phonics.js": {
 "size": 7880,
@@ -247,8 +3071,8 @@
 "sha256": "0739dc525781074e468e184d0b813fbfd8b2b35c2396f1246c343f6d9ab645ef"
 },
 "littown/js/screens/home.js": {
-"size": 11946,
-"sha256": "4e3c043e51cac37044ae5e704b18efb3e4723e25892af4269d6732143f251928"
+"size": 17168,
+"sha256": "d7726ec394558114a811f37f492aa01f9021ae610abfe35614d37d606d3d04e2"
 },
 "littown/js/screens/house.js": {
 "size": 20344,
@@ -267,16 +3091,16 @@
 "sha256": "8a745580e64b612f7cb6bb5dae3292a0cc81fabdfa102ff0140ceafb2da2c741"
 },
 "littown/js/screens/shop.js": {
-"size": 5858,
-"sha256": "2df4f6f8c32cbcca80686c8b8e01bbaa662e566509c803c83b1e09b2e4065de2"
+"size": 6233,
+"sha256": "380280550c730e1a1d245448d6c7cda71cc2f0ba2d958e453a4aabd47cb2a0b2"
 },
 "littown/js/screens/world.js": {
-"size": 41834,
-"sha256": "bd743ce81256655ff21372f8c146108e309a7d0c8d2172fcab596be6d8dac47a"
+"size": 42348,
+"sha256": "e6480e2ab34faa856e8761e2220d6db67c3a2fb24bfd0074a7cc6d9b6eeec116"
 },
 "littown/js/storage.js": {
-"size": 13388,
-"sha256": "2013d0406c333d8d3b467cda9aa7bf7613a5450f4c8daac04f2754265dca4271"
+"size": 13694,
+"sha256": "96e4882cd1bb5bc2006d981e001006f98c355d849a7e565338af5a487805a55a"
 },
 "littown/js/trace-check.js": {
 "size": 12676,
@@ -287,8 +3111,8 @@
 "sha256": "f9d8656409bb85974ec10bafef7bfa0f02d6bb184283915045f6209fdbdd53dd"
 },
 "littown/js/ui.js": {
-"size": 11312,
-"sha256": "a298d00e3a4abeeeab8326d4de69510680fdc6b5416b086e3a501ad9a07d627d"
+"size": 11415,
+"sha256": "de1d7ed729fdf246d8c71adc211aff43f3dbbe715e072841ef38226d8c8064cc"
 },
 "littown/js/updates.js": {
 "size": 4245,
@@ -299,8 +3123,8 @@
 "sha256": "0f71354fcfc65887ddc7b68762ea4214c1d52db147ed5f6690c05e6f7d9b1942"
 },
 "littown/version.json": {
-"size": 76,
-"sha256": "db992f3889fe278e7c114ab371d3a8fac3abc85cdbc84317b0c00ad38efc0f5a"
+"size": 77,
+"sha256": "d82c9f9f0809aeee5552cbcf8d3ad5bffa7dfbac9172a75ae682bc82a0e2963b"
 },
 "lt-bridge.js": {
 "size": 11175,
