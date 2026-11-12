@@ -11,6 +11,9 @@
   ART.pack('ui', {
     'ui-back': S('<path fill="' + INK + '" d="M14 48L44 20Q50 15 54 20Q57 24 53 29L40 42H80Q86 42 86 48Q86 54 80 54H40L53 67Q57 72 54 76Q50 81 44 76Z"/>'),
     'ui-next': S('<path fill="' + INK + '" d="M84 48L54 18Q48 12 43 18Q39 23 44 28L56 40H16Q8 40 8 48Q8 56 16 56H56L44 68Q39 73 43 78Q48 84 54 78Z"/>'),
+    'ui-skip': S('<path fill="' + INK + '" d="M14 26Q14 20 19 23L46 43Q51 48 46 53L19 73Q14 76 14 70Z"/>' +
+      '<path fill="' + INK + '" d="M46 26Q46 20 51 23L78 43Q83 48 78 53L51 73Q46 76 46 70Z"/>' +
+      '<rect fill="' + INK + '" x="80" y="22" width="7" height="52" rx="3.5"/>'),
     'ui-map': S('<path fill="#FFE79A" d="M10 24Q10 20 14 19L34 13L62 21L82 15Q86 14 86 18V72Q86 76 82 77L62 83L34 75L14 81Q10 82 10 78Z"/>' +
       '<path fill="#9BE3B5" d="M34 13L62 21V83L34 75Z"/>' +
       '<g fill="' + INK + '"><circle cx="20" cy="64" r="3"/><circle cx="26" cy="55" r="3"/><circle cx="35" cy="51" r="3"/><circle cx="44" cy="54" r="3"/><circle cx="53" cy="58" r="3"/><circle cx="61" cy="53" r="3"/><circle cx="65" cy="45" r="3"/></g>' +

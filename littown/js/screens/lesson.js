@@ -118,18 +118,40 @@
     fn(s);
     // a scored screen always has a way on: Next before answering counts as a miss
     if (s.scored && !s.grownup && ses.current() === s && !s.resolved) { addSkip(); }
+    fitStage();
   }
 
+  /* Anything on the screen wider than it (a long word's sound tiles on a phone, a colouring page on a tablet
+   * held upright) is shrunk to fit. Taps and drags still land right: the browser maps them through zoom. */
+  function fitStage() {
+    if (!stage || !stage.children) { return; }
+    var avail = stage.clientWidth - 16, i, ch;
+    if (!(avail > 0)) { return; }
+    for (i = 0; i < stage.children.length; i++) {
+      ch = stage.children[i];
+      if (ch.style.zoom) { ch.style.zoom = ''; }
+      var wd = ch.scrollWidth;
+      if (wd > avail) { ch.style.zoom = String(Math.floor(avail / wd * 100) / 100); }
+    }
+  }
+  if (window.addEventListener) { window.addEventListener('resize', function () { if (stage && stage.parentNode) { fitStage(); } }); }
+
+  // Skip: a small, faded "skip" button (not the green Next arrow), which only shows up after a while, so it isn't
+  // tapped by mistake. It counts as a miss, like a wrong first answer.
+  var SKIP_AFTER_MS = 6000;
   function addSkip() {
-    skipBtn = UI.btn('ui-next', '', function () {
+    skipBtn = UI.btn('ui-skip', '', function () {
       if (busy || Date.now() - shownAt < GUARD_MS) { return; }
       busy = true;
       A.stop();
       ses.skip();
       correctStreak = 0;
       advance();
-    }, 'skip-btn');
+    }, 'skip-btn.waiting');
+    skipBtn.setAttribute('aria-label', 'skip');
     stage.appendChild(skipBtn);
+    var mine = skipBtn;
+    later(function () { if (skipBtn === mine) { U.removeClass(mine, 'waiting'); } }, SKIP_AFTER_MS);
   }
   /** The answer is in (or shown): swap the skip button for the plain Next. */
   function hideSkip() { if (skipBtn && skipBtn.parentNode) { skipBtn.parentNode.removeChild(skipBtn); } skipBtn = null; }
@@ -149,16 +171,25 @@
       return;
     }
     if (correct) {
-      if (onRight) { later(onRight, 250); }
       busy = true;
+      hideSkip();
       U.addClass(optNode, 'right');
       UI.burstOn(optNode);
       RA.Sfx.play('chime');
       correctStreak++;
-      var praise = correctStreak % 3 === 0;
-      later(function () {
-        if (praise) { A.praise(); later(advance, 900); } else { advance(); }
-      }, 650);
+      var praise = correctStreak % 3 === 0, moved = false, minDone = false, said = !onRight;
+      // move on only once the word she picked has been said (onRight gets a done-callback), and not before
+      // 650 ms; 4 s at most in case a clip never reports back
+      var moveOn = function () {
+        if (moved || !minDone || !said || ses.current() !== s) { return; }
+        moved = true;
+        later(function () {
+          if (praise) { A.praise(function () { later(advance, 250); }); later(function () { if (ses.current() === s) { advance(); } }, 2500); } else { advance(); }
+        }, onRight ? 300 : 0);
+      };
+      if (onRight) { later(function () { onRight(function () { said = true; moveOn(); }); }, 250); }
+      later(function () { minDone = true; moveOn(); }, 650);
+      later(function () { said = true; minDone = true; moveOn(); }, 4000);
       return;
     }
     correctStreak = 0;
@@ -175,7 +206,7 @@
     hideSkip();
     allNodes.forEach(function (nd) { if (nd !== rightNode) { U.addClass(nd, 'dim'); } });
     U.addClass(rightNode, 'reveal');
-    A.line('show-answer', function () { if (onRight) { onRight(); } else if (replay) { replay(); } });
+    A.line('show-answer', function () { if (onRight) { onRight(function () {}); } else if (replay) { replay(); } });
     stage.appendChild(nextButton());
   }
 
@@ -590,7 +621,7 @@
     og.nodes.forEach(function (nd, i) {
       U.tap(nd, function () {
         RA.Audio.unlock();
-        choose(s, nd, s.options[i].w === s.w, og.nodes, og.nodes[idx], sayIt, function () { A.word(s.w); });
+        choose(s, nd, s.options[i].w === s.w, og.nodes, og.nodes[idx], sayIt, function (done) { A.word(s.w, done); });
       });
     });
     stage.appendChild(og.grid);
@@ -607,7 +638,7 @@
     og.nodes.forEach(function (nd, i) {
       U.tap(nd, function () {
         RA.Audio.unlock();
-        choose(s, nd, s.options[i].w === s.w, og.nodes, og.nodes[idx], null, function () { A.word(s.w); });
+        choose(s, nd, s.options[i].w === s.w, og.nodes, og.nodes[idx], null, function (done) { A.word(s.w, done); });
       });
     });
     stage.appendChild(og.grid);
@@ -626,13 +657,12 @@
     stage.appendChild(duo);
     var og = optionGrid(s.options, function (b, wd) { b.appendChild(U.el('span.wordtile', { text: wd })); }, 'words');
     var right = og.nodes[s.options.indexOf(s.answer)];
-    function sayAll() { A.text(s.full); }
     og.nodes.forEach(function (nd, i) {
       U.tap(nd, function () {
         RA.Audio.unlock();
-        choose(s, nd, s.options[i] === s.answer, og.nodes, right, null, function () {
+        choose(s, nd, s.options[i] === s.answer, og.nodes, right, null, function (done) {
           if (bl.blank) { bl.blank.textContent = s.answer; U.addClass(bl.blank, 'filled'); }
-          sayAll();
+          A.text(s.full, done);
         });
       });
     });
@@ -663,7 +693,7 @@
     og.nodes.forEach(function (nd, i) {
       U.tap(nd, function () {
         RA.Audio.unlock();
-        choose(s, nd, s.options[i].w === s.w, og.nodes, og.nodes[idx], null, function () { U.addClass(more, 'hidden'); A.word(s.w); });
+        choose(s, nd, s.options[i].w === s.w, og.nodes, og.nodes[idx], null, function (done) { U.addClass(more, 'hidden'); A.word(s.w, done); });
       });
     });
     stage.appendChild(og.grid);
@@ -921,6 +951,37 @@
     });
     box.appendChild(slots);
     box.appendChild(bank);
+    // size the slots and tiles to the screen (full size on a tablet held sideways; smaller when it's upright or
+    // on a phone), and again if the screen turns
+    function fit() {
+      var W = window.innerWidth || 1024, H = window.innerHeight || 600, availW = W - 48;
+      var nS = opts.answer.length, nB = opts.pool.length, perRow = nB, rows = 1;
+      var slot = Math.min(120, Math.floor(availW / nS) - 16);
+      var tile = Math.min(104, Math.floor(availW / perRow) - 16);
+      if (tile < slot - 16 && nB > 3) { rows = 2; perRow = Math.ceil(nB / 2); tile = Math.min(104, Math.floor(availW / perRow) - 16); }
+      tile = Math.min(tile, slot - 16);
+      var need = slot + 18 + rows * (tile + 12) + (H <= 450 ? 84 : 138), availH = H - 170;
+      if (need > availH) {
+        var k = Math.max(0.5, availH / need);
+        slot = Math.floor(slot * k); tile = Math.min(Math.floor(tile * k), slot - 16);
+      }
+      slotNodes.forEach(function (sl) {
+        sl.style.width = sl.style.height = slot + 'px';
+        sl.style.borderRadius = Math.round(slot * 0.18) + 'px';
+        var gh = sl.querySelector('.ghost');
+        if (gh) { gh.style.fontSize = Math.round(slot * 0.58) + 'px'; gh.style.top = Math.round(slot * 0.08) + 'px'; }
+      });
+      tiles.forEach(function (t) {
+        t.node.style.width = t.node.style.height = tile + 'px';
+        t.node.style.fontSize = Math.round(tile * 0.615) + 'px';
+        t.node.style.borderRadius = Math.round(tile * 0.19) + 'px';
+      });
+      bank.style.maxWidth = (perRow * (tile + 16)) + 'px';
+      bank.style.minHeight = (rows * (tile + 6)) + 'px';
+    }
+    fit();
+    var onResize = function () { if (!box.parentNode) { window.removeEventListener('resize', onResize); return; } fit(); };
+    window.addEventListener('resize', onResize);
     return box;
   }
 

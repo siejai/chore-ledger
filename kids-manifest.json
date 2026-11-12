@@ -1,5 +1,5 @@
 {
-"version": "cl-v52",
+"version": "cl-v53",
 "files": {
 "adventure.js": {
 "size": 42222,
@@ -135,8 +135,8 @@
 "sha256": "56b5d87eb67fcc3b8f91205fe09fa09b0d2cc304dfee7e05bedf09eeba68cb37"
 },
 "littown/art/ui.js": {
-"size": 15164,
-"sha256": "2170a9af5675cef58d4adc8eb8e40b89afce5140c3091ff3ef6105a3fdf1a210"
+"size": 15451,
+"sha256": "335645df10ceea0332e0ef7c94b364d412915aae92faaaf3f891619e060248aa"
 },
 "littown/audio/i/blend.mp3": {
 "size": 24469,
@@ -491,16 +491,16 @@
 "sha256": "5d0d1f9fcd2518a13f11b6b5617c190f3998bfbcabbf76bfcc2f58d96468f47b"
 },
 "littown/audio/ph/ar.mp3": {
-"size": 4198,
-"sha256": "5025d2dbbaeb33adc995923cb9eeea43b5183d87de3193b6ec42d7731c10034b"
+"size": 4408,
+"sha256": "95bcbb9b4e1f754297bf1ab8d47607239b683d860602cc42b71e64e54191f9ad"
 },
 "littown/audio/ph/aw.mp3": {
 "size": 5034,
 "sha256": "51f98d940babdf78f8cd8165abb745c060acade707f3cefb1219bb3027df5f34"
 },
 "littown/audio/ph/ay.mp3": {
-"size": 4407,
-"sha256": "2b15dcf92ba7e0336e8c434ee2e0427c917762735ff440e39f19aab8b72aef52"
+"size": 4408,
+"sha256": "7e4ccc4025d4fce368be29f43ee6ab1a1ec6fd33ccd818a868b585d34634fd99"
 },
 "littown/audio/ph/b.mp3": {
 "size": 1690,
@@ -519,40 +519,40 @@
 "sha256": "10b087b2899ed87aa37773fcf60f19347b6014e58efd0d074dfd547c3ecde0bc"
 },
 "littown/audio/ph/e.mp3": {
-"size": 3989,
-"sha256": "8870cf5c4dea82d4f94c47e13e012f30e99f6c761a4a8fb313862bf5adde3821"
+"size": 4199,
+"sha256": "900eb4b5fcbb62bb29beaff69c3a3a1050e1479da0f08d5628f76f6155d0f04b"
 },
 "littown/audio/ph/ear.mp3": {
-"size": 4407,
-"sha256": "3067e8011fb1fb6fca869e0e100c8e4785814941551ec85cfa269642196e95f7"
+"size": 4408,
+"sha256": "e8562980f805f49f86358e8f1a584b338799e57b1a07e7c952223f62dc8553d2"
 },
 "littown/audio/ph/ee.mp3": {
-"size": 4198,
-"sha256": "f64a5adb15263f834390cb1eaf379205cf8e23f5732df4e4d15c1f1f510aa0de"
+"size": 4408,
+"sha256": "16882e2d77aad8ae342793a9542d3bfb0f683120f910f60c4ff497f6835bccfa"
 },
 "littown/audio/ph/er.mp3": {
-"size": 3989,
-"sha256": "5f946654a9b12eca5cf36636f426727922e553660f67fd1b96a3038bd4e0bbe4"
+"size": 4199,
+"sha256": "166bfcf808711e5fd6d89255c2a7c6828eee8ca941a2396917901adaaeeb6fbf"
 },
 "littown/audio/ph/f.mp3": {
-"size": 6288,
-"sha256": "8b33391960903d32e72121ca3579d58eca049687c235b32e2f677caedf607a5f"
+"size": 4408,
+"sha256": "215ef08f011c23073e660343d40ff4e7edc4bc7fa46270787a4f4f80207604bb"
 },
 "littown/audio/ph/g.mp3": {
 "size": 1690,
 "sha256": "87490a354e063e78d2551cdb1ba651606aca5a8c6cf739b92fb6e1e3fda0dcd4"
 },
 "littown/audio/ph/h.mp3": {
-"size": 6079,
-"sha256": "38c599ca56f8c9558a69b2a3d0b8f4da633f76cbb69aec51966fad152e848e14"
+"size": 4408,
+"sha256": "018458d0dd7dad2a1c8cfe0a355fdb1e23db454e34cd490746b1df630f9c7475"
 },
 "littown/audio/ph/i.mp3": {
-"size": 3780,
-"sha256": "c357c8f6c2950272ed082de7c801abdeaf150eeddada9fa9e58f4bae6bc11014"
+"size": 1482,
+"sha256": "15fba474a788cc72c7dcc0ef494680abbb4516c108f43e0934d5db1db65ca415"
 },
 "littown/audio/ph/igh.mp3": {
-"size": 4198,
-"sha256": "1fbe07c346b0488407674a3606660572e63679fa0230a8577349059bdc0b401a"
+"size": 4199,
+"sha256": "bc8cd28ca51f8501583225339dd114bd77d687af67e45b17fd371e793d443fa7"
 },
 "littown/audio/ph/j.mp3": {
 "size": 2317,
@@ -563,24 +563,24 @@
 "sha256": "7a2c70b0b9c989b0e4a4fcff70553c14c1bc6343d06c82139e6ddf30b7976395"
 },
 "littown/audio/ph/ks.mp3": {
-"size": 3989,
-"sha256": "a2cca7c534795687e06b098e949b098359cac6ae8b31cfbdf33804cf5ac9e026"
+"size": 4199,
+"sha256": "70a29b8fc1cf38e3120db58c6d120b883af22c3acfe0caf468f161433813249e"
 },
 "littown/audio/ph/kw.mp3": {
 "size": 3153,
 "sha256": "1442608e3f01e4fa56cd0bcad77dd0a55d9fabe5b63c4830d7e3a5860eec3d45"
 },
 "littown/audio/ph/l.mp3": {
-"size": 6079,
-"sha256": "6236160df55cc0300186cb12cafa1473dc376e46f8ee833c6996a290463594b2"
+"size": 4408,
+"sha256": "da9db1f3d1d645599a32de284b8982dc1afbfe2c67be092765cfb7f042209170"
 },
 "littown/audio/ph/m.mp3": {
-"size": 6706,
-"sha256": "19f0eba115dca97b5a0613e9977f3c48b9d5d717cfc022e9a05f5efc007021f1"
+"size": 4199,
+"sha256": "270ab4ba94ce0f4834b1a9f6f311a2b526e965d8710803fd353fd6db3b87087a"
 },
 "littown/audio/ph/n.mp3": {
-"size": 9423,
-"sha256": "c30d7d5eacd55c7237503a86d282d834786ff581084a02afeefccf93a11d7b3b"
+"size": 4408,
+"sha256": "054ccb04c99a12f46f0de2fa4a2fe9ce474f39c48fc27026eb5a03f905116733"
 },
 "littown/audio/ph/ng.mp3": {
 "size": 4825,
@@ -591,8 +591,8 @@
 "sha256": "d86f0c1a174c533b9e8703d1f4e0a3cfbde0445ef79fb81ba0d314275dd66fbd"
 },
 "littown/audio/ph/o.mp3": {
-"size": 3989,
-"sha256": "49936eaa455f17afca4e16b10e212773cdf56172bc4595c46ffac53ba0d730ea"
+"size": 4199,
+"sha256": "ab75e4ecb0c3320617a7034f6d60bf49d1361c84dd54ecd1d6eff483b837455a"
 },
 "littown/audio/ph/oa.mp3": {
 "size": 4616,
@@ -603,36 +603,36 @@
 "sha256": "d35cc23f36977a161f81180e1eefe4c1823cfeac9e447a7487a3396c0e758330"
 },
 "littown/audio/ph/or.mp3": {
-"size": 4198,
-"sha256": "3b6aff615552848a86c0158f5237e1f13dc564b8dc6151792f8b7ad59dc2df03"
+"size": 4199,
+"sha256": "b10a57a59ea8651d6cbfd126d15ee5eb2c32003ec50472be6c8efb2b5fb846b1"
 },
 "littown/audio/ph/ow.mp3": {
 "size": 4616,
 "sha256": "050639e556782069071b4c2d080499a0a0865b334cb9fe55145fd8df5298611e"
 },
 "littown/audio/ph/oy.mp3": {
-"size": 3989,
-"sha256": "91e5f0e42b39c12acc11729b577ed89a295f042ecea656bf63400ccdd610fe1a"
+"size": 4199,
+"sha256": "441c4ebfd2062c908827f0867da8d7b38a148c59581e2876adc9827112fa82a9"
 },
 "littown/audio/ph/p.mp3": {
 "size": 1690,
 "sha256": "0e668b666abb53e845458a6060c4c24a56a269f00126cc4a2f5e3378a637121c"
 },
 "littown/audio/ph/r.mp3": {
-"size": 3989,
-"sha256": "a2344e9ddc9c27d25698d1f3a2c3e672e4dbf72f0b09d50ab5582e8a425b74d2"
+"size": 4199,
+"sha256": "5ac4c0f6cf4992c0465070ba9bb95a952b2f75cc9516087e10903c1cb047f5dc"
 },
 "littown/audio/ph/s.mp3": {
-"size": 7124,
-"sha256": "664ba504ef3d68b25fd9710859442d4833a7576789e8b05ceb581368a69c4462"
+"size": 4199,
+"sha256": "ff92c334ea4cd7e5820e6ed5b8131ed27e1a0710399119533430a058fe7d22af"
 },
 "littown/audio/ph/schwa.mp3": {
-"size": 3571,
-"sha256": "c1ab661840252fc44b613612f190bbff9dad904b251b10127dd9db85d6ba6264"
+"size": 3990,
+"sha256": "b60395fa8f0218b80102bdceaaa9523606b6f64691f4bf79235360d89f472c2b"
 },
 "littown/audio/ph/sh.mp3": {
-"size": 6915,
-"sha256": "07f6a927aec2714a60946d3b55b07bc6763ebd5473921dfba6da57e8323e2b7a"
+"size": 4408,
+"sha256": "85466661f6b504a64a443f1e96decb576d17395235928f5af7e1eb91bfc3b3a4"
 },
 "littown/audio/ph/shun.mp3": {
 "size": 5452,
@@ -640,43 +640,43 @@
 },
 "littown/audio/ph/t.mp3": {
 "size": 1690,
-"sha256": "c1e2ebd955100e74d5bd35be2f61e7a3de2321406f7614b9bc0dda131f86fa5d"
+"sha256": "fd5699d95bbef1c17fbb334d9b796d3ef6277b67b3346a03fc9bfd835297329d"
 },
 "littown/audio/ph/th.mp3": {
 "size": 4198,
 "sha256": "81178bf46a145cacbd54fd560edd0f724ed161133a57bb23583a74cb0b51f398"
 },
 "littown/audio/ph/u.mp3": {
-"size": 3571,
-"sha256": "2c5b843ed91f1a3936b7c8ec1a679f303856d211e671999f9430d0fd804fab77"
+"size": 3990,
+"sha256": "62a1fcf94d6434361624ce4b05d38afb57336793420738b1bb0641de3acfdcb2"
 },
 "littown/audio/ph/uu.mp3": {
-"size": 3780,
-"sha256": "d4216e9e1113e3ff8a8ada275047883d2e1ac30a12eec8769a58dc62810d3b58"
+"size": 4199,
+"sha256": "77f1165d913d048656ce5aab06e897bfa81ca19256e694f06d86b63a2dc6b170"
 },
 "littown/audio/ph/v.mp3": {
-"size": 2317,
-"sha256": "0ac0e1c4eeefd91e62863bed6d261b549849f303adf15f897961ddd3afd00b4d"
+"size": 2527,
+"sha256": "dda712096b112867182b5cc64754495cc906bac210744194ce21503c6b97ace0"
 },
 "littown/audio/ph/w.mp3": {
-"size": 5870,
-"sha256": "aa97d5626dcf2164f6835639ab97c474a2757a258b4df2dd212ee83abbb903b4"
+"size": 2736,
+"sha256": "9383b21ed6e4b449b502737775b9f5463b2f7645e1ff1dbbda502f68b24d6e8a"
 },
 "littown/audio/ph/y.mp3": {
-"size": 6079,
-"sha256": "aca6d71c674dea5c053aeec45f9717bfbc47fd4a71c36cff37c61c3da8a86ce5"
+"size": 2736,
+"sha256": "2764d126f0d17deb5feba75c444e1ab59d484169f918b6b33e95ba5f62f58606"
 },
 "littown/audio/ph/yoo.mp3": {
 "size": 4616,
 "sha256": "66e89c776f6de51ac97cc42c452d27c290eeffc84ae68759a7533a5ea214712b"
 },
 "littown/audio/ph/z.mp3": {
-"size": 2317,
-"sha256": "184a2b5f5dbc39c9f9b5684a9ed91459926cd8f1f9ecd8a39a92272f3a814f30"
+"size": 2945,
+"sha256": "859844792d9e6d7c7579794263ab3d3bb82d8c87b2561e6edada10e5a28174dd"
 },
 "littown/audio/ph/zh.mp3": {
-"size": 4407,
-"sha256": "13319eacf5d531f8c4f729bb09cc658afb38160aaf02467a7dfb8bba0255ded7"
+"size": 4408,
+"sha256": "da596ca54fbfafbf3ff3ff78de5e9f20260427d3324eb3d974403f6bf55842ca"
 },
 "littown/audio/s/a-cat-is-in-the-camp-8o0nh0.mp3": {
 "size": 12348,
@@ -2979,8 +2979,8 @@
 "sha256": "d5a3004b536b597c254bbf07b04491939e3cb76c58f9e228bbc8a56bec9ea871"
 },
 "littown/css/app.css": {
-"size": 65591,
-"sha256": "cb02688ee14b46891fc35c71adcc83dd45395db3b508501ee3ee978fbbd5e36e"
+"size": 66355,
+"sha256": "a3763a76ae18df70f07bd06d6bb0a0d8ed817ed04a0b5354982cb00d82e7e08c"
 },
 "littown/css/fonts.css": {
 "size": 979,
@@ -3079,8 +3079,8 @@
 "sha256": "4ee9f2b916a73fa334099bccab7fdfef9c502db9d96c5793d2e5639ce098cc13"
 },
 "littown/js/screens/lesson.js": {
-"size": 49074,
-"sha256": "ffebedf76242e7eb9f29f5fc491e0213b305bf12c2e794fbe1803fe9dc649b9f"
+"size": 52740,
+"sha256": "9dae8f2903aea39c0ac9425b78d2275d9a4c79843289a1f8b6f4a7c12276c7cf"
 },
 "littown/js/screens/parent.js": {
 "size": 17277,
@@ -3107,8 +3107,8 @@
 "sha256": "b730c53a855edeb4fa437e681538936ec27f9bfacd36b16f4d669a985557fb63"
 },
 "littown/js/trace.js": {
-"size": 21216,
-"sha256": "f9d8656409bb85974ec10bafef7bfa0f02d6bb184283915045f6209fdbdd53dd"
+"size": 22287,
+"sha256": "cd64a9c9992126469735896c96d29abd6b0a46f1f29a151e035b934f09e27800"
 },
 "littown/js/ui.js": {
 "size": 11415,
@@ -3124,7 +3124,7 @@
 },
 "littown/version.json": {
 "size": 77,
-"sha256": "d82c9f9f0809aeee5552cbcf8d3ad5bffa7dfbac9172a75ae682bc82a0e2963b"
+"sha256": "24fa1122e0ee2f74b7eda37c7f65ceeff2306b3f4fc5aeca3e19b1d0e7ed5e90"
 },
 "lt-bridge.js": {
 "size": 11175,

@@ -61,8 +61,24 @@
     var vb = { x: 0, y: TOP, w: Math.max(x, 1), h: BOTTOM - TOP };
     pad.vb = vb;
     var el = U.el('div.trace-pad.look-' + look + (opts.free ? '.free' : '') + (letters.length > 1 ? '.word' : ''));
-    // a word pad is as wide as its boxes (330 px tall), up to the screen's width
-    if (letters.length > 1) { el.style.width = Math.min(820, Math.round(vb.w * 330 / vb.h) + 12) + 'px'; }
+    // a word pad is as wide as its boxes (330 px tall), up to 820 px; any pad shrinks (keeping its shape) to fit
+    // the screen, e.g. a tablet held upright or a phone. Pen positions are read from the drawn size, so this is safe.
+    function fit() {
+      if (opts.free) { return; }
+      var W = window.innerWidth || 1024, H = window.innerHeight || 600, portrait = H > W, word = letters.length > 1;
+      var baseH = word ? (H <= 560 ? 300 : 330) : (H <= 560 ? 370 : 410);
+      var natW = word ? Math.min(820, Math.round(vb.w * baseH / vb.h) + 12) : Math.round(baseH * 300 / 410);
+      var availW = W - 40 - (portrait ? 0 : 140);           // the speaker and done buttons sit beside it…
+      var availH = H - 150 - (portrait ? 120 : 0);           // …or under it, when the screen is upright
+      var k = Math.min(1, availW / natW, availH / baseH);
+      el.style.width = Math.round(natW * k) + 'px';
+      el.style.height = Math.round(baseH * k) + 'px';
+    }
+    fit();
+    if (!opts.free && w.addEventListener) {
+      var onResize = function () { if (!el.parentNode && pad.attached) { w.removeEventListener('resize', onResize); return; } if (el.parentNode) { pad.attached = true; } fit(); };
+      w.addEventListener('resize', onResize);
+    }
     var svg = svgEl('svg', { viewBox: vb.x + ' ' + vb.y + ' ' + vb.w + ' ' + vb.h, preserveAspectRatio: 'xMidYMid meet', 'class': 'trace-svg' });
     var gLines = svgEl('g', { 'class': 'tr-lines' }), gModel = svgEl('g', { 'class': 'tr-model' }), gInk = svgEl('g', { 'class': 'tr-ink' }), gTop = svgEl('g', { 'class': 'tr-top' });
     svg.appendChild(gLines); svg.appendChild(gModel); svg.appendChild(gInk); svg.appendChild(gTop);
