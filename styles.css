@@ -906,7 +906,7 @@ svg.cre .cre-stink.cs1{animation-delay:-.6s}svg.cre .cre-stink.cs2{animation-del
 .games-card.locked{border-color:var(--warn)}
 .gate-list{list-style:none;margin:8px 0 10px;padding:0;display:grid;gap:6px}
 .gate-list .gc{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);font-size:17px}
-.gate-list .gc small{color:var(--muted)}
+.gate-list .gc small{color:var(--muted)}.gate-list .gc .btn{margin-left:auto;flex:none}.gate-list .gc.rep{opacity:.75}
 .gate-list .gc-ic{width:26px;text-align:center;font-size:18px}
 .gate-list .gc.ok{border-color:var(--good)}.gate-list .gc.ok .gc-ic,.gate-list .gc.ok small{color:var(--good)}
 .gate-list .gc.wait .gc-ic,.gate-list .gc.wait small{color:var(--warn)}
@@ -931,3 +931,88 @@ svg.cre .cre-stink.cs1{animation-delay:-.6s}svg.cre .cre-stink.cs2{animation-del
 .gate-row{align-items:center;gap:10px;flex-wrap:wrap}
 .seg.small button{padding:6px 10px;min-height:34px;font-size:13px}
 .time-card{display:grid;gap:8px}.time-row{display:flex;align-items:center;gap:12px}.time-row.out{color:var(--muted)}.time-row .meter{flex:0 0 120px;height:8px;border-radius:4px;background:var(--line);overflow:hidden}.time-row .meter span{display:block;height:100%;background:var(--accent)}.time-row.out .meter span{background:var(--muted)}
+.night-card{background:#1e2742;color:#e8ecff;border-color:#2c3660}.night-card .note{color:#b9c2e8}.night-card h2{color:#fff}
+.daybar{display:grid;gap:10px}.daybar .seg button small{font-weight:400;opacity:.8}
+.cal{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:10px;max-width:380px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow{text-align:center;font-size:12px;color:var(--muted);font-weight:600}
+.cal-grid button{position:relative;min-height:42px;border:1px solid transparent;border-radius:10px;background:none;color:var(--ink);font-size:15px}
+.cal-grid button:disabled{color:var(--muted);opacity:.45}
+.cal-grid button.now{border-color:var(--line);font-weight:700}
+.cal-grid button.sel{background:var(--ink);color:var(--bg)}
+.cal-grid button i{position:absolute;right:3px;top:2px;font-style:normal;font-size:10px;line-height:14px;min-width:14px;border-radius:7px;background:var(--accent);color:#fff;padding:0 3px}
+.dayask{display:grid;gap:10px;border:2px solid var(--accent)}.dayask.hot{box-shadow:0 0 0 4px rgba(27,94,88,.18)}
+.dayban{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.hrow .mv-y{margin-right:6px}
+.prize-h{font-size:14px;margin:14px 0 2px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.donate-list .btn{white-space:nowrap}
+
+/* ================= cl-v49: a tablet held sideways =================
+   On a short, wide screen the header shrinks to one row (name, tabs, who's playing), the page uses the whole width, the
+   town fills what is left of the screen, and the games put their board on the left with the buttons beside it. */
+@media (orientation:landscape) and (max-height:640px){
+  .app{max-width:none}
+  .top{display:flex;flex-wrap:wrap;align-items:center;padding-top:2px}
+  .top .brand{display:contents}
+  .top .brand>:first-child{order:1;margin-right:14px}
+  .top .tabs{order:2;flex:1 1 auto;min-width:0;margin-top:0}
+  .top .brand .right{order:3;margin-left:auto}
+  .top .demo,.top .nudge-bar,.top .alert-bar,.top>:not(.brand):not(.tabs){order:4;flex:1 0 100%;margin-top:0}
+  .top .demo{padding:1px 10px;margin-bottom:3px}
+  .tabs button{min-height:40px;padding:8px 12px}
+  main{padding-top:8px}
+  .world+.town-help{display:none}
+  .pcard{max-width:600px}
+  .pcard-wrap{padding:8px}
+  /* making a character: the picture stays on the left while the choices scroll on the right */
+  .creator{display:grid;grid-template-columns:210px minmax(0,1fr);column-gap:20px}
+  .creator>*{grid-column:2}
+  .creator>.av-stage{grid-column:1;grid-row:1/span 80;align-self:start;position:-webkit-sticky;position:sticky;top:56px}
+  .creator .av-stage .av-preview{width:128px}
+  /* park and care games: board on the left, steps and tools on the right */
+  .mg{display:grid;grid-template-columns:auto minmax(170px,1fr);grid-template-rows:auto 1fr;column-gap:14px;align-items:start}
+  .mg-stage{grid-column:1;grid-row:1/span 2}
+  .mg-steps{grid-column:2;grid-row:1}
+  .mg-steps ol{flex-direction:column;align-items:flex-start}
+  .mg-tools{grid-column:2;grid-row:2;justify-content:flex-start}
+  /* Mess Defense and Bedtime Defense: board on the left, the team down the right side */
+  .def-play{max-width:none;display:grid;grid-template-columns:auto minmax(150px,1fr);grid-template-rows:auto auto 1fr;column-gap:14px;align-items:start}
+  .def-play .def-hud{grid-column:2;grid-row:1;flex-wrap:wrap;gap:4px 10px}
+  .def-play .def-canvas{grid-column:1;grid-row:1/span 3;margin:0}
+  .def-play .def-cards{grid-column:2;grid-row:2;flex-wrap:wrap;margin:4px -2px 0}
+  .def-play .def-cards .def-slot{flex:0 0 calc(33.3% - 4px);margin:2px}
+  .def-play .def-tip,.def-play .bed-bar{grid-column:2}
+  .cav-stage{margin:0 auto}
+}
+
+/* cl-v49: unlock chores on the games screen open that chore */
+.gate-list .gc-go{display:flex;align-items:center;gap:8px;min-width:0;min-height:44px;margin:-8px 0;padding:0;background:none;border:0;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.gate-list .gc-go span{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px;overflow-wrap:anywhere}
+.gate-list .gc-go i{font-style:normal;font-size:22px;line-height:1;color:var(--accent)}
+.gate-list .gc.ok .gc-go span{text-decoration:none}
+.gate-list .gc-go:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+.row.flash{animation:rowflash 1.4s ease-out 2;border-radius:var(--r)}
+@keyframes rowflash{0%,100%{box-shadow:0 0 0 0 transparent;background:transparent}30%{box-shadow:0 0 0 3px var(--accent);background:var(--accent-soft)}}
+@media (prefers-reduced-motion:reduce){.row.flash{animation:none;box-shadow:0 0 0 3px var(--accent);background:var(--accent-soft)}}
+
+/* cl-v49: "Do these to unlock games" on the Chores tab */
+.unlock-card{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border:2px solid #2563eb;border-radius:12px;background:color-mix(in srgb,#2563eb 8%,var(--surface))}
+.unlock-card .uc-head{display:flex;align-items:center;gap:10px}
+.unlock-card .uc-head b{flex:1;font-size:17px}
+.unlock-card .uc-count{font-weight:700;color:#fff;background:#2563eb;border-radius:99px;padding:2px 10px;font-size:13px;white-space:nowrap}
+.unlock-card .uc-bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.unlock-card .uc-bar i{display:block;height:100%;background:#2563eb;border-radius:99px}
+.unlock-card .uc-list{display:flex;flex-wrap:wrap;gap:6px}
+.unlock-card .uc-chip{font:inherit;font-size:15px;font-weight:600;min-height:40px;padding:6px 12px;border-radius:99px;border:1.5px solid #2563eb;background:var(--surface);color:var(--ink);cursor:pointer}
+.unlock-card .uc-chip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.unlock-card .uc-chip.wait{border-color:var(--line);color:var(--muted);cursor:default;font-weight:500;display:inline-flex;align-items:center}
+.unlock-card.done,.unlock-card.wait{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.unlock-card.done{border-color:var(--good);background:color-mix(in srgb,var(--good) 10%,var(--surface))}
+.unlock-card.wait{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,var(--surface))}
+.unlock-card.done span,.unlock-card.wait span{color:var(--muted);font-size:14px}
+.grp.grp-unlock{color:#1d4ed8}
+.row.unlock{box-shadow:inset 4px 0 0 #2563eb;background:color-mix(in srgb,#2563eb 5%,transparent)}
+.unlock-card .uc-help,.unlock-card .uc-later{margin:0;font-size:14px;color:var(--muted);flex-basis:100%}
+.rep-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.gate-list .gc{flex-wrap:wrap}
+.gate-list .gc .gc-acts{display:flex;gap:6px;margin-left:auto;flex:none}

@@ -117,7 +117,7 @@
   var DEFAULTS = {
     bankName: 'Family Bank', requireApproval: true, catOrder: [], centsPerPoint: 1, petEvolve1Cents: 500, petEvolve2Cents: 1500,
     dadPid: '', allowanceCents: 0, allowanceDay: 5, allowanceLast: '', parents: [], foodCoins: 10, mealPrice: 10, careCoins: 10, kitPrice: 10,
-    coinsPerDollar: 100, swapPrice: 20, toothPrice: 20, ballPrice: 20,
+    coinsPerDollar: 100, swapPrice: 20, toothPrice: 20, ballPrice: 20, clothesK: 3,
     logCooldown: 60, logCap: 5, hideHours: 24,   /* hideHours: how long a pet hides after a "pet hides" rating (cl-v32) */   /* kids: seconds between logging the same chore, and the most times a day (0 = no limit) */
     nightStart: '20:00', nightEnd: '06:30', nightOff: false, drainFood: 50, drainClean: 25, drainRest: 50, drainEnergy: 50   /* pets sleep at night; how fast each need drops per day */      /* chore coins: each chore's pts, traded at the bank, spent on clothes and store items */
   };
@@ -403,6 +403,14 @@
       return DB.commit(ops);
     }).then(function () { S.backfilling = false; }, function () { S.backfilling = false; });
   }
+  /* cl-v51: what each kid really earns, to set prices by (approved chore coins a day over the last 14 days) */
+  function earnLine() {
+    var from = addDays(today(), -13), bits = kids().map(function (p) {
+      var n = 0; S.entries.forEach(function (e) { if (e.pid === p.id && e.status === 'approved' && e.date >= from && e.date <= today()) n += Number(e.pts) || 0; });
+      return esc(p.name) + ' about <b>' + Math.round(n / 14) + '</b>';
+    });
+    return bits.length ? '<p class="note">Chore coins earned a day over the last 2 weeks: ' + bits.join(', ') + '. A good rule: a meal or toothpaste is a small part of a day’s coins, a special outfit takes one to two weeks of saving.</p>' : '';
+  }
   function chorePts(pid) { var d = S.pets[pid] || {}; return Math.max(0, Number(d.chorePts) || 0); }
   function cashIn(pid) {
     var per = Number(S.settings.coinsPerDollar) || 100, have = chorePts(pid);
@@ -442,6 +450,14 @@
     return DB.commit(ops);
   }
   function addEntry(pid, date, chore, extra) { S.lastLog[pid + '|' + chore.id] = Date.now(); return saveEntries([newEntry(pid, date, chore, extra)]).catch(fail); }
+  /* "Done already": the kid says the chore got done (by someone else). A zero-credit entry for a parent to approve: no money,
+     no pet care, but once approved it counts toward unlocking games. Hidden on the kid's list while it waits. */
+  function reportDone(pid, cid, cant) {
+    var c = find(S.chores, function (x) { return x.id === cid; }); if (!c) return Promise.resolve();
+    var t = today();
+    if (S.entries.some(function (e) { return e.cid === cid && e.date === t && e.pid === pid && e.status === 'pending'; })) return Promise.resolve();
+    return addEntry(pid, t, c, { lvPct: 0, report: true, cant: !!cant });   /* cant: "can't do it today" (no dog food, nobody cooked dinner...) */
+  }
   /* kids can't flood the approvals: a short wait between logs of the same chore, and a daily limit (parents are never limited) */
   /* ----- the daily review (cl-v33): chores marked review, rated for every kid in one place; saving logs them as approved ----- */
   function reviewItems(date) { var cats = catList(S.chores); return S.chores.filter(function (c) { return c.active !== false && c.review && (!date || dayOk(c, date)); }).sort(function (a, b) { return (cats.indexOf(catName(a)) - cats.indexOf(catName(b))) || ((a.order || 0) - (b.order || 0)); }); }
@@ -737,6 +753,8 @@
   var lastShell = '';
   function render() {
     render0();
+    if (S.phase === 'app' && window.Pets && Pets.ltImport && !S.ltChecked && S.pets && Object.keys(S.pets).length) { S.ltChecked = true; try { Pets.ltImport(); } catch (e) {} }
+    if (S.goCid) { try { showGoChore(); } catch (e) {} if (S.goCid) setTimeout(function () { if (S.goCid) { S.goCid = null; S.goT0 = 0; var r = view.querySelector('.row.flash'); if (r) r.classList.remove('flash'); } }, 4200); }
     if (window.Gate && window.Gate.on) { try { window.Gate.sync(); } catch (e) {} }
   }
   function render0() {
@@ -1045,6 +1063,58 @@
   }
 
   /* ----- Chores (log) ----- */
+  /* ---------- which day the Chores tab logs for (cl-v48): Yesterday / Today buttons, a month calendar, and a question in the morning ---------- */
+  function askDayNeeded() { return !!(S.admin && S.dateAuto && S.date === today() && new Date().getHours() < 12 && S.dayAsked !== today()); }
+  /* run a logging action, asking a parent first which day it is for when it's morning and no day was picked */
+  function withDay(fn) {
+    if (!askDayNeeded()) { fn(); return; }
+    S.askDay = fn; updateDayBar();
+    var el = $('#dayAsk'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
+  }
+  function setDay(d) {
+    if (d > today()) return;
+    S.date = d; S.dateAuto = d === today(); S.dayAsked = today(); S.calOpen = false; S.calMonth = null;
+    var fn = S.askDay; S.askDay = null;
+    if (fn) fn();
+    schedule();
+  }
+  function dayBarHtml() { return '<div id="dayBar" class="daybar"></div>'; }
+  function calHtml() {
+    var t = today(), m = S.calMonth || S.date.slice(0, 7), first = m + '-01', d0 = parseD(first), lead = dow(first), dim = new Date(d0.getFullYear(), d0.getMonth() + 1, 0).getDate();
+    var pid = S.admin && S.logMode === 'chore' ? null : logTarget(), cnt = {}, i, h;
+    S.entries.forEach(function (e) { if (e.status !== 'rejected' && (!pid || e.pid === pid) && e.date.slice(0, 7) === m) cnt[e.date] = (cnt[e.date] || 0) + 1; });
+    h = '<div class="cal" role="group" aria-label="Pick a day"><div class="cal-head"><button class="btn small" type="button" data-act="calNav" data-n="-1" aria-label="Earlier month">&lsaquo;</button><b>' +
+      esc(d0.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })) + '</b><button class="btn small" type="button" data-act="calNav" data-n="1" aria-label="Later month"' + (m >= t.slice(0, 7) ? ' disabled' : '') + '>&rsaquo;</button></div><div class="cal-grid">';
+    for (i = 0; i < 7; i++) h += '<span class="cal-dow">' + DAYN[i].charAt(0) + '</span>';
+    for (i = 0; i < lead; i++) h += '<span></span>';
+    for (i = 1; i <= dim; i++) {
+      var d = m + '-' + (i < 10 ? '0' : '') + i, n = cnt[d] || 0;
+      h += '<button type="button" data-act="day" data-d="' + d + '"' + (d > t ? ' disabled' : '') + ' class="' + (d === S.date ? 'sel' : '') + (d === t ? ' now' : '') + '" aria-label="' + esc(fmtDate(d)) + (n ? ', ' + n + ' logged' : '') + '"' + (d === S.date ? ' aria-pressed="true"' : '') + '>' + i + (n ? '<i>' + (n > 9 ? '9+' : n) + '</i>' : '') + '</button>';
+    }
+    return h + '</div><p class="note">The small number is how many chores ' + (pid ? esc(pname(pid)) + ' has' : 'are') + ' logged that day. Tap a day to log chores for it.</p></div>';
+  }
+  function updateDayBar() {
+    var el = $('#dayBar'); if (!el) return;
+    var t = today(), y = addDays(t, -1), days = [addDays(t, -2), y, t], h;
+    h = '<div class="wrap end"><div class="seg" role="group" aria-label="Day to log for">' + days.map(function (d) {
+      return '<button type="button" data-act="day" data-d="' + d + '" aria-pressed="' + (S.date === d) + '">' + (d === t ? 'Today' : d === y ? 'Yesterday' : DAYN[dow(d)] + ' ' + parseD(d).getDate()) + '</button>';
+    }).join('') + '</div><button class="btn" type="button" data-act="calToggle" aria-expanded="' + !!S.calOpen + '">' + (days.indexOf(S.date) < 0 ? esc(fmtDate(S.date)) : 'Calendar') + '</button></div>';
+    if (S.calOpen) h += calHtml();
+    if (askDayNeeded()) h += '<div id="dayAsk" class="card dayask' + (S.askDay ? ' hot' : '') + '" role="group" aria-label="Which day are these chores for?"><b>Good morning. Which day are these chores for?</b>' +
+      '<div class="wrap"><button class="btn primary" type="button" data-act="day" data-d="' + y + '">Yesterday, ' + esc(fmtDate(y)) + '</button><button class="btn" type="button" data-act="day" data-d="' + t + '">Today, ' + esc(fmtDate(t)) + '</button></div></div>';
+    else if (S.date !== t) h += '<div class="banner dayban">Logging for <b>' + esc(fmtDate(S.date)) + '</b>' + (S.date === y ? ' (yesterday)' : '') + '. <button class="btn small" type="button" data-act="today">Back to today</button></div>';
+    el.innerHTML = h;
+  }
+  /* a parent can move a chore logged today back to yesterday, unless it was already done yesterday (its limit is used up) or it isn't a chore for that day */
+  function canMoveBack(e) {
+    if (!S.admin || !e || e.date !== today() || e.paid || e.bountyPaid || e.questId || e.status === 'rejected') return false;
+    var y = addDays(e.date, -1), c = find(S.chores, function (x) { return x.id === e.cid; });
+    if (!c) return true;
+    if (!dayOk(c, y)) return false;
+    var f = limOf(c); if (!f) return true;
+    if (f.per === 'w' && weekStart(y) === weekStart(e.date)) return true;
+    return freqUsed(e.pid, c, y) < f.n;
+  }
   function logModeSeg() {
     return '<div class="seg" role="group" aria-label="Log chores"><button type="button" data-act="logMode" data-m="person" aria-pressed="' + (S.logMode !== 'chore') + '">By person</button>' +
       '<button type="button" data-act="logMode" data-m="chore" aria-pressed="' + (S.logMode === 'chore') + '">By chore</button></div>';
@@ -1062,12 +1132,12 @@
       view.innerHTML = '<section class="stack">' +
         '<div id="logModeBox"></div>' +
         '<div id="chips" class="wrap"></div>' +
-        '<div class="wrap end"><label class="field w-md" for="date"><span>Date</span><input type="date" id="date"></label>' +
-        '<button class="btn" id="todayBtn" data-act="today" type="button">Today</button></div>' +
+        dayBarHtml() +
         '<div class="head-line" id="logHead"></div>' +
         '<p class="note" id="logNote"></p>' +
         '<div id="pushBox"></div>' +
         '<div id="passBox"></div>' +
+        '<div id="unlockBox"></div>' +
         '<div id="questBox"></div>' +
         '<div class="cats" id="cats"></div><div class="cats gives" id="gives"></div>' +
         '<div class="wrap"><div class="field w-lg"><input type="search" id="q" placeholder="Search chores" aria-label="Search chores"></div>' +
@@ -1082,8 +1152,7 @@
     }).join('') : '';
     $('#chips').hidden = !S.admin;
     $('#logModeBox').innerHTML = S.admin ? logModeSeg() : '';
-    var di = $('#date'); if (di && document.activeElement !== di) di.value = S.date;
-    $('#todayBtn').hidden = S.date === D.t;
+    updateDayBar();
     var req = S.settings.requireApproval !== false;
     $('#logNote').textContent = !req ? 'Approved chores feed your pet.' : (S.admin ? 'Parent mode: chores you log are approved right away.' : 'Chores count and feed your pet once a parent approves them.');
     var mine = S.entries.filter(function (e) { return e.pid === pid && e.date === S.date; });
@@ -1113,16 +1182,14 @@
   function renderLogByChore(D) {
     if (!$('#choreList')) {
       view.innerHTML = '<section class="stack">' + '<div id="logModeBox">' + logModeSeg() + '</div>' +
-        '<div class="wrap end"><label class="field w-md" for="date"><span>Date</span><input type="date" id="date"></label>' +
-        '<button class="btn" id="todayBtn" data-act="today" type="button">Today</button></div>' +
+        dayBarHtml() +
         '<p class="note">Tap a chore to see everyone it is assigned to. Tick who did it, then approve them all at once. Anyone not logged yet gets logged and approved.</p>' +
         '<div class="cats" id="cats"></div><div class="cats gives" id="gives"></div>' +
         '<div class="wrap"><div class="field w-lg"><input type="search" id="q" placeholder="Search chores" aria-label="Search chores"></div></div>' +
         '<ul class="list board" id="choreList"></ul></section>';
       $('#q').value = S.q;
     }
-    var di = $('#date'); if (di && document.activeElement !== di) di.value = S.date;
-    $('#todayBtn').hidden = S.date === D.t;
+    updateDayBar();
     updateChoreBoard();
   }
   function updateChoreBoard() {
@@ -1258,9 +1325,9 @@
         (c.hideLv && c.hideLv === x.n ? ' &middot; your pet hides under the bed' : '') + '</small></button>';
     }).join('') + '</div><button class="btn small" type="button" data-act="lvCancel">Cancel</button></li>';
   }
-  function rowHtml(c, x, pid) {
+  function rowHtml(c, x, pid, unlock) {
     var n = x ? x.a + x.p : 0, tags = giveTag(c);
-    if (c.gate) tags += '<span class="tag game">Unlocks games</span>';
+    if (c.gate) tags += '<span class="tag game">Unlocks games' + (c.gateFrom ? ' after ' + esc(hm(gateFromMs(c, S.date))) : '') + '</span>';
     if (c.bountyCents > 0) tags += '<span class="tag bounty">' + money(c.bountyCents) + ' bounty</span>';
     if (c.major && window.ADV && ADV.bigJobsToday().indexOf(c) >= 0) tags += '<span class="tag big">Big job</span>';
     var full = pid && !S.admin && freqFull(pid, c, S.date), fq = limOf(c);
@@ -1275,11 +1342,33 @@
     var ln = S.admin && pid && !n ? lastNudge(c.id, pid) : null;
     if (ln) tags += '<span class="tag plain">' + nudgeNote(ln) + '</span>';
     var pick = S.lvPick && S.lvPick.cid === c.id && S.lvPick.pid === pid ? levelPickHtml(c, pid) : '';
-    return '<li class="row' + (n ? ' done' : '') + '"><div class="rname">' + esc(c.name) + (tags ? '<div class="meta">' + tags + '</div>' : '') + '</div>' +
+    var repBtns = unlock && !S.admin && pid && !n ? '<div class="rep-btns"><button type="button" class="btn small ghost" data-act="repDone" data-cid="' + esc(c.id) + '">Done already</button><button type="button" class="btn small ghost" data-act="repCant" data-cid="' + esc(c.id) + '">Can’t do it today</button></div>' : '';
+    return '<li class="row' + (n ? ' done' : '') + (unlock ? ' unlock' : '') + (S.goCid === c.id ? ' flash' : '') + '" data-row="' + esc(c.id) + '"><div class="rname">' + esc(c.name) + (tags ? '<div class="meta">' + tags + '</div>' : '') + repBtns + '</div>' +
       ptsBadge(c.pts, !!levelsOf(c)) + (S.admin && pid && !n ? bellBtn(c.id, pid, pname(pid)) : '') +
       '<div class="step"><button type="button" data-act="dec" data-cid="' + esc(c.id) + '" aria-label="Remove one: ' + esc(c.name) + '"' + (x && (x.p || (S.admin && x.a)) ? '' : ' disabled') + '>&minus;</button>' +
       '<span class="n' + (n ? '' : ' zero') + '">' + n + '</span>' +
       '<button type="button" class="plus" data-act="inc" data-cid="' + esc(c.id) + '" aria-label="Log: ' + esc(c.name) + '"' + (full ? ' disabled' : '') + '>+</button></div></li>' + pick;
+  }
+  /* cl-v49: on a kid's Chores tab, the chores that unlock games come first: a card says how many are left and lists them,
+     and in the list they sit at the top under "To unlock games" until they are logged */
+  function unlockInfo(pid) {
+    if (!pid || S.date !== today() || !isPerson(pid) || isAdult(pid) || !S.chores.some(function (c) { return c.gate; })) return null;
+    var gs = gateStatus(pid); if (!gs || !gs.total || gs.vacation) return null;
+    var todo = {}; gs.rows.forEach(function (r) { if (r.st === 'todo') todo[r.id] = 1; });
+    return { gs: gs, todo: todo, left: gs.rows.filter(function (r) { return r.st === 'todo'; }), wait: gs.rows.filter(function (r) { return r.st === 'wait' || r.st === 'rep'; }) };
+  }
+  function unlockCardHtml(u) {
+    if (!u) return '';
+    var gs = u.gs, n = u.left.length;
+    var later = gs.later && gs.later.length ? '<p class="uc-later">Later today: ' + gs.later.map(function (r) { return '<b>' + esc(r.name) + '</b> from ' + esc(hm(r.at)); }).join(', ') + '. Games lock again then until it’s done.</p>' : '';
+    if (gs.override === 'closed') return '<div class="unlock-card done"><b>Games are locked for today by a parent.</b></div>';
+    if (gs.open) return '<div class="unlock-card done"><b>&#127918; Games are unlocked</b><span>' + esc(gateLine(gs)) + '</span>' + later + '</div>';
+    if (!n) return '<div class="unlock-card wait"><b>&#8987; All ' + gs.total + ' unlock chores are in.</b><span>Games open when a parent approves ' + (u.wait.length === 1 ? 'the last one' : 'them') + '.</span>' + later + '</div>';
+    return '<div class="unlock-card"><div class="uc-head"><b>&#127918; Do these to unlock games</b><span class="uc-count mono">' + n + ' left</span></div>' +
+      '<div class="uc-bar" role="img" aria-label="' + (gs.total - n) + ' of ' + gs.total + ' unlock chores done"><i style="width:' + Math.round((gs.total - n) / gs.total * 100) + '%"></i></div>' +
+      '<div class="uc-list">' + u.left.map(function (r) { return '<button type="button" class="uc-chip" data-act="goChore" data-cid="' + esc(r.id) + '">' + esc(r.name) + '</button>'; }).join('') +
+      u.wait.map(function (r) { return '<span class="uc-chip wait" title="Waiting for a parent">&#8987; ' + esc(r.name) + (r.cant ? ' (can’t do)' : '') + '</span>'; }).join('') + '</div>' +
+      '<p class="uc-help">Already done by someone else, or can’t be done today? Use the buttons on that chore below and a parent will check.</p>' + later + '</div>';
   }
   function updateLogList(pid) {
     if (S.admin && S.logMode === 'chore') { updateChoreBoard(); return; }
@@ -1294,7 +1383,8 @@
         if (e.status === 'approved') x.a++; else if (e.status === 'pending') x.p++; else x.r++;
       }
     });
-    var vac = window.ADV && ADV.onVacation();
+    var vac = window.ADV && ADV.onVacation(), U = S.logMode === 'chore' ? null : unlockInfo(pid), ub = $('#unlockBox');
+    if (ub) ub.innerHTML = unlockCardHtml(U);
     var mine = S.chores.filter(function (c) { return c.active !== false && (c.who || []).indexOf(pid) >= 0 && vacShow(c, vac) && dayOk(c, S.date); });
     /* kids: chores already done as many times as allowed drop out of the list (a "Done" link brings them back) */
     var doneHid = S.admin ? [] : mine.filter(function (c) { return freqFull(pid, c, S.date); });
@@ -1319,8 +1409,11 @@
     else if (S.sort === 'name') list.sort(function (a, b) { return a.name.localeCompare(b.name); });
     else if (S.sort === 'used') list.sort(function (a, b) { return (used[b.id] || 0) - (used[a.id] || 0) || ord(a) - ord(b); });
     else list.sort(function (a, b) { return ord(a) - ord(b); });
-    if (!(S.sort === 'cat' && S.cat === 'all')) { ul.innerHTML = list.map(function (c) { return rowHtml(c, cnt[c.id], pid); }).join('') + doneLink; return; }
-    var html = '';
+    function first(c) { return U && U.todo[c.id] ? 1 : 0; }
+    if (U && !q) list.sort(function (a, b) { return first(b) - first(a); });     /* stable: unlock chores to the top, otherwise in the order picked */
+    if (!(S.sort === 'cat' && S.cat === 'all')) { ul.innerHTML = list.map(function (c) { return rowHtml(c, cnt[c.id], pid, first(c)); }).join('') + doneLink; return; }
+    var html = '', top = U && !q ? list.filter(first) : [];
+    if (top.length) { html += '<li class="grp grp-unlock"><span>&#127918; To unlock games</span><span class="mono">' + top.length + ' left</span></li>' + top.map(function (c) { return rowHtml(c, cnt[c.id], pid, 1); }).join(''); list = list.filter(function (c) { return !first(c); }); }
     catList(list).forEach(function (n) {
       var items = list.filter(function (c) { return catName(c) === n; });
       var done = items.filter(function (c) { var x = cnt[c.id]; return x && x.a + x.p > 0; }).length;
@@ -1449,9 +1542,10 @@
     return '<div class="swipe-wrap"><div class="swipe-bg"><span class="ok">Approve</span><span class="no">Deny</span></div>' +
       '<div class="hrow swipe' + (up ? ' ' + pCls(up) : '') + '" data-key="' + esc(u.key) + '">' +
       (sel ? '<label class="ap-sel" aria-label="Include in Approve"><input type="checkbox" data-act="apSel" data-key="' + esc(u.key) + '"' + (S.apSkip[u.key] ? '' : ' checked') + '></label>' : '') +
-      (up && mode !== 'person' ? '<span class="dot"></span>' : '') + '<div class="desc">' + esc(label) + apLevelHtml(u) +
+      (up && mode !== 'person' ? '<span class="dot"></span>' : '') + '<div class="desc">' + esc(label) + apLevelHtml(u) + (!u.quest && u.entries[0].report ? ' <span class="tag plain">' + (u.entries[0].cant ? 'says it can’t be done today (no credit)' : 'says it’s done already (no credit)') + '</span>' : '') +
       '<small>' + (mode === 'full' ? esc(who) + ' &middot; ' : '') + (u.date === t ? 'Today' : esc(fmtDate(u.date))) + ' ' + esc(fmtTime(u.ts)) + (u.cents ? ' &middot; ' + money(u.cents) + ' bounty' : '') + '</small></div>' +
       '<span class="amt plus">+' + u.pts + '</span>' +
+      (!u.quest && canMoveBack(u.entries[0]) ? '<button class="btn small mv-y" type="button" data-act="moveYday" data-id="' + esc(u.entries[0].id) + '">Move to yesterday</button>' : '') +
       '<span class="ap-btns"><button class="btn small ok-btn" type="button" data-act="apUnit" data-key="' + esc(u.key) + '" aria-label="Approve">&#10003;</button><button class="btn small danger" type="button" data-act="rjUnit" data-key="' + esc(u.key) + '" aria-label="Deny">&#10005;</button></span></div></div>';
   }
   function apLevelHtml(u) {
@@ -1738,6 +1832,7 @@
             var p = person(r.pid), key = 'rm' + r.id, acts = '', by = r.decidedBy ? parentName(r.decidedBy) : '';
             var canRm = !r.paid && !r.bountyPaid && (r.status === 'pending' || S.admin);
             if (S.admin && r.status === 'rejected') acts += '<button class="btn small" type="button" data-act="reopen" data-id="' + esc(r.id) + '">Reopen</button>';
+            if (canMoveBack(r)) acts += '<button class="btn small" type="button" data-act="moveYday" data-id="' + esc(r.id) + '">Move to yesterday</button>';
             if (canRm) acts += '<button class="btn small' + (S.armed === key ? ' danger' : '') + '" type="button" data-act="rm" data-id="' + esc(r.id) + '">' + (S.armed === key ? 'Confirm remove' : 'Remove') + '</button>';
             return '<div class="hrow ' + pCls(p) + (r.status === 'rejected' ? ' rej' : '') + '"><span class="dot"></span><div class="desc">' + esc(r.name) + (r.lv ? ' <span class="tag plain">' + esc(r.lv) + '</span>' : '') + (r.questId ? ' (' + r.share + '%)' : '') +
               '<small>' + esc(pname(r.pid)) + ' &middot; ' + esc(fmtTime(r.ts)) + (by && r.status !== 'pending' ? ' &middot; ' + (r.status === 'approved' ? 'approved' : 'denied') + ' by ' + esc(by) : '') +
@@ -2071,7 +2166,9 @@
       '<div class="wrap end"><label class="field w-sm" for="cpd"><span>Chore coins for $1</span><input type="number" id="cpd" min="1" step="1" value="' + (st.coinsPerDollar || 100) + '"></label>' +
       '<label class="field w-sm" for="ppc"><span>Chore coins for 10 food or clean coins</span><input type="number" id="ppc" min="1" step="1" value="' + (st.swapPrice || 20) + '"></label>' +
       '<label class="field w-sm" for="tprice"><span>Toothpaste (chore coins)</span><input type="number" id="tprice" min="1" step="1" value="' + (st.toothPrice || 20) + '"></label>' +
-      '<label class="field w-sm" for="bprice"><span>Ball (chore coins)</span><input type="number" id="bprice" min="1" step="1" value="' + (st.ballPrice || 20) + '"></label></div>' +
+      '<label class="field w-sm" for="bprice"><span>Ball (chore coins)</span><input type="number" id="bprice" min="1" step="1" value="' + (st.ballPrice || 20) + '"></label>' +
+      '<label class="field w-md" for="clk"><span>Clothes Shop prices</span><select id="clk">' + [1, 2, 3, 4, 5, 8].map(function (k) { return '<option value="' + k + '"' + ((Number(st.clothesK) || 3) === k ? ' selected' : '') + '>' + (k === 1 ? 'Normal (outfits 120 to 250)' : k + '× (outfits ' + (120 * k) + ' to ' + (250 * k) + ')') + '</option>'; }).join('') + '</select></label></div>' +
+      earnLine() +
       '<div class="wrap end">' +
       '<label class="field w-md" for="evo1"><span>First evolution pays ($)</span><input type="text" id="evo1" inputmode="decimal" value="' + dollars(st.petEvolve1Cents) + '"></label>' +
       '<label class="field w-md" for="evo2"><span>Final evolution pays ($)</span><input type="text" id="evo2" inputmode="decimal" value="' + dollars(st.petEvolve2Cents) + '"></label></div>' +
@@ -2164,7 +2261,7 @@
         var who = (c.who || []).map(pname);
         html += '<li class="srow' + (c.active === false ? ' off' : '') + '"><div class="grow">' + esc(c.name) + (c.active === false ? ' (archived)' : '') +
           ' ' + giveTag(c) + (c.bountyCents > 0 ? ' <span class="tag bounty">' + money(c.bountyCents) + '</span>' : '') +
-          (c.major ? ' <span class="tag big">Big job' + (c.majorEach ? ', everyone' : '') + '</span>' : '') + (c.travel && c.major ? ' <span class="tag plain">Trip big job</span>' : '') + (c.tripOnly ? ' <span class="tag plain">Only on vacation</span>' : c.homeOnly ? ' <span class="tag plain">Hidden on vacation</span>' : '') + (daysOf(c) ? ' <span class="tag plain">' + esc(daysText(daysOf(c))) + '</span>' : '') + (c.shared ? ' <span class="tag plain">Shared</span>' : '') + (freqOf(c) ? ' <span class="tag plain">' + freqText(freqOf(c)) + '</span>' : '') + (c.review ? ' <span class="tag plain">Daily review</span>' : '') + (c.gate ? ' <span class="tag game">Unlocks games</span>' : '') +
+          (c.major ? ' <span class="tag big">Big job' + (c.majorEach ? ', everyone' : '') + '</span>' : '') + (c.travel && c.major ? ' <span class="tag plain">Trip big job</span>' : '') + (tripOnly(c) ? ' <span class="tag plain">Only on vacation</span>' : c.homeOnly ? ' <span class="tag plain">Hidden on vacation</span>' : '') + (daysOf(c) ? ' <span class="tag plain">' + esc(daysText(daysOf(c))) + '</span>' : '') + (c.shared ? ' <span class="tag plain">Shared</span>' : '') + (freqOf(c) ? ' <span class="tag plain">' + freqText(freqOf(c)) + '</span>' : '') + (c.review ? ' <span class="tag plain">Daily review</span>' : '') + (c.gate ? ' <span class="tag game">Unlocks games</span>' : '') +
           '<br><small>' + (who.length ? esc(who.join(', ')) : 'Nobody assigned') + '</small></div>' +
           ptsBadge(c.pts, !!levelsOf(c)) + '<button class="btn small" type="button" data-act="editChore" data-cid="' + esc(c.id) + '">Edit</button></li>';
       });
@@ -2188,8 +2285,11 @@
   function ctNewRow(cat) { return { name: '', cat: cat || '', pts: 4, food: 0, clean: 0, tuck: 0, play: 0, any: 0, lv: '', freq: '', review: false, gate: false, days: '', shared: false, vac: '', big: false, bounty: 0, active: true, who: '' }; }
   /* vacation: '' shows it always, 'hide' hides it on vacation (homeOnly), 'only' shows it only on vacation (tripOnly) */
   var VACS = [['', 'Always'], ['hide', 'Hide on vacation'], ['only', 'Only on vacation']];
-  function vacOf(c) { return c && c.tripOnly ? 'only' : c && c.homeOnly ? 'hide' : ''; }
-  function vacShow(c, vac) { return vac ? !c.homeOnly : !c.tripOnly; }
+  /* cl-v49: a travel chore (made by "Add travel chores", or in the Travel category) counts as "only on vacation" unless a
+     parent picked something else for it in the chore editor */
+  function tripOnly(c) { return !!(c && (c.tripOnly || (c.tripOnly === undefined && !c.homeOnly && (c.travel || lc(String(c.cat || '')) === 'travel')))); }
+  function vacOf(c) { return tripOnly(c) ? 'only' : c && c.homeOnly ? 'hide' : ''; }
+  function vacShow(c, vac) { return vac ? !c.homeOnly : !tripOnly(c); }
   function vacKey(str) { var t = lc(String(str || '')).trim(); if (!t || /^(always|show|both|no|n|0|false|-)$/.test(t)) return ''; if (/^(hide|home)/.test(t) || /^(yes|y|1|x|true|✓|✔)$/.test(t)) return 'hide'; if (/only|trip|travel|away/.test(t)) return 'only'; return null; }
   function normDays(v) { var k = daysKey(v); return k === null ? v : k.length ? daysText(k) : ''; }   /* "mon thu" reads as "Mon, Thu"; unreadable text stays as typed */
   function ctRow(c) { var d = ctState().d[c.id]; return d ? assign(ctBase(c), d) : ctBase(c); }
@@ -2515,6 +2615,8 @@
         }).join('') + '</div></div></div></fieldset>' +
       '<fieldset><legend>Extras</legend><div class="checks"><label><input type="checkbox" id="ceReview"' + (c && c.review ? ' checked' : '') + '>Show it in the daily review (parents rate it for every kid at the end of the day)</label>' +
         '<label><input type="checkbox" id="ceGate"' + (c && c.gate ? ' checked' : '') + '>Needed to unlock games: on the kids’ tablets, games stay locked until it’s approved that day</label></div>' +
+        '<div class="wrap end"><label class="field w-md" for="ceGateFrom"><span>Only needed to unlock games after (blank = all day)</span><input type="time" id="ceGateFrom" value="' + esc(c && c.gateFrom || '') + '"></label></div>' +
+        '<p class="note">For chores that can only happen later, like clearing the table after dinner: before this time games can open without it; from this time they lock again until it’s done.</p>' +
         '<div class="wrap end"><label class="field w-sm" for="ceBounty"><span>Bounty ($)</span><input type="text" id="ceBounty" inputmode="decimal" placeholder="0.00" value="' + (c && c.bountyCents ? dollars(c.bountyCents) : '') + '"></label></div></fieldset>' +
       '<p class="note">A bounty pays money when approved. People who do it together choose how to split it.</p>' +
       '<div class="wrap"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="cancelEdit">Cancel</button>' +
@@ -2528,7 +2630,7 @@
   ];
   function addTravelChores() {
     var ids = kids().map(function (p) { return p.id; }), base = S.chores.reduce(function (m, c) { return Math.max(m, c.order || 0); }, 0);
-    var ops = TRAVEL.map(function (t, i) { return { t: 'set', c: 'chores', id: 'travel-' + i, d: { name: t[0], pts: t[1], need: t[2], major: t[3], majorEach: false, majorDays: [], travel: true, cat: 'Travel', who: ids.slice(), active: true, order: base + 1 + i, bountyCents: 0 } }; });
+    var ops = TRAVEL.map(function (t, i) { return { t: 'set', c: 'chores', id: 'travel-' + i, d: { name: t[0], pts: t[1], need: t[2], major: t[3], majorEach: false, majorDays: [], travel: true, tripOnly: true, homeOnly: false, cat: 'Travel', who: ids.slice(), active: true, order: base + 1 + i, bountyCents: 0 } }; });
     DB.commit(ops).then(function () { toast('Added ' + ops.length + ' travel chores'); }, fail);
   }
   function renameCat(oldN, newN) {
@@ -2607,17 +2709,32 @@
       case 'chAll': case 'chNone':
         (function (cid, on) { var c = find(S.chores, function (x) { return x.id === cid; }); if (!c) return; (c.who || []).forEach(function (pid) { S.chPick[cid + '|' + pid] = on; }); })(d('cid'), a === 'chAll');
         updateChoreBoard(); break;
-      case 'chGo': if (needAdmin()) choreGo(d('cid')); break;
-      case 'today': S.date = today(); S.dateAuto = true; schedule(); break;
+      case 'chGo': if (needAdmin()) (function (cid) { withDay(function () { choreGo(cid); }); })(d('cid')); break;
+      case 'today': S.date = today(); S.dateAuto = true; S.calOpen = false; S.calMonth = null; schedule(); break;
+      case 'day': setDay(d('d')); break;
+      case 'calToggle': S.calOpen = !S.calOpen; S.calMonth = null; updateDayBar(); break;
+      case 'calNav':
+        (function (n) { var m = parseD((S.calMonth || S.date.slice(0, 7)) + '-01'); m.setMonth(m.getMonth() + n); var k = dstr(m).slice(0, 7); if (k <= today().slice(0, 7)) S.calMonth = k; updateDayBar(); })(Number(d('n')));
+        break;
+      case 'moveYday':
+        if (!needAdmin()) break;
+        en = entry(d('id'));
+        if (en && canMoveBack(en)) DB.commit([{ t: 'update', c: 'entries', id: en.id, d: { date: addDays(en.date, -1), movedFrom: en.date } }]).then(function () { toast('Moved to yesterday'); }, fail);
+        else toast('That one can’t move: it was already done yesterday, or it isn’t a chore for that day.', true);
+        break;
       case 'inc':
-        c = find(S.chores, function (x) { return x.id === d('cid'); }); pid = logTarget();
-        if (!c || !pid || !canLog(pid, c)) break;
-        if (c.bountyCents > 0) {
-          var sh = {}; sh[pid] = 100; S.quest = { cid: c.id, shares: sh };
-          renderQuestBox();
-          var qb = $('#questBox'); if (qb && qb.scrollIntoView) qb.scrollIntoView();
-        } else if (levelsOf(c)) { S.lvPick = { cid: c.id, pid: pid }; updateLogList(); }
-        else addEntry(pid, S.date, c);
+        (function (cid) {
+          withDay(function () {
+            var c = find(S.chores, function (x) { return x.id === cid; }), pid = logTarget();
+            if (!c || !pid || !canLog(pid, c)) return;
+            if (c.bountyCents > 0) {
+              var sh = {}; sh[pid] = 100; S.quest = { cid: c.id, shares: sh };
+              renderQuestBox();
+              var qb = $('#questBox'); if (qb && qb.scrollIntoView) qb.scrollIntoView();
+            } else if (levelsOf(c)) { S.lvPick = { cid: c.id, pid: pid }; updateLogList(); }
+            else addEntry(pid, S.date, c);
+          });
+        })(d('cid'));
         break;
       case 'lvPick':
         c = find(S.chores, function (x) { return x.id === d('cid'); }); pid = logTarget();
@@ -2625,6 +2742,11 @@
         if (c && pid && canLog(pid, c)) addEntry(pid, S.date, c, levelExtra(c, Number(d('i'))));
         updateLogList(); break;
       case 'lvCancel': S.lvPick = null; updateLogList(); break;
+      case 'goChore': if (d('cid')) goChore(d('cid')); break;
+      case 'repDone': case 'repCant': (function (pid, cid, cant) {
+        if (!pid || !cid) return;
+        reportDone(pid, cid, cant).then(function () { toast(cant ? 'Okay. A parent will check, and it won’t count against games once they agree.' : 'Okay. A parent will check that it’s done.'); updateLogList(); });
+      })(logTarget(), d('cid'), a === 'repCant'); break;
       case 'showDone': S.showDone = !S.showDone; updateLogList(); break;
       case 'rvPick': if (needAdmin()) { var rv = rvState(), rk = d('k'), ri = Number(d('i')), ex0 = rvEntry(rk.split('|')[0], rk.split('|')[1], rv.date), c0 = find(S.chores, function (x) { return x.id === rk.split('|')[1]; });
         var cur0 = ex0 ? (levelsOf(c0) ? levelsOf(c0).map(function (x) { return x.n; }).indexOf(ex0.lv) : 0) : -1;
@@ -2938,7 +3060,7 @@
       var mdays = $$('input[name=mday]', f).filter(function (x) { return x.checked; }).map(function (x) { return Number(x.value); });
       var cdays = $$('input[name=cday]', f).filter(function (x) { return x.checked; }).map(function (x) { return Number(x.value); }).sort();
       if (cdays.length === 7) cdays = [];
-      var data = { name: cname, pts: pts, who: who, cat: cat, rw: rw, need: compatNeed(rw), coins: rw.food || rw.clean || 0, levels: levels, hideLv: hideLv, freq: val('ceFreq') || '', review: $('#ceReview').checked, gate: $('#ceGate').checked, bountyCents: bounty, major: $('#ceMajor').checked, majorEach: $('#ceEach').checked, majorDays: mdays, travel: $('#ceTrip').checked, homeOnly: val('ceVac') === 'hide', tripOnly: val('ceVac') === 'only', days: cdays, shared: $('#ceShared').checked };
+      var data = { name: cname, pts: pts, who: who, cat: cat, rw: rw, need: compatNeed(rw), coins: rw.food || rw.clean || 0, levels: levels, hideLv: hideLv, freq: val('ceFreq') || '', review: $('#ceReview').checked, gate: $('#ceGate').checked, gateFrom: $('#ceGateFrom') ? $('#ceGateFrom').value : '', bountyCents: bounty, major: $('#ceMajor').checked, majorEach: $('#ceEach').checked, majorDays: mdays, travel: $('#ceTrip').checked, homeOnly: val('ceVac') === 'hide', tripOnly: val('ceVac') === 'only', days: cdays, shared: $('#ceShared').checked };
       var op = cid ? { t: 'update', c: 'chores', id: cid, d: data }
         : { t: 'set', c: 'chores', id: DB.newId('chores'), d: assign(data, { active: true, order: S.chores.reduce(function (m, c) { return Math.max(m, c.order || 0); }, 0) + 1 }) };
       var eff = catList(S.chores).filter(function (x) { return x !== 'Other'; });
@@ -2959,7 +3081,7 @@
       var p2 = { logCooldown: dn('lgWait', 60, 3600), logCap: dn('lgCap', 5, 100), hideHours: Math.max(1, dn('hHours', 24, 168)), nightOff: !$('#nOn').checked, nightStart: val('nFrom') || '20:00', nightEnd: val('nTo') || '06:30',
         drainFood: dn('dFood', 50), drainClean: dn('dClean', 25), drainRest: dn('dRest', 50), drainEnergy: dn('dEnergy', 50),
         foodCoins: Math.max(1, Math.round(Number(val('fcoins')) || 10)), mealPrice: Math.max(1, Math.round(Number(val('mprice')) || 10)), careCoins: Math.max(1, Math.round(Number(val('ccoins')) || 10)), kitPrice: Math.max(1, Math.round(Number(val('kprice')) || 10)),
-        coinsPerDollar: Math.max(1, Math.round(Number(val('cpd')) || 100)), swapPrice: Math.max(1, Math.round(Number(val('ppc')) || 20)), toothPrice: Math.max(1, Math.round(Number(val('tprice')) || 20)), ballPrice: Math.max(1, Math.round(Number(val('bprice')) || 20)), bankName: trim(val('bname')) || 'Family Bank', requireApproval: $('#reqAppr').checked, centsPerPoint: rate, petEvolve1Cents: e1, petEvolve2Cents: e2, dadPid: val('dad'), allowanceCents: al, allowanceDay: Number(val('aday')), allowanceVacPause: $('#aVacPause').checked };
+        coinsPerDollar: Math.max(1, Math.round(Number(val('cpd')) || 100)), swapPrice: Math.max(1, Math.round(Number(val('ppc')) || 20)), clothesK: Math.max(1, Number(val('clk')) || 3), toothPrice: Math.max(1, Math.round(Number(val('tprice')) || 20)), ballPrice: Math.max(1, Math.round(Number(val('bprice')) || 20)), bankName: trim(val('bname')) || 'Family Bank', requireApproval: $('#reqAppr').checked, centsPerPoint: rate, petEvolve1Cents: e1, petEvolve2Cents: e2, dadPid: val('dad'), allowanceCents: al, allowanceDay: Number(val('aday')), allowanceVacPause: $('#aVacPause').checked };
       if (p2.dadPid !== S.settings.dadPid || p2.allowanceDay !== Number(S.settings.allowanceDay) || !S.settings.allowanceLast) p2.allowanceLast = lastAllowanceDay(p2.allowanceDay);
       saveSettings(p2).then(function () { toast('Saved'); go(); }, fail);
     }
@@ -3041,30 +3163,41 @@
     if (close <= open) close = d0 + 864e5;
     return [open, close];
   }
-  function gateChores(pid, date) {
+  /* cl-v49: an unlock chore can be "only needed after" a time (gateFrom, "18:30"): before then it doesn't lock games */
+  function gateFromMs(c, date) { var m = /^(\d{1,2}):(\d{2})/.exec(c && c.gateFrom || ''); return m ? parseD(date).getTime() + (+m[1] * 60 + +m[2]) * 60000 : 0; }
+  function gateAll(pid, date) {
     var vac = window.ADV && ADV.onVacation();
     return S.chores.filter(function (c) { return c.gate && c.active !== false && (c.who || []).indexOf(pid) >= 0 && vacShow(c, vac) && dayOk(c, date); });
   }
+  function gateChores(pid, date) { var now = Date.now(); return gateAll(pid, date).filter(function (c) { var t = gateFromMs(c, date); return !t || now >= t || date !== today(); }); }
+  function gateLater(pid, date) { var now = Date.now(); return date !== today() ? [] : gateAll(pid, date).filter(function (c) { return gateFromMs(c, date) > now; }); }
   function gateStatus(pid, date) {
     date = date || today();
     var p = person(pid); if (!p) return null;
     var rows = gateChores(pid, date).map(function (c) {
       var es = S.entries.filter(function (e) { return e.cid === c.id && e.date === date && (e.pid === pid || c.shared); });
-      var ok = es.some(function (e) { return e.status === 'approved' && e.lvPct !== 0; });
-      var wait = !ok && es.some(function (e) { return e.status === 'pending' && e.pid === pid; });
-      return { id: c.id, name: c.name, st: ok ? 'ok' : wait ? 'wait' : 'todo' };
+      var ok = es.some(function (e) { return e.status === 'approved' && (e.lvPct !== 0 || e.report); });
+      var rep = !ok && es.some(function (e) { return e.status === 'pending' && e.pid === pid && e.report; });   /* this kid says it's done already */
+      var cant = rep && es.some(function (e) { return e.status === 'pending' && e.pid === pid && e.report && e.cant; });
+      var wait = !ok && !rep && es.some(function (e) { return e.status === 'pending' && e.pid === pid; });
+      return { id: c.id, name: c.name, st: ok ? 'ok' : rep ? 'rep' : wait ? 'wait' : 'todo', shared: !!c.shared, cant: !!cant };
     });
+    var later = gateLater(pid, date).filter(function (c) {     /* due later today, and not already approved */
+      return !S.entries.some(function (e) { return e.cid === c.id && e.date === date && (e.pid === pid || c.shared) && e.status === 'approved'; });
+    }).map(function (c) { return { id: c.id, name: c.name, at: gateFromMs(c, date) }; }).sort(function (a, b) { return a.at - b.at; });
     var done = rows.filter(function (r) { return r.st === 'ok'; }).length, w = gameWindow(date), now = Date.now();
     var ov = p.gameDay && p.gameDay.date === date ? p.gameDay.mode : '', choresOk = rows.length > 0 && done === rows.length;   /* no unlock chores due = locked, not open */
-    var open, until = 0;
-    if (ov === 'open') { open = true; until = now < w[1] ? w[1] : parseD(date).getTime() + 864e5; }
-    else { open = ov !== 'closed' && choresOk && now >= w[0] && now < w[1]; if (open) until = w[1]; }
-    return { pid: pid, rows: rows, done: done, total: rows.length, choresOk: choresOk, override: ov, open: open, until: until, hours: w, early: now < w[0], late: now >= w[1], readMin: +S.settings.readMin || 0, gameMin: +S.settings.gameMin || 0 };
+    var open, until = 0, vac = !!(window.ADV && ADV.onVacation());
+    if (vac) { open = true; until = parseD(date).getTime() + 864e5; ov = ov || 'vacation'; }   /* traveling: play anything, any time */
+    else if (ov === 'open') { open = true; until = now < w[1] ? w[1] : parseD(date).getTime() + 864e5; }
+    else { open = ov !== 'closed' && choresOk && now >= w[0] && now < w[1]; if (open) until = later.length ? Math.min(w[1], later[0].at) : w[1]; }   /* games shut again when a later chore comes due */
+    return { pid: pid, rows: rows, later: later, done: done, total: rows.length, choresOk: choresOk, override: ov, open: open, until: until, hours: w, early: now < w[0], late: now >= w[1], vacation: vac, readMin: vac ? 0 : +S.settings.readMin || 0, gameMin: vac ? 0 : +S.settings.gameMin || 0 };
   }
   function gateLine(gs) {
     if (!gs) return '';
     if (gs.override === 'closed') return 'Locked for today by a parent';
-    if (gs.open) return 'Open until ' + hm(gs.until) + (gs.override === 'open' ? ' (opened by a parent)' : ', all ' + gs.total + ' approved');
+    if (gs.vacation) return 'Open all day: vacation mode';
+    if (gs.open) return 'Open until ' + hm(gs.until) + (gs.override === 'open' ? ' (opened by a parent)' : ', all ' + gs.total + ' approved') + (gs.override !== 'open' && gs.later && gs.later.length && gs.later[0].at === gs.until ? '; then ' + gs.later[0].name : '');
     if (!gs.total) return 'Locked: no chores are set to unlock games today';
     if (gs.late) return 'Closed for the night' + (gs.total ? ' (' + gs.done + ' of ' + gs.total + ' approved)' : '');
     if (gs.early) return 'Opens at ' + hm(gs.hours[0]) + (gs.total ? ', after ' + gs.total + ' chore' + (gs.total === 1 ? '' : 's') : '');
@@ -3112,6 +3245,19 @@
     if (window.Pets) window.Pets.reset();
     go();
   }
+  /* cl-v49: the games screen lists the chores that unlock games; tapping one opens the Chores tab at that chore, today */
+  function goChore(cid) {
+    var c = S.chores.filter(function (x) { return x.id === cid; })[0]; if (!c) { setTab('log'); return; }
+    if (S.date !== today()) { S.date = today(); S.dateAuto = true; S.calOpen = false; S.calMonth = null; }
+    S.cat = 'all'; S.q = ''; S.goCid = cid; S.goAt = Date.now();
+    setTab('log'); window.scrollTo(0, 0);
+  }
+  function showGoChore() {
+    if (!S.goCid || S.tab !== 'log') return;
+    var row = view.querySelector('[data-row="' + (window.CSS && CSS.escape ? CSS.escape(S.goCid) : S.goCid) + '"]');
+    if (row && S.goAt) { S.goAt = 0; try { row.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { row.scrollIntoView(); } }
+    if (Date.now() - (S.goT0 || (S.goT0 = Date.now())) > 4000) { S.goCid = null; S.goT0 = 0; if (row) row.classList.remove('flash'); }
+  }
   function setTab(t) {
     S.tab = t; LS.set(MODE === 'bank' ? 'cl.ptab' : 'cl.tab', t);
     S.edit = null; S.bankForm = null; S.bankPid = null; S.picking = false; S.quest = null; S.avEditFor = null; S.txEdit = null;
@@ -3149,7 +3295,7 @@
     S: S, schedule: schedule, go: go, toast: toast, fail: fail, esc: esc, money: money, today: today, addDays: addDays, daysBetween: daysBetween,
     fmtDate: fmtDate, person: person, pname: pname, pIndex: pIndex, pCls: pCls, pColor: pColor, isPerson: isPerson, isDad: isDad, isAdult: isAdult, kids: kids, activePeople: activePeople,
     txOps: txOps, accountHtml: accountHtml, needAdmin: needAdmin, logTarget: logTarget, confirmTap: confirmTap, bankName: bankName,
-    APP: APP, launcher: launcher, gateStatus: gateStatus, gateLine: gateLine, gameWindow: gameWindow, kidPinOf: kidPinOf, chooseMe: chooseMe, repick: repick, setTab: setTab,
+    APP: APP, launcher: launcher, gateStatus: gateStatus, gateLine: gateLine, reportDone: reportDone, goChore: goChore, gameWindow: gameWindow, kidPinOf: kidPinOf, chooseMe: chooseMe, repick: repick, setTab: setTab,
     stopAll: stopAll, closeTop: closeTop, saveSettings: saveSettings, hm: hm, tabsFor: tabsFor
   };
 

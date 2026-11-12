@@ -39,8 +39,16 @@
     G[kind].init(g);
     RAF(loop);
   }
+  /* cl-v49: on a tablet held sideways, the tallest a board may be so it fits under the header (0 = no limit) */
+  function landH(el, spare) {
+    var vw = window.innerWidth || 0, vh = window.innerHeight || 0; if (!(vw > vh && vh <= 640)) return 0;
+    var hd = document.querySelector('.top'), top = Math.max(hd ? hd.offsetHeight : 0, el && el.getBoundingClientRect ? el.getBoundingClientRect().top : 0);
+    return Math.max(180, vh - top - (spare || 10));
+  }
   function size(g) {
-    var w = g.cv.parentNode.clientWidth || 340, dpr = Math.min(2, window.devicePixelRatio || 1);
+    var st = g.cv.parentNode, mh = landH(st, 12), w, dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (mh) { var box = st.parentNode && st.parentNode.parentNode; w = Math.floor(Math.min(((box && box.clientWidth) || 600) * 0.68, mh * VW / VH)); st.style.width = w + 'px'; }
+    else { st.style.width = ''; w = st.clientWidth || 340; }
     g.cv.style.width = w + 'px'; g.cv.style.height = Math.round(w * VH / VW) + 'px';
     g.cv.width = Math.round(w * dpr); g.cv.height = Math.round(w * VH / VW * dpr);
     g.k = g.cv.width / VW;

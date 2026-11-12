@@ -463,30 +463,40 @@
   var petLast = {};
   if (window.C3D) C3D.onReady(function () { for (var k in W.imgs) if ((k.indexOf('pet|') === 0 || k.indexOf('av|') === 0) && W.imgs.hasOwnProperty(k)) delete W.imgs[k]; petLast = {}; });
   /* 3D pets have front, side and back views: walking down shows the face, up shows the back, sideways the profile */
-  function is3d(p) { return !!(!window.PETS_2D && window.C3D && !C3D.off && p && C3D.has(p.sp)); }   /* cl-v39: flat 2D pets when creatures.js sets PETS_2D */
+  function is3d(p) { return !!(p && window.SPR); }   /* cl-v49: sprites.js draws every pet from the front, the side and the back */
   function petView(p, dir) { return !is3d(p) ? '' : dir === 'up' ? 'back' : dir === 'side' ? 'side' : 'front'; }
   function petImage(pid, mood, moving, dir, a) {
     var st = Pz().state(pid); if (!st.pet) return null;
-    var f = st.flags, p = st.pet, fr = petFrame(mood, pid.length * 0.7, moving), view = petView(p, dir), lf = legFrame(p, a, mood);
-    if (view) { fr.t = 0; fr.w = 1; }
-    var base = 'pet|' + pid + '|' + p.sp + p.stage + p.pal + '|' + (p.wear || '') + '|' + (p.dye || '') + '|' + mood + '|' + (f.thin ? 1 : 0) + (f.dirty ? 1 : 0) + (f.tired ? 1 : 0) + (f.pudgy ? 1 : 0) + '|' + view;
-    var im = img(base + '|' + fr.b + fr.t + fr.w + '|' + (lf == null ? '' : lf), function () { return Pz().petSvg(p, mood, f, { blink: !!fr.b, tailRot: fr.t, wingFlap: fr.w === 1 ? 0 : fr.w, view: view || undefined, noStink: true, frame: lf }); });
+    var f = st.flags, p = st.pet, fr = petFrame(mood, pid.length * 0.7, moving), view = petView(p, dir), lf = legFrame(p, a, mood), fly = petGait(p) === 'fly' && mood !== 'asleep';
+    if (lf != null) { fr.b = 0; fr.t = 0; }                    /* walking: the legs are the animation */
+    if (!fly && !flaps(p)) fr.w = 1;
+    var base = 'pet|' + pid + '|' + p.sp + p.stage + p.pal + '|' + (p.wear || '') + '|' + (p.dye || '') + '|' + mood + '|' + (f.thin ? 1 : 0) + (f.dirty ? 1 : 0) + (f.tired ? 1 : 0) + (f.pudgy ? 1 : 0) + '|' + view + (fly ? 'F' : '');
+    var im = img(base + '|' + fr.b + fr.t + fr.w + '|' + (lf == null ? '' : lf), function () { return Pz().petSvg(p, mood, f, { blink: !!fr.b, tailRot: fr.t, wingFlap: fr.w === 1 ? 0 : fr.w, view: view || undefined, noStink: true, frame: lf, fly: fly, ow: 4 }); });
     if (im) { petLast[base] = im; return im; }
     return petLast[base] || null;
   }
   /* real leg frames (rendered in Blender) for pets that walk: which frame to show now, or null for the still picture.
      One stride per square walked, so the feet keep time with the ground. */
   /* 3D pets that walk never get their picture cut up (that bent faces): leg frames when there are any, else it rides as one piece */
-  function hasLegs(p) { return !!(p && is3d(p) && petGait(p) === 'walk'); }
+  function hasLegs(p) { var g = p && is3d(p) ? petGait(p) : ''; return g === 'walk' || g === 'waddle'; }
+  function flaps(p) { var sp = CRE.byId(p.sp) || {}; return !!(sp.wings && sp.wings !== 'folded' && sp.wings !== 'flipper'); }
   function legFrame(p, a, mood) {
-    if (!a || !a.moving || mood === 'asleep' || !hasLegs(p) || !C3D.walks || !C3D.walks(p.sp, p.stage || 0)) return null;
-    if (!C3D.walkReady(p.sp)) { C3D.preloadWalk(p.sp); return null; }
-    var n = C3D.walkFrames(p.sp), u = a.gait || 0;
+    if (!a || !a.moving || mood === 'asleep' || !hasLegs(p)) return null;
+    var n = SPR.petFrames, u = a.gait || 0;
     return Math.floor(((u % 1) + 1) % 1 * n) % n;
   }
-  function people3d() { return !!(window.C3D && C3D.hasPeople && C3D.hasPeople()); }
+  function people3d() { return !!(window.SPR && SPR.person); }      /* cl-v49: people are drawn from the front, the side and the back, with walk frames */
+  /* which walk frame a person shows now (null when standing still): one stride per square walked */
+  function avFrame(a) { if (!a || !a.moving || !people3d()) return null; var u = a.gait || 0, n = SPR.personFrames; return Math.floor(((u % 1) + 1) % 1 * n) % n; }
+  function avOpts(view, fr) { if (!view) return null; var o = { view: view, ow: 2.3 }; if (fr != null) o.frame = fr; return o; }
+  var avLast = {};
+  function avImg(av, adult, view, fr) {
+    var base = 'av|' + (adult ? 'A' : '') + JSON.stringify(av) + '|' + (view || ''), im = img(base + '|' + (fr == null ? '' : fr), function () { return adult === null ? window.CHAR.drawAvatar(av, null, avOpts(view, fr)) : Pz().avatarSvg(av, adult, avOpts(view, fr)); });
+    if (im) { avLast[base] = im; return im; }
+    return avLast[base] || null;
+  }
   function actorView(dir) { return !people3d() ? '' : dir === 'up' ? 'back' : dir === 'side' ? 'side' : 'front'; }
-  function avatarImage(pid, view) { var a = Pz().doc(pid).avatar, key = 'av|' + JSON.stringify(a) + '|' + (view || ''); return img(key, function () { return Pz().avatarSvg(a, false, view ? { view: view } : null); }); }
+  function avatarImage(pid, view, fr) { return avImg(Pz().doc(pid).avatar, false, view, fr); }
   function avatarPx(av) { var hh = window.CHAR.heightOf ? window.CHAR.heightOf(av) : { h: (av && av.height) || 'small', s: 1 }; return Math.round(54 * ((window.CHAR.HEIGHT_PX || {})[hh.h] || 1) * hh.s); }
   function itemImage(id) { return img('item|' + id, function () { return A().itemArt(id); }); }
   function eggImage() { return img('egg', function () { return CRE.egg(); }); }
@@ -729,10 +739,10 @@
   }
   function dropPassengers(S) {   /* leaving the ship: forget their pictures so they don't pile up in memory */
     if (!S || !S.pool) return;
-    S.pool.forEach(function (av) { var k = 'av|' + JSON.stringify(av) + '|'; ['', 'front', 'side', 'back'].forEach(function (v) { delete W.imgs[k + v]; }); });
+    S.pool.forEach(function (av) { var k = 'av|' + JSON.stringify(av) + '|', q; for (q in W.imgs) if (q.indexOf(k) === 0) delete W.imgs[q]; for (q in avLast) if (q.indexOf(k) === 0) delete avLast[q]; });
   }
   function deckOk(x, y) { var t = tile(x, y); return t === DECK || t === WET || t === PATH; }
-  function passengerImage(av, view) { return img('av|' + JSON.stringify(av) + '|' + (view || ''), function () { return window.CHAR.drawAvatar(av, null, view ? { view: view } : null); }); }
+  function passengerImage(av, view, fr) { return avImg(av, null, view, fr); }
   function newShip() {
     W.ship = { items: {}, puddles: [], carry: [], done: 0, tickets: 0, next: Date.now() + 3000, mop: null, hintAt: 0, pops: [],
       swim: [0, 1, 2].map(function (i) { return { x: 9 + i * 2.5, y: 12 + (i % 2), ph: Math.random() * 6, c: ['#e45757', '#f2d43a', '#6d3fcf'][i] }; }),
@@ -847,6 +857,14 @@
       closePrizes(); A().reveal(res); setTimeout(function () { hud(); if (Pz().G.room && Pz().G.room.kind === 'prizes') renderRoom(true); }, 120);
     }, C().fail);
   }
+  function donatePrize(id) {
+    A().donate(W.pid, id).then(function (res) {
+      if (res.thanks) C().toast('Thank you! +' + res.thanks + ' deck tickets');
+      var el = W.root && W.root.querySelector('.prizes');
+      if (el && !el.hidden) el.innerHTML = A().prizesHtml(W.pid);
+      hud(); if (Pz().G.room && Pz().G.room.kind === 'prizes') renderRoom(true);
+    }, C().fail);
+  }
   function itemDraw(kind, cx, cy, sc) {
     var ctx = W.ctx; sc = sc || 1;
     ctx.save(); ctx.translate(cx, cy); ctx.scale(sc, sc);
@@ -951,8 +969,8 @@
       var wp = pos(w);
       list.push({ y: wp.y + 0.005, draw: function () {
         var p3 = people3d(), v = p3 ? (w.dir === 'up' ? 'back' : w.dir === 'side' ? 'side' : 'front') : '', h = Math.round(54 * ((window.CHAR.HEIGHT_PX || {})[w.av.height] || 1) * 0.92);
-        var im = passengerImage(w.av, v);
-        actor(im, wp.x, wp.y, h, { face: v ? (v === 'side' ? -w.face : 1) : w.face, gait: 'stride', a: w, view: v || (w.dir === 'side' ? 'side' : 'front'), isAvatar: true, seed: w.fx });
+        var im = passengerImage(w.av, v, avFrame(w));
+        actor(im, wp.x, wp.y, h, { face: v ? (v === 'side' ? -w.face : 1) : w.face, gait: 'stride', a: w, view: v || (w.dir === 'side' ? 'side' : 'front'), isAvatar: true, seed: w.fx, legs3d: p3 });
       } });
     });
     S.puddles.forEach(function (p) {
@@ -1068,7 +1086,7 @@
         if (b.owner === W.pid) return;
         var st = Pz().state(b.owner); if (!st.pet) return;
         list.push({ y: b.door.y + 1, draw: function () {
-          actor(petImage(b.owner, st.mood.key, false, 'down'), b.door.x + 2, b.door.y + 1, 48, { face: is3d(st.pet) ? 1 : -1, gait: petGait(st.pet), seed: b.x, view: 'front', stink: st.flags && st.flags.dirty });
+          actor(petImage(b.owner, st.mood.key, false, 'down'), b.door.x + 2, b.door.y + 1, 44, { face: is3d(st.pet) ? 1 : -1, gait: petGait(st.pet), seed: b.x, view: 'front', stink: st.flags && st.flags.dirty });
           if (CRE.byId(st.pet.sp).rare) sparkles((b.door.x + 2) * T + 16, (b.door.y + 1) * T - 10, 22, '#ffe27a');
         } });
       });
@@ -1077,7 +1095,7 @@
         var rp = pos(r);
         list.push({ y: rp.y, draw: function () {
           var pv = petView(r.p, r.dir);
-          actor(residentImage(r), rp.x, rp.y, r.p.current ? 52 : 46, { face: pv ? (pv === 'side' ? -r.face : 1) : r.face, gait: petGait(r.p), a: r, view: pv || (r.dir === 'side' ? 'side' : 'front'), seed: r.fx * 3 + r.fy, low: petLow(r.p), wings: petWings(r.p), legs3d: hasLegs(r.p) });
+          actor(residentImage(r), rp.x, rp.y, r.p.current ? 46 : 42, { face: pv ? (pv === 'side' ? -r.face : 1) : r.face, gait: petGait(r.p), a: r, view: pv || (r.dir === 'side' ? 'side' : 'front'), seed: r.fx * 3 + r.fy, low: petLow(r.p), wings: petWings(r.p), legs3d: hasLegs(r.p) });
           if (CRE.byId(r.p.sp) && CRE.byId(r.p.sp).rare) sparkles(rp.x * T + 16, rp.y * T - 10, 20, '#ffe27a');
         } });
       });
@@ -1100,7 +1118,7 @@
     }
     hostSpots().forEach(function (h) {
       list.push({ y: h.y, draw: function () {
-        var hv = actorView('down'), im = img('av|' + JSON.stringify(h.avatar) + '|' + hv, function () { return Pz().avatarSvg(h.avatar, true, hv ? { view: hv } : null); });
+        var hv = actorView('down'), im = avImg(h.avatar, true, hv, null);
         actor(im, h.x, h.y, avatarPx(h.avatar), { face: hv ? 1 : -1, gait: 'stride', seed: h.x, view: hv || 'front', isAvatar: true });
         ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         var tw = ctx.measureText(h.name).width + 10, cx = h.x * T + 16, cy = h.y * T + T - 2 - avatarPx(h.avatar) - 6;
@@ -1117,7 +1135,7 @@
         if (pet.atBed) { var hid = !!hideInfo(), ub = !hid && nightInfo() && nightInfo().under; list.push({ y: hid || ub ? 5.6 : 4.6, draw: function () { if (hid) petHiding(); else if (ub) petUnderBed(); else petInBed(st); } }); }
       } else list.push({ y: petPos.y, draw: function () {
         var pv = petView(st.pet, pet.dir);
-        actor(petImage(W.pid, mood, pet.moving, pet.dir, pet), petPos.x, petPos.y, 54, { face: pv ? (pv === 'side' ? -pet.face : 1) : pet.face, gait: mood === 'asleep' ? 'still' : petGait(st.pet), a: pet, view: pv || (pet.dir === 'side' ? 'side' : 'front'),
+        actor(petImage(W.pid, mood, pet.moving, pet.dir, pet), petPos.x, petPos.y, 47, { face: pv ? (pv === 'side' ? -pet.face : 1) : pet.face, gait: mood === 'asleep' ? 'still' : petGait(st.pet), a: pet, view: pv || (pet.dir === 'side' ? 'side' : 'front'),
           bob: digging ? Math.sin(W.t * 18) * 2 : 0, rot: digging ? Math.sin(W.t * 14) * 0.15 : 0, stink: st.flags && st.flags.dirty, seed: 0.3, low: petLow(st.pet), wings: petWings(st.pet), legs3d: hasLegs(st.pet) });
         if (digging) trash(petPos.x, petPos.y, dump);
         if (pet.mode === 'nap') zzz(petPos.x, petPos.y);
@@ -1126,7 +1144,7 @@
     }
     list.push({ y: pp.y + 0.01, draw: function () {
       var av = actorView(W.P.dir);
-      actor(avatarImage(W.pid, av), pp.x, pp.y, avatarPx(Pz().kidAv(Pz().doc(W.pid).avatar)), { face: av ? (av === 'side' ? -W.P.face : 1) : W.P.face, gait: 'stride', a: W.P, view: av || (W.P.dir === 'side' ? 'side' : 'front'), isAvatar: true });
+      actor(avatarImage(W.pid, av, avFrame(W.P)), pp.x, pp.y, avatarPx(Pz().kidAv(Pz().doc(W.pid).avatar)), { face: av ? (av === 'side' ? -W.P.face : 1) : W.P.face, gait: 'stride', a: W.P, view: av || (W.P.dir === 'side' ? 'side' : 'front'), isAvatar: true, legs3d: !!av });
       if (W.ship) { carryDraw(pp.x, pp.y, 58, W.ship.carry.slice(0, 3)); if (W.ship.mop) mopDraw(pp.x, pp.y, W.ship.mop.pd); }
     } });
     if (W.ship && W.ship.carry.length > 3) list.push({ y: petPos.y + 0.02, draw: function () { carryDraw(petPos.x, petPos.y, 50, W.ship.carry.slice(3)); } });
@@ -1412,8 +1430,9 @@
     });
   }
   function residentImage(r) {
-    var p = r.p, v = petView(p, r.dir), lf = v ? legFrame(p, r, 'happy') : null, key = 'res|' + p.sp + p.stage + p.pal + '|' + (p.wear || '') + (p.dye || '') + '|' + v;
-    var im = img(key + '|' + (lf == null ? '' : lf), function () { return Pz().petSvg(p, 'happy', {}, { view: v || undefined, noStink: true, frame: lf }); });
+    var p = r.p, v = petView(p, r.dir), lf = v ? legFrame(p, r, 'happy') : null, fly = petGait(p) === 'fly', key = 'res|' + p.sp + p.stage + p.pal + '|' + (p.wear || '') + (p.dye || '') + '|' + v;
+    var fw = fly || flaps(p) ? petFrame('happy', r.fx * 3 + r.fy, r.moving).w : 1;
+    var im = img(key + '|' + (lf == null ? '' : lf) + '|' + fw, function () { return Pz().petSvg(p, 'happy', {}, { view: v || undefined, noStink: true, frame: lf, fly: fly, wingFlap: fw === 1 ? 0 : fw, ow: 4 }); });
     if (im) { petLast[key] = im; return im; }
     return petLast[key] || null;
   }
@@ -1621,6 +1640,7 @@
     if (!W.cv) return;
     var cw = W.root.clientWidth || 320, vh = window.innerHeight || 640;
     var ch = Math.max(280, Math.min(Math.round(cw * (away() ? 1.75 : 1.35)), vh - 190));   /* adventures have no help text below, so the map gets that room */
+    if (cw > vh && vh <= 640) { var hd = document.querySelector('.top'); ch = Math.max(220, vh - (hd ? hd.offsetHeight : 0) - 14); }   /* cl-v49: held sideways, the town fills the screen under the header */
     W.dpr = Math.min(2, window.devicePixelRatio || 1);
     W.cw = cw; W.ch = ch;
     W.cv.style.height = ch + 'px';
@@ -1671,7 +1691,7 @@
       if (wb && W.root && W.root.contains(wb)) {
         var a = wb.getAttribute('data-wact');
         if (a === 'closeCard') { if (wb === e.target || !wb.classList.contains('pcard-wrap')) closeCard(); return; }
-        if (a === 'act') doAction(); else if (a === 'reel') reel(); else if (a === 'stopFish') stopFish(); else if (a === 'leave') leaveRegion(); else if (a === 'prize') buyPrize(wb.getAttribute('data-id')); else if (a === 'closePrizes') closePrizes();
+        if (a === 'act') doAction(); else if (a === 'reel') reel(); else if (a === 'stopFish') stopFish(); else if (a === 'leave') leaveRegion(); else if (a === 'prize') buyPrize(wb.getAttribute('data-id')); else if (a === 'donate') donatePrize(wb.getAttribute('data-id')); else if (a === 'closePrizes') closePrizes();
         return;
       }
     });
@@ -1739,6 +1759,7 @@
   function closeCard() { var el = W.root && W.root.querySelector('.pcard-wrap'); if (el) { el.hidden = true; el.innerHTML = ''; } }
   /* birds flap real wings when they fly (their 3D wings are folded) */
   function petWings(p) {
+    if (window.SPR) return null;                   /* cl-v49: the wings are part of the picture now, and flap there */
     var sp = CRE.byId(p.sp) || {}; if (!(sp.family === 'bird' || sp.id === 'phoenix') || sp.id === 'waddles' || !p.stage) return null;
     var pal = (sp.palettes || [])[p.pal || 0] || {}, dp = p.dye && A() ? A().dyePal(p.dye) : null; if (dp) pal = dp;
     return { fill: pal.main || '#e45757', line: pal.dark || '#7a2a2a', tip: pal.accent || pal.light || '#ffffff' };

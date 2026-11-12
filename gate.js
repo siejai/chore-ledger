@@ -83,12 +83,23 @@
     if (document.readyState === 'complete') ready(); else window.addEventListener('load', ready);
   }
 
+  /* ---------- bedtime: the pets' night (Setup → Pet night). The tablet sleeps too: no games, no reading apps, no Lit Town ---------- */
+  function vacation() { return !!(window.ADV && window.ADV.onVacation && window.ADV.onVacation()); }
+  function bedtime() { return !vacation() && window.Pets && window.Pets.night ? window.Pets.night(null) : null; }   /* traveling: no bedtime */
+  /* when tonight's (or tomorrow's) night starts, in ms; 0 when nights are off */
+  function nextNightStart() {
+    var st = S().settings; if (st.nightOff) return 0;
+    var hm = String(st.nightStart || '20:00').split(':'), d = new Date(); d.setHours(+hm[0] || 20, +hm[1] || 0, 0, 0);
+    if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
+    return d.getTime();
+  }
+
   /* ---------- who is playing, and the rules the lock gets ---------- */
   function kid() { var me = S().me, cl = C(); return cl.isPerson(me) && !cl.isAdult(me) ? me : null; }
   function policy() {
     var st = S(), pid = kid(), gs = pid ? C().gateStatus(pid) : null;
     var p = {
-      on: !paused(), kid: pid, wakeMin: wakeMin(), alwaysMin: +st.settings.readMin || 0, gamesMin: +st.settings.gameMin || 0,
+      on: !paused(), kid: pid, wakeMin: wakeMin(), alwaysMin: vacation() ? 0 : +st.settings.readMin || 0, gamesMin: vacation() ? 0 : +st.settings.gameMin || 0,
       gamesUntil: gs && gs.open ? gs.until : 0,
       parentUntil: st.admin ? Math.ceil((Date.now() + 25 * 60000) / 300000) * 300000 : 0   /* about half an hour, moved on every 5 minutes */
     };
@@ -96,6 +107,7 @@
       var m = sorted();
       p.always = []; p.games = [];
       G.apps.forEach(function (a) { var k = kindOf(a, m); if (k === 'always') p.always.push(a.pkg); else if (k === 'game') p.games.push(a.pkg); });
+      if (bedtime() && !st.admin) { p.always = []; p.gamesUntil = 0; }   /* asleep: nothing opens (a parent still can) */
     }
     return p;
   }
@@ -124,7 +136,8 @@
     G.sent = '';   /* Android may have changed the rules itself (wake clears them): send ours again on the next sync */
     if (ev.kind === 'apps') { loadApps(true); return; }   /* an app was installed or removed */
     if (ev.kind === 'wake') { G.msg = null; cl.repick(); autoPick(); return; }
-    if (ev.kind === 'blocked' && ev.pkg) G.msg = { pkg: ev.pkg, label: ev.label || ev.pkg, ts: Date.now(), why: ev.why || '' };
+    if (ev.kind === 'look') { if (window.Pets && (st.me === ev.kid || st.admin)) { cl.stopAll(); cl.setTab('pet'); window.Pets.openCreator(); } return; }   /* "Change my look" in Lit Town */
+    if (ev.kind === 'blocked' && ev.pkg) G.msg = { pkg: ev.pkg, label: ev.label || ev.pkg, ts: Date.now(), why: ev.why || (bedtime() && !st.admin ? 'night' : '') };
     if (ev.kind === 'blocked' && ev.pkg === LT_PAGE) G.msg.label = 'Lit Town';
     if (ev.kind === 'blocked') refreshState();
     G.html = '';
@@ -150,10 +163,17 @@
     if (ev && ev.ev && ev.ev.kind && Date.now() - (ev.at || 0) < 600000) onGate(ev.ev);
   }
   function openLitTown(pid) {
-    var cl = C(), gs = pid ? cl.gateStatus(pid) : null, mins = gs ? left('always', gs.readMin) : null;
-    if (mins === 0 && !S().admin) { G.msg = { pkg: LT_PAGE, label: 'Lit Town', ts: Date.now(), why: 'time' }; G.html = ''; cl.schedule(); window.scrollTo(0, 0); return; }
-    var now = Date.now(), until = mins != null && !S().admin ? now + mins * 60000 : 0;
+    var cl = C(), gs = pid ? cl.gateStatus(pid) : null, mins = gs ? left('always', gs.readMin) : null, nt = bedtime();
+    if ((mins === 0 || nt) && !S().admin) { G.msg = { pkg: LT_PAGE, label: 'Lit Town', ts: Date.now(), why: nt ? 'night' : 'time' }; G.html = ''; cl.schedule(); window.scrollTo(0, 0); return; }
+    var now = Date.now(), until = mins != null && !S().admin ? now + mins * 60000 : 0, ns = nextNightStart();
+    if (ns && !S().admin && (!until || ns < until)) until = ns;   /* Lit Town comes back by bedtime */
     lsSet('cl.ltStart', JSON.stringify({ at: now, kid: pid, until: until }));
+    /* cl-v51: every kid's character, for Lit Town to draw (one character for both games; see lt-bridge.js) */
+    try {
+      var looks = {}, P = window.Pets;
+      cl.kids().forEach(function (k) { var d = P && P.doc(k.id), a = d && d.avatar; if (!a) return; looks[k.id] = { name: k.name, look: window.CHAR.look(P.kidAv(a)), have: d.closet || {} }; });
+      lsSet('cl.looks', JSON.stringify(looks));
+    } catch (e) {}
     lsSet('cl.ltUntil', until ? String(until) : null);
     lsSet('cl.ltMs', null);
     sync();
@@ -179,8 +199,18 @@
       '<span class="app-name">' + esc(a.label) + '</span>' + (locked ? '<span class="app-lock" aria-label="locked">&#128274;</span>' : '') + '</button>';
   }
   function chip(r) {
-    var ic = r.st === 'ok' ? '&#10003;' : r.st === 'wait' ? '&#8987;' : '&#9675;', note = r.st === 'ok' ? 'approved' : r.st === 'wait' ? 'waiting for a parent' : 'not done yet';
-    return '<li class="gc ' + r.st + '"><span class="gc-ic">' + ic + '</span><span class="grow">' + esc(r.name) + '</span><small>' + note + '</small></li>';
+    var ic = r.st === 'ok' ? '&#10003;' : r.st === 'wait' || r.st === 'rep' ? '&#8987;' : '&#9675;';
+    var note = r.st === 'ok' ? 'approved' : r.st === 'wait' ? 'waiting for a parent' : r.st === 'rep' ? (r.cant ? 'can’t do it today, waiting for a parent' : 'done already, waiting for a parent') : 'not done yet';
+    /* cl-v49: the chore's name is a button that opens it on the Chores tab */
+    return '<li class="gc ' + r.st + '"><span class="gc-ic">' + ic + '</span><button type="button" class="gc-go grow" data-gact="go-chore" data-cid="' + esc(r.id) + '"><span>' + esc(r.name) + '</span>' + (r.st === 'ok' ? '' : '<i aria-hidden="true">&rsaquo;</i>') + '</button><small>' + note + '</small>' +
+      (r.st === 'todo' ? '<span class="gc-acts"><button class="btn small ghost" type="button" data-gact="done-already" data-cid="' + esc(r.id) + '" title="Someone else did it; a parent will check">Done already</button>' +
+        '<button class="btn small ghost" type="button" data-gact="cant-do" data-cid="' + esc(r.id) + '" title="It can’t be done today; a parent will check">Can’t do it</button></span>' : '') + '</li>';
+  }
+  /* the rows a kid sees: still to do first, then waiting, then "done already", then approved; so an open job is always on top */
+  var ORDER = { todo: 0, wait: 1, rep: 2, ok: 3 };
+  function chips(rows) {
+    var sorted = rows.slice().sort(function (a, b) { return (ORDER[a.st] || 0) - (ORDER[b.st] || 0); });
+    return '<ul class="gate-list">' + sorted.map(chip).join('') + '</ul>';
   }
   /* today's minutes, when a parent set a daily limit */
   function left(kind, limitMin) {
@@ -200,8 +230,8 @@
   function gamesCard(gs) {
     var cl = C(), h;
     if (gs.open) {
-      h = '<div class="card games-card open"><h2>&#127918; Games are open until ' + cl.hm(gs.until) + '</h2>' +
-        '<p class="note">' + (gs.override === 'open' ? 'A parent opened them for today.' : 'All your game chores are approved. Have fun!') + '</p>';
+      h = '<div class="card games-card open"><h2>&#127918; Games are open' + (gs.vacation ? '' : ' until ' + cl.hm(gs.until)) + '</h2>' +
+        '<p class="note">' + (gs.vacation ? 'Vacation mode: play anything. Have a good trip!' : gs.override === 'open' ? 'A parent opened them for today.' : 'All your game chores are approved. Have fun!') + '</p>';
     } else if (gs.override === 'closed') {
       h = '<div class="card games-card locked"><h2>&#128274; Games are locked today</h2><p class="note">A parent locked them for today.</p>';
     } else if (gs.late) {
@@ -210,7 +240,8 @@
       h = '<div class="card games-card locked"><h2>&#128274; Games are locked</h2><p class="note">' +
         (gs.early ? 'They can open at ' + cl.hm(gs.hours[0]) + '. ' : '') + (gs.total ? 'Get ' + (gs.total === 1 ? 'this' : 'these') + ' approved to open them (' + gs.done + ' of ' + gs.total + ' done):' : 'No chores are set to unlock games today, so they stay locked. A grown-up can set some up, or open today.') + '</p>';
     }
-    if (gs.total && !(gs.open && gs.override === 'open')) h += '<ul class="gate-list">' + gs.rows.map(chip).join('') + '</ul>';
+    if (gs.total && !(gs.open && (gs.override === 'open' || gs.vacation))) h += chips(gs.rows);
+    if (gs.later && gs.later.length && !gs.vacation && gs.override !== 'open') h += '<p class="note gate-later">Later today: ' + gs.later.map(function (r) { return esc(r.name) + ' (from ' + cl.hm(r.at) + ')'; }).join(', ') + '. Games lock again then until it’s done.</p>';
     if (!gs.open && gs.total && gs.done < gs.total && gs.override !== 'closed') h += '<div class="wrap"><button type="button" class="btn primary" data-tab="log">Go to my chores</button></div>';
     return h + '</div>';
   }
@@ -218,13 +249,15 @@
     var cl = C(), p = cl.person(pid), gs = cl.gateStatus(pid), m = sorted(), apps = G.apps || [];
     var games = [], always = [];
     apps.forEach(function (a) { var k = kindOf(a, m); if (a.pkg === LIT) return; if (k === 'game') games.push(a); else if (k === 'always') always.push(a); });   /* the old separate Lit Town app is never shown: the built-in one is */
-    var now = new Date(), msg = G.msg && Date.now() - G.msg.ts < 120000 ? G.msg : null;
+    var now = new Date(), msg = G.msg && Date.now() - G.msg.ts < 120000 ? G.msg : null, nt = bedtime(), st = S();
     var h = '<section class="home stack">' +
       '<div class="home-hi"><div class="home-av">' + (window.Pets && window.Pets.miniHtml ? window.Pets.miniHtml(pid) : '') + '</div>' +
       '<div class="grow"><h1>Hi ' + esc(p ? p.name : '') + '!</h1><p class="note">' + now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) + ' &middot; ' + cl.hm(now.getTime()) + '</p></div>' +
       '<button type="button" class="btn small" data-act="pick">Not you?</button></div>' +
-      (msg ? '<div class="banner warn" role="alert">&#128274; <b>' + esc(msg.label) + '</b> ' + (msg.why === 'time' ? 'is done for today: the time for it is used up.' : kindOf(appFor(msg.pkg), m) === 'game' ? 'opens when your game chores are approved.' : 'isn’t allowed on this tablet. Ask a parent.') + '</div>' : '') +
-      gamesCard(gs) + timeCard(gs) +
+      (msg ? '<div class="banner warn" role="alert">&#128274; <b>' + esc(msg.label) + '</b> ' + (msg.why === 'night' ? 'is asleep, like everything else. Everything wakes up at ' + esc(nt ? nt.wake : 'morning') + '.' : msg.why === 'time' ? 'is done for today: the time for it is used up.' : kindOf(appFor(msg.pkg), m) === 'game' ? 'opens when your game chores are approved.' : 'isn’t allowed on this tablet. Ask a parent.') + '</div>' : '') +
+      (nt && !st.admin ? '<div class="card night-card"><h2>&#127769; Everything is asleep</h2><p class="note">Games, reading apps and Lit Town wake up at <b>' + esc(nt.wake) + '</b>. You can still mark a chore done. Good night!</p></div>' +
+        '<div class="app-grid"><button type="button" class="app-tile big" data-tab="log"><span class="app-dot cq">&#9733;</span><span class="app-name">My chores</span></button></div></section>' : '') +
+      (nt && !st.admin ? '' : gamesCard(gs) + timeCard(gs) +
       '<div class="app-grid">' +
       '<button type="button" class="app-tile big" data-tab="log"><span class="app-dot cq">&#9733;</span><span class="app-name">My chores</span></button>' +
       '<button type="button" class="app-tile big" data-tab="pet"><span class="app-dot pet">&#128062;</span><span class="app-name">My pet</span></button>' +
@@ -233,7 +266,7 @@
       '<h2 class="games-h">Games</h2>' +
       (G.apps ? (games.length ? '<div class="app-grid games' + (gs.open ? '' : ' shut') + '">' + games.map(function (a) { return tile(a, !gs.open); }).join('') + '</div>'
         : '<p class="note">No games on this tablet yet.</p>') : '<p class="note">Loading the games...</p>') +
-      '</section>';
+      '</section>');
     return h;
   }
   function updLine() {
@@ -317,6 +350,9 @@
     if (a === 'kidHere' || a === 'wake') return false;   /* handled on change */
     e.preventDefault();
     if (a === 'littown') { openLitTown(kid()); return true; }
+    if (a === 'go-chore') { if (b.getAttribute('data-cid')) cl.goChore(b.getAttribute('data-cid')); return true; }
+    if (a === 'cant-do') { var pid1 = kid(); if (pid1 && b.getAttribute('data-cid')) cl.reportDone(pid1, b.getAttribute('data-cid'), true).then(function () { cl.toast('Okay. A parent will check, and it won’t count against games once they agree.'); G.html = ''; cl.schedule(); }); return true; }
+    if (a === 'done-already') { var pid0 = kid(); if (pid0 && b.getAttribute('data-cid')) cl.reportDone(pid0, b.getAttribute('data-cid')).then(function () { cl.toast('Okay. A parent will check that it’s done.'); G.html = ''; cl.schedule(); }); return true; }
     if (a === 'launch') {
       var pid = kid(), app = appFor(pkg);
       var gs0 = pid ? cl.gateStatus(pid) : null, k = kindOf(app), open = st.admin || k === 'always' || (k === 'game' && gs0 && gs0.open);

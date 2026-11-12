@@ -294,8 +294,15 @@
   }
   /* board: house strip on the left (HW wide), CELLS squares to the right; lane 0 at the top.
      A mess's progress p goes from -0.6 (just off the right edge) to CELLS (inside the house). */
+  /* cl-v49: on a tablet held sideways, the tallest a board may be so it fits under the header (0 = no limit) */
+  function landH(el, spare) {
+    var vw = window.innerWidth || 0, vh = window.innerHeight || 0; if (!(vw > vh && vh <= 640)) return 0;
+    var hd = document.querySelector('.top'), top = Math.max(hd ? hd.offsetHeight : 0, el && el.getBoundingClientRect ? el.getBoundingClientRect().top : 0);
+    return Math.max(180, vh - top - (spare || 10));
+  }
   function size() {
-    var w = Math.min(D.root.clientWidth || 320, 560), cell = Math.floor(w / (CELLS + 0.8)), dpr = Math.min(2, window.devicePixelRatio || 1);
+    var mh = landH(D.cv, 10), w = Math.min(D.root.clientWidth || 320, mh ? Math.floor((D.root.clientWidth || 320) * 0.74) : 560), cell = Math.floor(w / (CELLS + 0.8)), dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (mh) cell = Math.min(cell, Math.floor(mh / LANES));
     D.cell = cell; D.HW = Math.round(cell * 0.8); D.W = D.HW + cell * CELLS; D.H = cell * LANES; D.dpr = dpr;
     D.cv.width = D.W * dpr; D.cv.height = D.H * dpr; D.cv.style.width = D.W + 'px'; D.cv.style.height = D.H + 'px';
   }

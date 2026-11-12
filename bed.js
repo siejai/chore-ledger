@@ -230,8 +230,15 @@
     size(); cardsHtml();
     D.run = true; D.last = 0; RAF(tick);
   }
+  /* cl-v49: on a tablet held sideways, the tallest a board may be so it fits under the header (0 = no limit) */
+  function landH(el, spare) {
+    var vw = window.innerWidth || 0, vh = window.innerHeight || 0; if (!(vw > vh && vh <= 640)) return 0;
+    var hd = document.querySelector('.top'), top = Math.max(hd ? hd.offsetHeight : 0, el && el.getBoundingClientRect ? el.getBoundingClientRect().top : 0);
+    return Math.max(180, vh - top - (spare || 10));
+  }
   function size() {
-    var w = Math.min(D.root.clientWidth || 320, 480), cell = Math.floor(w / COLS), dpr = Math.min(2, window.devicePixelRatio || 1);
+    var mh = landH(D.cv, 10), w = Math.min(D.root.clientWidth || 320, 480), cell = Math.floor(w / COLS), dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (mh) cell = Math.min(cell, Math.floor(mh / ROWS));
     D.c = cell; D.PW = cell * COLS; D.PH = cell * ROWS; D.dpr = dpr;
     D.cv.width = D.PW * dpr; D.cv.height = D.PH * dpr; D.cv.style.width = D.PW + 'px'; D.cv.style.height = D.PH + 'px';
     D.bg = null;

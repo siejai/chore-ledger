@@ -26,7 +26,11 @@
   var MEAL_GAIN = 50, BATH_GAIN = 60, SLEEP_GAIN = 60, PLAY_GAIN = 60, PANTRY_CAP = 3, TOKEN_CAP = 2;
   var G = { talk: 0, pick: null, dirtyAvatar: null, room: null, game: null, D: null, creator: false, spin: 1, spinAdult: false };
   /* ----- spinning the character in the creator ----- */
-  function spinOpts() { var F = window.C3D && C3D.spinFrames ? C3D.spinFrames() : [['three', 0]], f = F[G.spin % F.length] || F[0]; return { view: f[0], flip: !!f[1], abs: !G.spinAdult }; }
+  function spinN() { return window.SPR && SPR.person ? 8 : window.C3D && C3D.spinFrames ? C3D.spinFrames().length : 1; }
+  function spinOpts() {
+    if (window.SPR && SPR.person) return { yaw: 28 + ((G.spin + 7) % 8) * 45, abs: !G.spinAdult };      /* cl-v49: the character turns all the way round, an eighth at a time */
+    var F = window.C3D && C3D.spinFrames ? C3D.spinFrames() : [['three', 0]], f = F[G.spin % F.length] || F[0]; return { view: f[0], flip: !!f[1], abs: !G.spinAdult };
+  }
   function heightValue(a) { return typeof a.hv === 'number' ? a.hv : a.height === 'medium' ? 100 : a.height === 'tiny' ? 15 : 60; }
   /* the height slider: toddler to big kid, updating the preview as it moves */
   document.addEventListener('input', function (e) {
@@ -36,7 +40,7 @@
     spinTo(G.spin);
   });
   function spinTo(i) {
-    var n = window.C3D && C3D.spinFrames ? C3D.spinFrames().length : 1; G.spin = ((i % n) + n) % n;
+    var n = spinN(); G.spin = ((i % n) + n) % n;
     var pv = document.querySelector('.creator .av-preview'); if (pv && G.dirtyAvatar) pv.innerHTML = avatarSvg(G.dirtyAvatar, G.spinAdult, spinOpts());
   }
   var drag = null;
@@ -333,10 +337,15 @@
     G.dirtyAvatar = a; G.spinAdult = !!adult;
     if (window.C3D && C3D.preloadSpin) C3D.preloadSpin();
     function sw(key, i, color) { return '<button type="button" class="sw" style="background:' + color + '" data-pact="av" data-k="' + key + '" data-v="' + i + '" aria-pressed="' + (a[key] === i || (a[key] == null && i === 0 && key === 'shoeColor')) + '" aria-label="' + key + ' ' + (i + 1) + '"></button>'; }
-    function word(key) { return AV[key].map(function (v) { return '<button type="button" class="cat" data-pact="av" data-k="' + key + '" data-v="' + v + '" aria-pressed="' + (a[key] === v) + '">' + L[key][v] + '</button>'; }).join(''); }
+    /* cl-v51: things from Lit Town show a book until they're earned there by reading */
+    function lockBtn(key, v, cur) {
+      if (window.CHAR.litTownOnly(key, v) && !owns(pid, v, adult)) return '<button type="button" class="cat lt-lock" disabled title="Earn it by reading in Lit Town"><span aria-hidden="true">&#128214;</span> ' + L[key][v] + '</button>';
+      return '<button type="button" class="cat' + (window.CHAR.litTownOnly(key, v) ? ' lt-own' : '') + '" data-pact="av" data-k="' + key + '" data-v="' + v + '" aria-pressed="' + (cur === v) + '">' + L[key][v] + '</button>';
+    }
+    function word(key) { return AV[key].map(function (v) { return lockBtn(key, v, a[key]); }).join(''); }
     var ORD = window.CHAR.ORDER || {};
     function swatches(key, from) { var lk = from || key, list = AV[lk], ord = ORD[lk] || list.map(function (c, i) { return i; }); return ord.map(function (i) { return sw(key, i, list[i]); }).join(''); }
-    function word2(key, cur) { return AV[key].map(function (v) { return '<button type="button" class="cat" data-pact="av" data-k="' + key + '" data-v="' + v + '" aria-pressed="' + (cur === v) + '">' + L[key][v] + '</button>'; }).join(''); }
+    function word2(key, cur) { return AV[key].map(function (v) { return lockBtn(key, v, cur); }).join(''); }
     if (a.hairFx && a.hairFx !== 'none' && a.hair2 == null) a.hair2 = AV.hairColor.indexOf(window.CHAR.hair2Default(a.hairFx));
     function pats(key, colorKey) {
       var col = AV[colorKey][a[colorKey]] || AV[colorKey][0], cur = a[key] || 'solid';
@@ -361,20 +370,20 @@
       (a.hair === 'bald' ? '' : '<div class="av-row"><span class="av-l">Bangs</span><div class="wrap">' + word2('bangs', a.bangs || 'none') + '</div></div>' +
         '<div class="av-row"><span class="av-l">Tendrils</span><div class="wrap">' + word2('tendrils', a.tendrils || 'none') + '</div></div>') +
       '<div class="av-row"><span class="av-l">Eyes</span><div class="wrap">' + word('eyes') + '</div></div>' +
-      '<div class="av-row"><span class="av-l">Outfit</span><div class="wrap">' + AV.top.concat(AV.special.filter(function (k) { return owns(pid, k, adult); })).map(function (v) {
-        return '<button type="button" class="cat" data-pact="av" data-k="top" data-v="' + v + '" aria-pressed="' + (a.top === v) + '">' + (L.top[v] || L.special[v]) + '</button>'; }).join('') +
+      '<div class="av-row"><span class="av-l">Mouth</span><div class="wrap">' + word2('mouth', a.mouth || 'smile') + '</div></div>' +
+      '<div class="av-row"><span class="av-l">Outfit</span><div class="wrap">' + AV.top.map(function (v) { return lockBtn('top', v, a.top); }).join('') + AV.special.filter(function (k) { return owns(pid, k, adult); }).map(function (v) {
+        return '<button type="button" class="cat" data-pact="av" data-k="top" data-v="' + v + '" aria-pressed="' + (a.top === v) + '">' + L.special[v] + '</button>'; }).join('') +
         (adult ? '' : '<span class="note av-more">More outfits at the Clothes Shop in town</span>') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Outfit color</span><div class="wrap">' + swatches('topColor') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Outfit pattern</span><div class="wrap">' + pats('topPat', 'topColor') + '</div></div>' +
       (dress ? '' : '<div class="av-row"><span class="av-l">Bottoms</span><div class="wrap">' + word2('bottom', bot) + '</div></div>' +
         '<div class="av-row"><span class="av-l">' + L.bottom[bot] + ' color</span><div class="wrap">' + swatches('pantsColor') + '</div></div>' +
         '<div class="av-row"><span class="av-l">' + L.bottom[bot] + ' pattern</span><div class="wrap">' + pats('pantsPat', 'pantsColor') + '</div></div>') +
-      '<div class="av-row"><span class="av-l">Shoes</span><div class="wrap">' + AV.shoes.filter(function (k) { return owns(pid, k, adult); }).map(function (v) {
-        return '<button type="button" class="cat" data-pact="av" data-k="shoes" data-v="' + v + '" aria-pressed="' + ((a.shoes || 'sneakers') === v) + '">' + L.shoes[v] + '</button>'; }).join('') + '</div></div>' +
+      '<div class="av-row"><span class="av-l">Shoes</span><div class="wrap">' + AV.shoes.filter(function (k) { return owns(pid, k, adult) || window.CHAR.litTownOnly('shoes', k); }).map(function (v) { return lockBtn('shoes', v, a.shoes || 'sneakers'); }).join('') + '</div></div>' +
       '<div class="av-row"><span class="av-l">Shoe color</span><div class="wrap">' + AV.shoeColor.map(function (c, i) { return sw('shoeColor', i, c); }).join('') + '</div></div>' +
       (adult ? '<div class="av-row"><span class="av-l">Face</span><div class="wrap">' + word('face') + '</div></div>' : '') +
       '<div class="av-row"><span class="av-l">Extra</span><div class="wrap">' + word('acc') + '</div>' +
-        (/^(cap|bow|headband|visor)$/.test(a.acc || '') ? '<span class="note av-more">' + (L.acc[a.acc] || 'It') + ' matches the ' + (dress ? 'outfit' : L.bottom[bot].toLowerCase()) + ' color</span>' : '') + '</div>' +
+        (/^(cap|bow|headband|visor|beanie)$/.test(a.acc || '') ? '<span class="note av-more">' + (L.acc[a.acc] || 'It') + ' matches the ' + (dress ? 'outfit' : L.bottom[bot].toLowerCase()) + ' color</span>' : '') + '</div>' +
       '<div class="wrap"><button class="btn primary" type="button" data-pact="avSave">That’s me!</button><button class="btn" type="button" data-pact="avRandom">Surprise me</button>' +
       (d.avatar || adult ? '<button class="btn" type="button" data-pact="avCancel">Cancel</button>' : '') + '</div></section>';
   }
@@ -498,7 +507,31 @@
     { id: 'skates', kind: 'shoes', price: 120, blurb: 'Roller skates with yellow wheels.' },
     { id: 'lightup', kind: 'shoes', price: 100, blurb: 'Sneakers with soles that glow.' }
   ];
-  function owns(pid, id, adult) { return adult || id === 'sneakers' || !!(doc(pid).closet || {})[id] || AV0().top.indexOf(id) >= 0; }
+  /* cl-v51: clothes and hair bought in Lit Town's shop (lt-bridge.js leaves them in cl.ltBack) join the kid's closet here */
+  function ltImport() {
+    var back = null; try { back = JSON.parse(localStorage.getItem('cl.ltBack') || 'null'); } catch (e) {}
+    if (!back) return;
+    var ops = [], left = {}, L2 = window.CHAR.LITTOWN, ok = {}, k;
+    for (k in L2) Object.keys(L2[k]).forEach(function (id) { ok[id] = 1; });
+    ['jersey', 'boots'].forEach(function (id) { ok[id] = 1; });     /* Lit Town sells these too */
+    Object.keys(back).forEach(function (pid) {
+      var b = back[pid] || {}, d = S().pets[pid];
+      if (!C().person(pid)) return;
+      if (!d) { left[pid] = b; return; }      /* not loaded yet: try again later */
+      var cl = assign({}, d.closet || {}), add = 0;
+      (b.owned || []).forEach(function (id) { if (ok[id] && !cl[id]) { cl[id] = 1; add++; } });
+      if (add) ops.push({ t: 'merge', c: 'pets', id: pid, d: { closet: cl } });
+    });
+    try { if (Object.keys(left).length) localStorage.setItem('cl.ltBack', JSON.stringify(left)); else localStorage.removeItem('cl.ltBack'); } catch (e) {}
+    if (ops.length) DB.commit(ops).then(function () { C().toast('New clothes from Lit Town are in your character maker.'); }, function () {});
+  }
+  /* cl-v51: the Clothes Shop's prices times the parents' setting (Setup: "Clothes Shop prices"; 3x unless changed) */
+  function priceOf(it) { var k = Number(S().settings.clothesK) || 3; return Math.round(it.price * k / 10) * 10; }
+  function owns(pid, id, adult) {
+    if (adult || id === 'sneakers' || (doc(pid).closet || {})[id]) return true;
+    var L2 = window.CHAR.LITTOWN, k; for (k in L2) if (L2[k][id]) return false;      /* earned in Lit Town only */
+    return AV0().top.indexOf(id) >= 0 || AV0().hair.indexOf(id) >= 0 || AV0().bottom.indexOf(id) >= 0 || AV0().acc.indexOf(id) >= 0 || id === 'ankle';
+  }
   function AV0() { return window.CHAR.AV; }
   function clothIcon(it) {
     var c = '#d9488f';
@@ -527,14 +560,14 @@
       '<div class="speech">Welcome to the Clothes Shop! Tap anything to try it on. Pay with chore coins.</div></div>' +
       '<div class="try-on"><div class="try-av">' + avatarSvg(tryAv) + '</div><div class="grow"><strong>' + esc(sel.kind === 'top' ? L.special[sel.id] : L.shoes[sel.id]) + '</strong><p class="note">' + esc(sel.blurb) + '</p>' +
       (owns(pid, sel.id) ? (wearing ? '<span class="tag ok">Wearing it</span>' : '<button class="btn primary" type="button" data-pact="wearCloth" data-id="' + sel.id + '">Wear it</button>') :
-        '<button class="btn primary' + (w.pts >= sel.price ? '' : ' wait') + '" type="button" data-pact="buyCloth" data-id="' + sel.id + '">' + (G.armed === 'buy' + sel.id ? 'Tap again to buy' : coin('pts') + ' ' + sel.price) + '</button>' +
-        (w.pts < sel.price ? ' <b class="why">Need ' + (sel.price - w.pts) + ' more chore coins</b>' : '')) + '</div></div>' +
+        '<button class="btn primary' + (w.pts >= priceOf(sel) ? '' : ' wait') + '" type="button" data-pact="buyCloth" data-id="' + sel.id + '">' + (G.armed === 'buy' + sel.id ? 'Tap again to buy' : coin('pts') + ' ' + priceOf(sel)) + '</button>' +
+        (w.pts < priceOf(sel) ? ' <b class="why">Need ' + (priceOf(sel) - w.pts) + ' more chore coins</b>' : '')) + '</div></div>' +
       '<div class="wallet-row"><span>' + coin('pts') + ' <b class="mono">' + w.pts + '</b>&nbsp;chore coins</span><span class="note">Chores pay chore coins (look for the purple star)</span></div>';
     [['top', 'Outfits'], ['shoes', 'Shoes']].forEach(function (grp) {
       h += '<h3 class="shop-h">' + grp[1] + '</h3><div class="cloth-grid">' + CLOTHES.filter(function (it) { return it.kind === grp[0]; }).map(function (it) {
         var own = owns(pid, it.id);
         return '<button type="button" class="cloth' + (it === sel ? ' sel' : '') + (own ? ' own' : '') + '" data-pact="tryOn" data-id="' + it.id + '">' + clothIcon(it) +
-          '<span class="cl-n">' + esc(it.kind === 'top' ? L.special[it.id] : L.shoes[it.id]) + '</span><span class="cl-p">' + (own ? 'Yours' : coin('pts') + ' ' + it.price) + '</span></button>';
+          '<span class="cl-n">' + esc(it.kind === 'top' ? L.special[it.id] : L.shoes[it.id]) + '</span><span class="cl-p">' + (own ? 'Yours' : coin('pts') + ' ' + priceOf(it)) + '</span></button>';
       }).join('') + '</div>';
     });
     return h + '<p class="note">Things you buy stay in your closet. Change into them here or at the mirror at home.</p></div>';
@@ -543,12 +576,12 @@
     var it = null; CLOTHES.forEach(function (x) { if (x.id === id) it = x; }); if (!it) return;
     var w = state(pid).wallet;
     if (owns(pid, id)) return;
-    if (w.pts < it.price) { C().toast('That costs ' + it.price + ' chore coins and you have ' + w.pts + '.', true); return; }
+    if (w.pts < priceOf(it)) { C().toast('That costs ' + priceOf(it) + ' chore coins and you have ' + w.pts + '.', true); return; }
     if (G.armed !== 'buy' + id) { G.armed = 'buy' + id; C().schedule(); setTimeout(function () { if (G.armed === 'buy' + id) { G.armed = null; C().schedule(); } }, 4000); return; }
     G.armed = null;
     var cl = {}; cl[id] = true;
     var av = assign({}, doc(pid).avatar || {}); if (it.kind === 'top') av.top = id; else av.shoes = id;
-    DB.commit([{ t: 'merge', c: 'pets', id: pid, d: { closet: cl, chorePts: DB.inc(-it.price), avatar: av } }])
+    DB.commit([{ t: 'merge', c: 'pets', id: pid, d: { closet: cl, chorePts: DB.inc(-priceOf(it)), avatar: av } }])
       .then(function () { C().toast('You bought the ' + (it.kind === 'top' ? window.CHAR.AV_LABEL.special[id] : window.CHAR.AV_LABEL.shoes[id]) + '! You’re wearing it now.'); C().schedule(); }, C().fail);
   }
   function wearCloth(pid, id) {
@@ -904,6 +937,7 @@
   window.Pets = {
     render: render, onClick: onClick, onSubmit: onSubmit, reset: reset, miniHtml: miniHtml,
     state: state, prices: prices, feed: feed, startFeed: startFeed, partBar: partBar, progressHtml: progressHtml, asleep: asleep, night: night, hiding: hiding, needsNow: needsNow, wake: function (pid) { if (asleep(pid)) DB.commit([{ t: 'update', c: 'pets', id: pid, d: { sleepUntil: 0 } }]).catch(function () {}); }, petSvg: petSvg, avatarSvg: avatarSvg, speciesName: speciesName, doc: doc,
+    openCreator: function () { G.creator = true; G.dirtyAvatar = null; G.room = null; if (window.World) window.World.unmount(); C().go(); }, ltImport: ltImport,
     roomHtml: roomHtml, mountGame: mountGame, petCardHtml: petCardHtml, hosts: hosts, adultAv: adultAv, kidAv: kidAv, SPOTS: SPOTS, HOST_LINE: HOST_LINE, adultCreatorHtml: adultCreatorHtml, G: G, NEEDS: NEEDS, GOOD: GOOD, LOW: LOW, coin: coin, friendCard: friendCard
   };
 })();

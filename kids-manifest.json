@@ -1,501 +1,37 @@
 {
-"version": "cl-v45",
+"version": "cl-v51",
 "files": {
 "adventure.js": {
-"size": 29799,
-"sha256": "b77f7bb203668a5d35fbbc0ba687cede927813c53173289b725acd27de2b7828"
+"size": 42222,
+"sha256": "1875e61829194a521990a1e910f441272a0bfe6c4d2b69effdbd1c1c5403081c"
 },
 "app.js": {
-"size": 271005,
-"sha256": "ca5a61d479a8d3d64c29d3caeec1c459cc5371cfc6cf84019293f8af59094cee"
+"size": 286860,
+"sha256": "bb17b127d5d49de3db61cb4573e9d4c064ec856f91eb42e1a791d17b6732b9ff"
 },
 "avatar.js": {
-"size": 34201,
-"sha256": "53a917c5dc72de25643b431c79a89e6d296f62a8c761847309684787bf0d4212"
+"size": 36484,
+"sha256": "581c00c3ad902219eab16cded4f39b10127e762208a14f9a59ed859df9720897"
 },
 "bed.js": {
-"size": 65641,
-"sha256": "59bf00ec6fe6161ad3016c0789cc53ae57e1c63dd4694ed03e643ba072e41851"
-},
-"c3d-antsy-walk.webp": {
-"size": 100280,
-"sha256": "0f8d83b9245663541d9697ff44c57e47b599bc7fe3a48d26ac8aad62da9a2ad6"
-},
-"c3d-antsy.webp": {
-"size": 124422,
-"sha256": "a2a6000aae68e0be82674012f449bf1f6f6ea328cf5c91069a7504baf58bc415"
-},
-"c3d-axolittle-walk.webp": {
-"size": 97002,
-"sha256": "739feecb10f8da085566567f4679c1c0408ffd374d3275c1a219ca4c33ac9ed0"
-},
-"c3d-axolittle.webp": {
-"size": 116842,
-"sha256": "a5ca04dcd3922b19ac55d77fa8a48c37f4ef02652009319f85ae40f99cd6ccd8"
-},
-"c3d-blubbo.webp": {
-"size": 115008,
-"sha256": "8ed286c906dacfcf597cf9d28f63576e64f18776874e8962fe5f7f6f6822da9f"
-},
-"c3d-bubbit-walk.webp": {
-"size": 105322,
-"sha256": "3a8d65216988d2ccdaac06daca87ba8792c232d8f8254b26e666393e8ea99829"
-},
-"c3d-bubbit.webp": {
-"size": 125490,
-"sha256": "2b69b51ba6af310fd76ac4daf1eee73a3056300366454a6bb60eb677d088dd44"
-},
-"c3d-bunny.webp": {
-"size": 128248,
-"sha256": "bfe78fcd98db16e1179f514726c9f75b000121a829afbff9c51211074b6e48f1"
-},
-"c3d-buzzby.webp": {
-"size": 199628,
-"sha256": "129d34d9e679573945ddc54318d6e5b4eecebde796e06418090b62b486d26d83"
-},
-"c3d-cerberus-walk.webp": {
-"size": 109008,
-"sha256": "e40909411f8c0b02f4f24d271569a9493ae1e7387ba3174977d541fd4b8b1251"
-},
-"c3d-cerberus.webp": {
-"size": 141782,
-"sha256": "5d36cd7d007ba3e15aefd02047ec8ef80d4f0585b291805c2fe2469f5d731107"
-},
-"c3d-chai-walk.webp": {
-"size": 27718,
-"sha256": "fabceb52f213f8400df01d68934fd6cb8547dd77c60c16559a17b90dab654d3a"
-},
-"c3d-chai.webp": {
-"size": 109322,
-"sha256": "1518fd5d4c424846bfcb57974627608f89cc37f958d5d7b253995b41dde33b57"
-},
-"c3d-cheetling-walk.webp": {
-"size": 108574,
-"sha256": "e78284ff4a6a84ed75631c2f0a21494dc88fee733d59e558767a5d541f68d630"
-},
-"c3d-cheetling.webp": {
-"size": 128746,
-"sha256": "ff10154fd6a602f6638a7fd249f6bc5c24ac1ff45b663c11946a270e186d574c"
-},
-"c3d-chimera-walk.webp": {
-"size": 87538,
-"sha256": "84c2ed84ec048448bbd2ac0aa56ba7c74e1a8e41f4cae63c123bd6c9238d85c2"
-},
-"c3d-chimera.webp": {
-"size": 199658,
-"sha256": "fb7ac04cb4a95e27085484582079dcc4a7449e7efab25f86a9480038728931f1"
-},
-"c3d-chirpet.webp": {
-"size": 160696,
-"sha256": "7fd111d28c8c641c8318c1ca4bd5ea88e2b1cf7069b566a9b61abce26b435e3f"
-},
-"c3d-cinder-walk.webp": {
-"size": 113492,
-"sha256": "d9837ff87cbbbfa0fbd2c5fc3771a24d5ff97f14c4017b2c78d10ebb8d68bd29"
-},
-"c3d-cinder.webp": {
-"size": 141300,
-"sha256": "60442b60f7369893c070259f32a82546ba34d2bb1029ecedf046c9d49888a7ad"
-},
-"c3d-cupcat.webp": {
-"size": 192496,
-"sha256": "df60576b31fe7525ee41454b148a9254d6b8a0ccee3059a59348fd378d5cfed2"
-},
-"c3d-dotbug-walk.webp": {
-"size": 114034,
-"sha256": "57665ead845e215f5adbfe8ee5eab2551b0d4dd2440674c3043853a0082b53db"
-},
-"c3d-dotbug.webp": {
-"size": 143576,
-"sha256": "7eb57945c09fad9e7d75c0195296fd5c3f0a9bef85595d8a492e944d5c096bdf"
-},
-"c3d-dotty-walk.webp": {
-"size": 128150,
-"sha256": "8e012322fc4f97be827383ffb811038eed8b51f2b9c6cf391717f4b43cd0b498"
-},
-"c3d-dotty.webp": {
-"size": 161446,
-"sha256": "b08bbca980786a4bb02f20e5dc8a550226d0ca218ec214c7492a88e3331ab10f"
-},
-"c3d-drake-walk.webp": {
-"size": 39050,
-"sha256": "b9d5faed828f03a33796d70fa7c27ae24c447e739abda513ea9de3c41d42ff37"
-},
-"c3d-drake.webp": {
-"size": 133944,
-"sha256": "493a883a84cec1795806a87b8a0bd0c60909d0f56f82bb98417fd9620c29172c"
-},
-"c3d-flitter.webp": {
-"size": 124236,
-"sha256": "721314e1fa04d85ef286a5f1d21cae05021228e29ff8c7cf41111b009bf6e60a"
-},
-"c3d-fluttle.webp": {
-"size": 171166,
-"sha256": "dd0d60151dbffc8f7e549ef7fe1146bc77e155f7faaf10485391143ff1afedde"
-},
-"c3d-foe_block.webp": {
-"size": 17178,
-"sha256": "e3bad246e4813b284eb27baef895c5bb31bd263a54b88c1fe7dd62030c75c9e9"
-},
-"c3d-foe_boss.webp": {
-"size": 22722,
-"sha256": "552ffe09a303f17b3912a8db39902a8cdc473347ed54a91def2936711bb960ec"
-},
-"c3d-foe_can.webp": {
-"size": 17354,
-"sha256": "b78d9d165dac8c805bc1e6a401aea128cf1a2889d284ead13b29d996dedc4925"
-},
-"c3d-foe_car.webp": {
-"size": 20122,
-"sha256": "2d0fe21054c9667c4d599a712f8ece8896fd27388957e1077cb416e1eaa701f2"
-},
-"c3d-foe_chips.webp": {
-"size": 16910,
-"sha256": "879d98fa6e0e48c7c794f4fb3bb06b31b9293cc1f664b944eebfeae886d4e6a2"
-},
-"c3d-foe_crumb.webp": {
-"size": 15934,
-"sha256": "cdf0fcd6261e6c16d6efc2cfc5d7b78bbc148d425e846a8a14be572bd938f0ce"
-},
-"c3d-foe_dust.webp": {
-"size": 12902,
-"sha256": "d735049685979f4aac323053f6a2262f3bd98bc001caaa6060272866ef0cc6ae"
-},
-"c3d-foe_jeans.webp": {
-"size": 17080,
-"sha256": "717ea0c18f2632dbac0ae291b08da01fd2d0e9a9a222ba7815f0b85623082b68"
-},
-"c3d-foe_mud.webp": {
-"size": 12754,
-"sha256": "d258c1dea44c16c75452361912a2746700ce42d80810e534d4a8de04835f6da4"
-},
-"c3d-foe_peel.webp": {
-"size": 12178,
-"sha256": "2131a009245c7716759293bcbba31d7eb4dbec248afb315375dccce08c1dd5ec"
-},
-"c3d-foe_pizza.webp": {
-"size": 15750,
-"sha256": "f489bf915b8c985f6b193881531fe292b73d8d7b4287804008a7567dc1173b25"
-},
-"c3d-foe_shirt.webp": {
-"size": 18704,
-"sha256": "4d739872ba7bd3017d6dc7e77b28ec477169d217a90bddacbe89e4b0de7d6679"
-},
-"c3d-foe_sock.webp": {
-"size": 12778,
-"sha256": "62c7812174af75899dad7f5a2faeb9904a6b3e1b6334987055635fd703b47c95"
-},
-"c3d-foldmew-walk.webp": {
-"size": 112360,
-"sha256": "b92e4b4cf869ba6e1ebf754a2f50214c024d406fcc67f7dc7f0c02975ea9f644"
-},
-"c3d-foldmew.webp": {
-"size": 130258,
-"sha256": "e65e84f03dc5162353acfcbe5c819bec0751a577238a3fb1ab92de0546fde48f"
-},
-"c3d-fox-walk.webp": {
-"size": 121708,
-"sha256": "dc4d0cc4bd93ece548768c05bfe806e1b7394547bf1b4a279ac91cb7c3041eb4"
-},
-"c3d-fox.webp": {
-"size": 150132,
-"sha256": "fee6d75fa2990bafe583f19134b26c6f889811c55ebf997c16757bda96b80263"
-},
-"c3d-gloop.webp": {
-"size": 120876,
-"sha256": "ae95a60a8d406bc7198eb44d1a651b4a1c46ac4fd2af8e2f4adbada3f1fdc50d"
-},
-"c3d-glowbit.webp": {
-"size": 161002,
-"sha256": "8e2b04ff1e719ffb23ffa42d8aaf9efe7c799e33ecf9d60e82d61366b8af1dec"
-},
-"c3d-griffin-walk.webp": {
-"size": 38976,
-"sha256": "c7c3daa5fa27b4457aca84395eb01428f568e4faa156fe104868448beea3bd98"
-},
-"c3d-griffin.webp": {
-"size": 139516,
-"sha256": "fbc911a3c233a5ffae430d71467684a657e970bdd3274cc34dea3cb757ccd3ca"
-},
-"c3d-hootlet.webp": {
-"size": 160494,
-"sha256": "b16b85161071f5a702523780b4e8aa775a8fa13267b4fb2dfc26b1e81c383e24"
-},
-"c3d-hopsy.webp": {
-"size": 171808,
-"sha256": "2acc037e313223ca716bd6ccdc44b1e1bab5802b513052793b63b370ed6f1ec9"
-},
-"c3d-hornbit-walk.webp": {
-"size": 125262,
-"sha256": "a7813ce4a93491d3b92234f73b3c1d95905bed9d8ec0f930931ce43eb0feab44"
-},
-"c3d-hornbit.webp": {
-"size": 153496,
-"sha256": "1c54361f328062a348ea802eaf4846c4bf73613ac43cf075454938a55e24d424"
-},
-"c3d-icecube.webp": {
-"size": 151282,
-"sha256": "c5a88bae58aeeaf2cbcee4212e50a9eab35434f36a602812d8167ba5b13a96bf"
-},
-"c3d-kitsune-walk.webp": {
-"size": 130114,
-"sha256": "40388b700b612d630be670d51998bcb0d7bb4e7888c90389991fbddaf03650b9"
-},
-"c3d-kitsune.webp": {
-"size": 164014,
-"sha256": "a57931d10a764981a370d6215743af453336535d5ad215946747ef3b86640f3d"
-},
-"c3d-lynx-walk.webp": {
-"size": 120668,
-"sha256": "e2982027a498b285e389a2504d136af7887976e22a4c0ea54187fceebda9c19d"
-},
-"c3d-lynx.webp": {
-"size": 144682,
-"sha256": "59e46cfa9c420269569067f0118bfa3af1734b655bcfb626481816a36b7de24b"
-},
-"c3d-match.webp": {
-"size": 113356,
-"sha256": "da06564fc13d34abc0b0f606c824007a7323fe5302a11fbc673f2c338286e9a6"
-},
-"c3d-mopsy-walk.webp": {
-"size": 130646,
-"sha256": "3521467d04f3281f1474c25adc2d98ec5c0e70edf217dd90176199b0832d5b7b"
-},
-"c3d-mopsy.webp": {
-"size": 162614,
-"sha256": "5aace74c8c67d943528904a09313176f44aa2ae5a47cb68fc30ad78b04784035"
-},
-"c3d-mossmew-walk.webp": {
-"size": 117248,
-"sha256": "e25814a8a03d2ac0d85bb3903dc9cf987df9241969a896ea073f81e43d11cfe8"
-},
-"c3d-mossmew.webp": {
-"size": 149258,
-"sha256": "7ec27912e399b1901f6262289643b832cdec2cf5c5b606b4f5c8ec598abb81a6"
-},
-"c3d-mothlet.webp": {
-"size": 175214,
-"sha256": "236f6d5372c158965d8ca8d68ac9d242f740c65d059febbc265e35d2fe749427"
-},
-"c3d-otter-walk.webp": {
-"size": 104852,
-"sha256": "f93ac9c1a5f9fcdb46bb9033c22052d941d3164e29d993c516f851427f07b7d5"
-},
-"c3d-otter.webp": {
-"size": 123340,
-"sha256": "5fbdc9b2f59d6f6bacfffc8414a4fadbc24b5d2a2d3de63aa2938d76d69adaef"
-},
-"c3d-pebble.webp": {
-"size": 158980,
-"sha256": "d6392866b4890f39591970c2fcc1f13aa33cca1dc99dcba393ea69ffa74f7ada"
-},
-"c3d-petalpaw-walk.webp": {
-"size": 114460,
-"sha256": "cb05b4e6a12a390337719dd61037a383458a6207c7ef4c60ceb6930fa3951940"
-},
-"c3d-petalpaw.webp": {
-"size": 142166,
-"sha256": "1e5e3a9e5689a0c76b01aa27171febd61872c498865afbac674e87a822423f3d"
-},
-"c3d-phoenix.webp": {
-"size": 123440,
-"sha256": "6e3001c5adfbd37495d64edc9d34da304400ba88b6d042a53c2d6fc99739c84f"
-},
-"c3d-pompom-walk.webp": {
-"size": 115688,
-"sha256": "5225c4cb715aa7966e46168c30e1f3fd0b88b760d0c18332828286b5c87dbd2e"
-},
-"c3d-pompom.webp": {
-"size": 144494,
-"sha256": "4de704eab88385242803c57c074daa8173621890dac73bc67b4e709e46953a91"
-},
-"c3d-poofle-walk.webp": {
-"size": 116554,
-"sha256": "a17744f41a5e2ea81595586595324e589732c86bf0e90a656d6052cbeb7cb028"
-},
-"c3d-poofle.webp": {
-"size": 133196,
-"sha256": "9f788963bb766b115c9be598a112dc88660e29f016cd9978bab645fbefd6568e"
-},
-"c3d-puglet-walk.webp": {
-"size": 116796,
-"sha256": "9c385a86fc0439c5bb5be9cb3dc75a38ca057fed1d2ddd5fba832fe623e7fa15"
-},
-"c3d-puglet.webp": {
-"size": 144722,
-"sha256": "718cbecbf3c2d7993ee56588678f391356b461f2baec6ebbc11278d0c7a880b5"
-},
-"c3d-rainmew-walk.webp": {
-"size": 108290,
-"sha256": "055d2f79e73dc6027a8c79a8213a3ad217ec0cc803f7b8dbe3637d9b30d316b7"
-},
-"c3d-rainmew.webp": {
-"size": 122086,
-"sha256": "618a75a4e88b7bad2f1f2dca0acf50a88352fe02133031fd1f10fc3f464eda2e"
-},
-"c3d-rolly-walk.webp": {
-"size": 114526,
-"sha256": "f0998a6a46cfce274f4e8c0d2e627283fcbbe35274edfad166525909ce64618a"
-},
-"c3d-rolly.webp": {
-"size": 149654,
-"sha256": "ab58f4a106a67c109d69782e2c69d9b20d2082176ec73f1cbdd940e887793a49"
-},
-"c3d-scruff-walk.webp": {
-"size": 112326,
-"sha256": "3fb7acfb61eb3f8f265a1c713b929423122488c7b53eec50e6bc686b2237995b"
-},
-"c3d-scruff.webp": {
-"size": 127874,
-"sha256": "090d07cf9dbed1c0cb9cd25df8db1978bef9f898af1ea9971385c3a4d63994ee"
-},
-"c3d-shadekit-walk.webp": {
-"size": 108288,
-"sha256": "ba48e258c93d5958c045d325e8cb4f21f2cdd835096b3615f82c6a3055cf90a5"
-},
-"c3d-shadekit.webp": {
-"size": 123202,
-"sha256": "10421a5c7e6a2c23ed4c0d9e7d38522246cd698f3b5a7bfd58851b697341fb79"
-},
-"c3d-shellby.webp": {
-"size": 149646,
-"sha256": "b49482d3dbcecd501bda51620ed11b34cfce697555779f486977dc4f30e6523b"
-},
-"c3d-shibble-walk.webp": {
-"size": 121706,
-"sha256": "3b681763a91acc9bad166fd675f919c30afa607266d4f1cd4e12076ef693b946"
-},
-"c3d-shibble.webp": {
-"size": 146628,
-"sha256": "5884b5740de1c7faba06e9bbf75bce0e6642c5685fb2fa40c3f060b43df88a0e"
-},
-"c3d-skimmer.webp": {
-"size": 134562,
-"sha256": "a754a78fef8c1b011320c655816c599fc16a150b2c27da5fa43ad4fe1ef15f30"
-},
-"c3d-sniffle-walk.webp": {
-"size": 114884,
-"sha256": "e1775e5143d43da7640c94d1fc5eaa4c27c6da6a2f5f8c868fb28cfe581284f0"
-},
-"c3d-sniffle.webp": {
-"size": 140568,
-"sha256": "1110313c33c5c475242e86c8adbf5adab762f75a1af5f5f34dc1ed2333181d2b"
-},
-"c3d-snowleo-walk.webp": {
-"size": 120902,
-"sha256": "379a8c56fa7cc0cfaf04dd31c0fd6f4045a2b08d0833bd4425d4c0823b3eb1a3"
-},
-"c3d-snowleo.webp": {
-"size": 154708,
-"sha256": "1787b15d3f71d192543b29cd32d46637a7d9a73f7c6a4bfe4e481ae8b3590fb0"
-},
-"c3d-snowpup-walk.webp": {
-"size": 124420,
-"sha256": "330e5d2609138061089d1e672ea473d5293e98eafa47f373e83f139b3a072907"
-},
-"c3d-snowpup.webp": {
-"size": 163564,
-"sha256": "9b68a1563c14e7aefd776dc03bb54ae8ffd3c89a6bf03083790bc8e009d059a7"
-},
-"c3d-sphinx-walk.webp": {
-"size": 56190,
-"sha256": "607927214c613517a1002fdec1d73e705279c81723a60309a94f121e1a474c37"
-},
-"c3d-sphinx.webp": {
-"size": 241310,
-"sha256": "a28015f98ec80616db476069fdc1ce39b342d7e9c1dec6ee0b951b78a77cb429"
-},
-"c3d-splashpup-walk.webp": {
-"size": 116582,
-"sha256": "b7f1330d700893efd0883189c3c1d6538c3fd6f2a1f5c23b70129433ef038c38"
-},
-"c3d-splashpup.webp": {
-"size": 147174,
-"sha256": "a0fff4ba31194154a3337aba1b9310072ab2141d3d77b7130414ca658abadc52"
-},
-"c3d-sprigbug.webp": {
-"size": 178012,
-"sha256": "3e45c9f9fa976743f729ad4920c52a7e4915f1e3e641f2b3c586fd173c5d026b"
-},
-"c3d-starling-walk.webp": {
-"size": 117754,
-"sha256": "0359d8a6e26b3253d728ce72412b46e50a7e84de64b31af73009b693d344abd7"
-},
-"c3d-starling.webp": {
-"size": 142806,
-"sha256": "746204e87e8c8becaf0e5241492ec03b0e69cc606e7c16338d4a315f77a4a153"
-},
-"c3d-sunpaw-walk.webp": {
-"size": 114416,
-"sha256": "1fd5c3f5c81aa630a8a22702d896c5b78b606f583349b0a400ab7b2e6ec4b5c6"
-},
-"c3d-sunpaw.webp": {
-"size": 151762,
-"sha256": "594c551cbee254376f6a9276e67dfd0c28dc14bfbc166810d3623541e244c561"
-},
-"c3d-tadlet.webp": {
-"size": 154614,
-"sha256": "3271465874494cc1eb75482734aa9132e25911d921a25c73cca2f4bd3f0a2048"
-},
-"c3d-tigrit-walk.webp": {
-"size": 118754,
-"sha256": "6f42397aed372405291b8c4b4a224a2479829d26ec2e5a41b05873fdb85fb519"
-},
-"c3d-tigrit.webp": {
-"size": 150240,
-"sha256": "363d17cf701ec28fd0d08f5a52be75aa66fd45191a582838ba464fea6856fb8f"
-},
-"c3d-toastie-walk.webp": {
-"size": 114370,
-"sha256": "2962cdeb9cd0d73c0e6be151bfd723573da2cb4304710bb7f4be62af5b356510"
-},
-"c3d-toastie.webp": {
-"size": 135944,
-"sha256": "d761d4154dffe27c492ec583763defb227a2de561db533b2f67a2db16e3214a9"
-},
-"c3d-unicorn-walk.webp": {
-"size": 121386,
-"sha256": "ea400b6cf287e583044313fcdebab125455059e2d3cee7bb1c19830ee721e4ea"
-},
-"c3d-unicorn.webp": {
-"size": 154076,
-"sha256": "c59cb78c6c20c9fb16ccefbde408fc64da1b5ea0e4d02390de522501ac0df605"
-},
-"c3d-waddles.webp": {
-"size": 169534,
-"sha256": "4e8d37910ec1f065e5270af7faf6870098818b1c8223767cf3c675516cbfd8a8"
-},
-"c3d-weenie-walk.webp": {
-"size": 107106,
-"sha256": "34c09555b99f56d2f2f8f8bda51d00812f216437133edc4e5448110fd26b8d2a"
-},
-"c3d-weenie.webp": {
-"size": 125754,
-"sha256": "8671c6f48e91776a8f31ebefda4ae136159d9016bb1d90ec3c78133f7c471441"
-},
-"c3d.js": {
-"size": 14904,
-"sha256": "112864b9d952e0373edf4883bc3dec61a22b6498e9d6054df3372e4c364967f1"
-},
-"c3dmeta.js": {
-"size": 403982,
-"sha256": "3b656a37b859a70728282446bf97fe9fa496004fc90e6156274d7cd5c64ee4d4"
+"size": 66182,
+"sha256": "47034f8d4d87ef39541f84cdeb68461f6687460c17a3ebae77ce38ddeedd0c08"
 },
 "caverns.js": {
-"size": 23563,
-"sha256": "25bc081a7d8f5b0a2e2a412675fecb8d24b3ee22a609aa88612d3e5bfe2580b6"
+"size": 24171,
+"sha256": "f62b385da261da2da370e4296579af5353fb19590c094d920d34b108ce31984c"
 },
 "config.js": {
 "size": 772,
 "sha256": "53fc0189741bd5f54026954800fa423a3be6721606075db0d7c759482876077f"
 },
 "creatures.js": {
-"size": 132965,
-"sha256": "2ab1c5138083444fa58bc3f8f61df63c833b6f137c4ea0a523c7e217b86196d3"
+"size": 133462,
+"sha256": "dd578a73319892abb81945898505062f5328d86638e4f4bd10f7a90fe7ce4fa9"
 },
 "defense.js": {
-"size": 61888,
-"sha256": "9c6a0d13011cf51dce87987d797a17a387757322780f5102daeb1651dc0d0601"
+"size": 62484,
+"sha256": "db785063c5da479fe75d456c9ef1befa05c1fe73638373f2fc8c05e91b3bacd7"
 },
 "firebase-app.js": {
 "size": 22121,
@@ -514,12 +50,12 @@
 "sha256": "69df19aa714c324e70896cd5cc834d9dcc1080b58b2e771e86df18ab10b20859"
 },
 "games.js": {
-"size": 90579,
-"sha256": "213e86b9c814c190bc2aeddb3fd8b5219fa681f0c00c75523e22773df2b7a525"
+"size": 91284,
+"sha256": "d6a2e2097ee09c30e79fdab783a7e7f87812faf1401e583b7451ca360db496fe"
 },
 "gate.js": {
-"size": 28166,
-"sha256": "4b22ab2fb6f3e3acf59ce665fb830486b84da1022db68010caa5a0662ab69430"
+"size": 32707,
+"sha256": "69d07531c9a531d37f9b5d5d349759d4b23ae446a24f6ac7d5a0153014855691"
 },
 "icecream.js": {
 "size": 6159,
@@ -534,8 +70,8 @@
 "sha256": "21fcc47374ae43c083c5f044c32cdf0b7b78fef61e4ddf1cce9169a75aeb0b15"
 },
 "index.html": {
-"size": 1882,
-"sha256": "a0e7f004c8dbde3f889d1a26518bdafba2e1e47fa4725497b2185485fd713008",
+"size": 1913,
+"sha256": "d2925cdb1e4792d3f04431329cd96af052688ab45a568b07f5200e7c400f98e8",
 "from": "kids.html"
 },
 "littown/art/art-core.js": {
@@ -671,8 +207,8 @@
 "sha256": "dd9fa9c7991113b0dddefe9506a30ad26b48e302b7a8fb91719a4726e8fde85b"
 },
 "littown/index.html": {
-"size": 2005,
-"sha256": "0159e2da2105b4f0ec515bd54f4432c5b05d96331a56b303b9ef255ef8c94cc7"
+"size": 2178,
+"sha256": "c832fac97f35f8048d277bd9b84e46fd3dd22e51a4e01ce19cec7ba85379f3c3"
 },
 "littown/js/anim.js": {
 "size": 2448,
@@ -766,81 +302,17 @@
 "size": 76,
 "sha256": "db992f3889fe278e7c114ab371d3a8fac3abc85cdbc84317b0c00ad38efc0f5a"
 },
-"people-acc-spin.webp": {
-"size": 116902,
-"sha256": "b4a89fbf529a72ca5521b72c102c3f29d8b2225621b532c7683788a121654aa1"
-},
-"people-acc.webp": {
-"size": 105726,
-"sha256": "b08459d0d7665503991d354bc003310380c4940910b33cf9ce344f2fef632984"
-},
-"people-body-spin.webp": {
-"size": 264672,
-"sha256": "b23b25f924e6f9add19c4ca9ea6fe3dda143cbcbbc615a9c94ec06ff64ee0152"
-},
-"people-body.webp": {
-"size": 208958,
-"sha256": "001450481099c44cc20b4cf735ed2c078b1878b53df6feaa20d4d8e4a8cd1cc2"
-},
-"people-face-spin.webp": {
-"size": 78432,
-"sha256": "40c87a424a504669cc6308da3a0327e4b9e6fb0329dafe674db5323a5a03cb40"
-},
-"people-face.webp": {
-"size": 84644,
-"sha256": "fac0a91b5dbc146b83d331d6d9e95443a9c651122863e91f34236ac5b2aa0acb"
-},
-"people-fringe-spin.webp": {
-"size": 184766,
-"sha256": "cf7e924b425137218614edc63b4a3ed2acb74b186cc6f411ea42c4d7a86b363f"
-},
-"people-fringe.webp": {
-"size": 191194,
-"sha256": "bb1d7fe81bf95a992affedd8135cf33511920a1ae91b4bce4648dbe1d591e4e7"
-},
-"people-hair-spin.webp": {
-"size": 1703668,
-"sha256": "63e7305099a7feddade3655d31778f445070c1137ae92559f50dd931761c173f"
-},
-"people-hair.webp": {
-"size": 1109300,
-"sha256": "0fda5732699a9a230eabdf41ee4955fd0583b473f2cf78eae80a810c14167209"
-},
-"people-pants-spin.webp": {
-"size": 980786,
-"sha256": "5027916187e883bf5dfaa1ad56cba39b4b4e0f5c65ad7c03d1cfb5158a3db1e2"
-},
-"people-pants.webp": {
-"size": 735988,
-"sha256": "84248643ba0d08f5bcac52278cb05eb22e34c7cfe468f127d81110ed774b82b4"
-},
-"people-shoes-spin.webp": {
-"size": 519758,
-"sha256": "dd4cdaf934a54bc5ec6232fddfd8a7d28e31e5684f6a245a83e21548d9a78471"
-},
-"people-shoes.webp": {
-"size": 454380,
-"sha256": "1a165d4b2c8786514d868b5288af4a1f37127caf7f62f655888de58f6b2e446f"
-},
-"people-top-spin.webp": {
-"size": 2452354,
-"sha256": "176f9725a4ee9bb8f2116e6797b5af9e0fb2542f558992be5fc989472c72d88b"
-},
-"people-top.webp": {
-"size": 1769554,
-"sha256": "9a7d2bb3e9e62a344e9dc12aff31db87c106a500a82f22469be503b90a1e506c"
-},
-"people-topx-spin.webp": {
-"size": 6820820,
-"sha256": "3b630d26821573c0c59215ea4edee1ba00cb4b7afd37cf8cb078e852f0d5c265"
-},
-"people-topx.webp": {
-"size": 4598878,
-"sha256": "9a494b7678473e93266ad3130e03d6fdfcea70c6a98dc70b5d65ff00458b6097"
+"lt-bridge.js": {
+"size": 11175,
+"sha256": "4a127568216a4691122e268277a5cf557b25472df304fbf0e976be12e06abf49"
 },
 "pets.js": {
-"size": 93661,
-"sha256": "66b0bb5f9535d79131a853fad75809a7118c137b1352a14044e11e5a351f078c"
+"size": 96278,
+"sha256": "e45b579b0ed385ea979d5e492a07a1c6081a612eb0285513bcacbff69dad8948"
+},
+"sprites.js": {
+"size": 150834,
+"sha256": "f6a872c4433c5592ff1afd17c4485260ee046ea8a41ce44d2cc4e487ddc51b8d"
 },
 "starter.js": {
 "size": 10149,
@@ -851,12 +323,12 @@
 "sha256": "cdb97fa69ab77084dfd3f69957feef612b06ad6b802f8147b773845aa6daa9cb"
 },
 "styles.css": {
-"size": 68762,
-"sha256": "8d6bb084493f1fe25a2c4116f5408cac6548c62fceb94e44601bedc91ee1e13b"
+"size": 75600,
+"sha256": "9047570dfb097397f7662dc7d7cd9950a6ff93dc6523b04ac6af6d215efc69a6"
 },
 "world.js": {
-"size": 131908,
-"sha256": "edf4ef5a887b8e32446537eb5ebed4a3f977ba933a5f59f6733f39cb378fd648"
+"size": 133684,
+"sha256": "9dc9b0fa3e14ad0e2c76d418afabc8567b2295122a8c829dd8dccb85c4cb49d2"
 }
 }
 }

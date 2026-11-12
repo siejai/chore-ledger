@@ -37,15 +37,33 @@
     shipbottle: { name: 'Ship in a bottle', kind: 'toy', r: 'rare' },
     mopbot: { name: 'Mop-Bot plush', kind: 'toy', r: 'uncommon' },
     trophy: { name: 'Clean House Trophy', kind: 'toy', r: 'rare' },
+    pinwheel: { name: 'Pinwheel', kind: 'toy', r: 'common' },
+    sandcastle: { name: 'Sandcastle', kind: 'toy', r: 'uncommon' },
+    anchor: { name: 'Anchor plush', kind: 'toy', r: 'uncommon' },
+    spyglass: { name: 'Spyglass', kind: 'toy', r: 'uncommon' },
+    treasure: { name: 'Treasure chest', kind: 'toy', r: 'rare' },
     dye_ocean: { name: 'Ocean dye', kind: 'dye', r: 'uncommon', pal: { main: '#3f7fd0', dark: '#1d3f7a', light: '#eef5ff', accent: '#ffffff', name: 'Ocean' } },
     dye_coral: { name: 'Coral dye', kind: 'dye', r: 'uncommon', pal: { main: '#ff7f6e', dark: '#b8453a', light: '#fff0ea', accent: '#ffd1a8', name: 'Coral' } },
     dye_seafoam: { name: 'Seafoam dye', kind: 'dye', r: 'uncommon', pal: { main: '#7fd8c4', dark: '#2f8a78', light: '#effcf8', accent: '#ffe08a', name: 'Seafoam' } },
     dye_sunset: { name: 'Sunset dye', kind: 'dye', r: 'rare', pal: { main: '#f7894a', dark: '#a8452a', light: '#ffe9c9', accent: '#b56cf0', name: 'Sunset' } },
     dye_gold: { name: 'Golden shimmer', kind: 'dye', r: 'rare', pal: { main: '#f2c14e', dark: '#a67c12', light: '#fff6d8', accent: '#ffffff', name: 'Golden' } },
+    dye_lagoon: { name: 'Lagoon dye', kind: 'dye', r: 'uncommon', pal: { main: '#2fb5b0', dark: '#156b72', light: '#e6fbf7', accent: '#ffd45e', name: 'Lagoon' } },
+    dye_bubblegum: { name: 'Bubblegum dye', kind: 'dye', r: 'uncommon', pal: { main: '#ff8fc0', dark: '#c2507f', light: '#fff0f6', accent: '#8fe3ff', name: 'Bubblegum' } },
+    dye_berry: { name: 'Berry dye', kind: 'dye', r: 'rare', pal: { main: '#9b59d0', dark: '#5a2a86', light: '#f4eaff', accent: '#ff8fb0', name: 'Berry' } },
+    dye_midnight: { name: 'Midnight dye', kind: 'dye', r: 'rare', pal: { main: '#34407a', dark: '#161b3d', light: '#dfe6ff', accent: '#ffe08a', name: 'Midnight' } },
     scallop: { name: 'Scallop shell', kind: 'shell', r: 'common' },
     conch: { name: 'Conch shell', kind: 'shell', r: 'uncommon' },
     sanddollar: { name: 'Sand dollar', kind: 'shell', r: 'common' },
     starfish: { name: 'Starfish', kind: 'shell', r: 'uncommon' },
+    cowrie: { name: 'Spotted cowrie', kind: 'shell', r: 'common' },
+    clam: { name: 'Sunset clam', kind: 'shell', r: 'common' },
+    periwinkle: { name: 'Blue periwinkle', kind: 'shell', r: 'common' },
+    auger: { name: 'Twisty auger', kind: 'shell', r: 'uncommon' },
+    moonshell: { name: 'Moon shell', kind: 'shell', r: 'uncommon' },
+    urchin: { name: 'Purple urchin', kind: 'shell', r: 'uncommon' },
+    nautilus: { name: 'Tiger nautilus', kind: 'shell', r: 'rare' },
+    abalone: { name: 'Rainbow abalone', kind: 'shell', r: 'rare' },
+    goldscallop: { name: 'Golden scallop', kind: 'shell', r: 'legendary' },
     sardine: { name: 'Sardine', kind: 'fish', r: 'common' },
     clownfish: { name: 'Clownfish', kind: 'fish', r: 'uncommon' },
     puffer: { name: 'Pufferfish', kind: 'fish', r: 'uncommon' },
@@ -68,9 +86,23 @@
     else if (id === 'shipbottle') v += '<rect x="10" y="20" width="40" height="26" rx="12" fill="#d9f1f7" stroke="#7fb8c8" stroke-width="2"/><rect x="48" y="28" width="8" height="10" rx="2" fill="#a8703a"/><path d="M18 38 h24 l-4 5 h-16 Z" fill="#8a5a2b"/><path d="M29 38 V22 M29 23 l9 12 h-9 Z M28 25 l-7 10 h7 Z" fill="#fff" stroke="#555" stroke-width="1"/><path d="M12 42 q9 -3 18 0 q9 3 18 0" fill="none" stroke="#3a8ed8" stroke-width="2"/>';
     else if (id === 'mopbot') v += '<ellipse cx="30" cy="50" rx="22" ry="5" fill="#f4f1ea" stroke="#9aa4b2" stroke-width="1.5"/><circle cx="30" cy="32" r="18" fill="#2a4a8f" stroke="#162a5a" stroke-width="2"/><rect x="18" y="26" width="24" height="8" rx="4" fill="#8fd8ff"/><circle cx="24" cy="30" r="2" fill="#2b2233"/><circle cx="36" cy="30" r="2" fill="#2b2233"/><path d="M26 40 q4 3 8 0" stroke="#fff" stroke-width="2" fill="none"/><path d="M30 14 v-6" stroke="#162a5a" stroke-width="2"/><circle cx="30" cy="7" r="3" fill="#e45757"/>';
     else if (id === 'trophy') v += '<path d="M18 10 h24 v12 a12 12 0 0 1 -24 0 Z" fill="#f2c14e" stroke="#a67c12" stroke-width="2"/><path d="M18 14 h-6 a6 6 0 0 0 6 10 M42 14 h6 a6 6 0 0 1 -6 10" fill="none" stroke="#a67c12" stroke-width="2"/><rect x="27" y="33" width="6" height="10" fill="#e8b83a"/><rect x="18" y="43" width="24" height="8" rx="2" fill="#8a5a2b"/><path d="M24 16 l3 6 l3 -6 l3 6" stroke="#fff" stroke-width="1.5" fill="none" opacity=".8"/>';
+    else if (id === 'pinwheel') v += '<path d="M30 30 V56" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><path d="M30 28 L30 8 Q44 12 44 28 Z" fill="#e45757" stroke="#9d2f2f" stroke-width="1.5"/><path d="M30 28 L50 28 Q46 42 30 42 Z" fill="#3a8ed8" stroke="#1f5a94" stroke-width="1.5"/><path d="M30 28 L30 48 Q16 44 16 28 Z" fill="#f2d43a" stroke="#a88a12" stroke-width="1.5"/><path d="M30 28 L10 28 Q14 14 30 14 Z" fill="#5cc177" stroke="#2f8a4a" stroke-width="1.5"/><circle cx="30" cy="28" r="3.5" fill="#fff" stroke="#555" stroke-width="1.5"/>';
+    else if (id === 'sandcastle') v += '<path d="M8 52 h44 l-4 -16 h-36 Z" fill="#f0d59a" stroke="#b8975a" stroke-width="2"/><rect x="14" y="22" width="12" height="16" fill="#f0d59a" stroke="#b8975a" stroke-width="2"/><rect x="34" y="26" width="12" height="12" fill="#f0d59a" stroke="#b8975a" stroke-width="2"/><path d="M14 22 v-4 h3 v3 h2 v-3 h2 v3 h2 v-3 h3 v4 M34 26 v-4 h3 v3 h2 v-3 h2 v3 h2 v-3 h3 v4" fill="#f0d59a" stroke="#b8975a" stroke-width="1.5"/><path d="M26 52 v-8 a4 4 0 0 1 8 0 v8" fill="#b8975a"/><path d="M20 18 V8 l8 3 l-8 3" fill="#e45757" stroke="#9d2f2f" stroke-width="1.2"/>';
+    else if (id === 'anchor') v += '<circle cx="30" cy="12" r="5" fill="none" stroke="#3d5a80" stroke-width="4"/><path d="M30 17 V48 M20 24 H40" stroke="#3d5a80" stroke-width="5" stroke-linecap="round"/><path d="M12 36 Q14 52 30 52 Q46 52 48 36" fill="none" stroke="#3d5a80" stroke-width="5" stroke-linecap="round"/><path d="M8 38 l5 -7 l5 7 M42 38 l5 -7 l5 7" fill="#3d5a80"/><circle cx="26" cy="32" r="1.6" fill="#fff"/><circle cx="34" cy="32" r="1.6" fill="#fff"/><path d="M27 37 q3 2.5 6 0" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>';
+    else if (id === 'spyglass') v += '<g transform="rotate(-28 30 30)"><rect x="6" y="24" width="20" height="14" rx="3" fill="#c98a3a" stroke="#7a4f1a" stroke-width="2"/><rect x="24" y="26" width="16" height="10" rx="2" fill="#e0a85a" stroke="#7a4f1a" stroke-width="2"/><rect x="38" y="27.5" width="14" height="7" rx="2" fill="#f0c98a" stroke="#7a4f1a" stroke-width="2"/><rect x="4" y="22" width="5" height="18" rx="2" fill="#f2c14e" stroke="#7a4f1a" stroke-width="1.5"/><circle cx="53" cy="31" r="3" fill="#bfe6ff" stroke="#7a4f1a" stroke-width="1.5"/></g>';
+    else if (id === 'treasure') v += '<rect x="8" y="28" width="44" height="22" rx="3" fill="#a8683f" stroke="#5e3a1e" stroke-width="2"/><path d="M8 28 Q8 12 30 12 Q52 12 52 28 Z" fill="#c07f4c" stroke="#5e3a1e" stroke-width="2"/><path d="M8 28 H52 M18 14 V50 M42 14 V50" stroke="#f2c14e" stroke-width="3"/><rect x="26" y="26" width="8" height="10" rx="2" fill="#f2c14e" stroke="#8a6a12" stroke-width="1.5"/><circle cx="14" cy="24" r="2.4" fill="#f2c14e"/><circle cx="24" cy="20" r="2.4" fill="#ff7d8a"/><circle cx="37" cy="21" r="2.4" fill="#7fd8ff"/><circle cx="46" cy="24" r="2.4" fill="#f2c14e"/>';
     else if (it.kind === 'shell') {
       if (id === 'starfish') v += '<path d="M30 6 L36 24 L54 24 L40 35 L45 53 L30 42 L15 53 L20 35 L6 24 L24 24 Z" fill="#f29b6e" stroke="#b8553a" stroke-width="2"/>';
       else if (id === 'sanddollar') v += '<circle cx="30" cy="30" r="20" fill="#efe3c8" stroke="#bfae88" stroke-width="2"/><path d="M30 18 v8 M20 26 l7 5 M40 26 l-7 5 M24 40 l5 -6 M36 40 l-5 -6" stroke="#bfae88" stroke-width="2"/>';
+      else if (id === 'cowrie') v += '<ellipse cx="30" cy="30" rx="15" ry="22" fill="#f6e3c2" stroke="#a8763f" stroke-width="2"/><path d="M30 10 Q25 30 30 50" fill="none" stroke="#a8763f" stroke-width="2.5"/><path d="M27 16 h-3 M26 22 h-4 M26 28 h-4 M26 34 h-4 M26 40 h-4 M27 46 h-3" stroke="#a8763f" stroke-width="1.5"/><circle cx="37" cy="20" r="2.6" fill="#b86a3a"/><circle cx="39" cy="30" r="3" fill="#b86a3a"/><circle cx="36" cy="40" r="2.4" fill="#b86a3a"/><circle cx="34" cy="26" r="1.6" fill="#b86a3a"/>';
+      else if (id === 'clam') v += '<path d="M30 52 L6 26 Q30 2 54 26 Z" fill="#ffb347" stroke="#b8553a" stroke-width="2"/><path d="M11 30 Q30 12 49 30 L43 36 Q30 22 17 36 Z" fill="#ff7f6e"/><path d="M19 39 Q30 28 41 39 L36 45 Q30 38 24 45 Z" fill="#e85d8a"/><path d="M30 52 L6 26 Q30 2 54 26 Z" fill="none" stroke="#b8553a" stroke-width="2"/>';
+      else if (id === 'periwinkle') v += '<path d="M10 40 Q8 20 28 14 Q50 10 52 30 Q52 48 32 50 Q16 52 10 40 Z" fill="#6fa8e8" stroke="#2f5a9a" stroke-width="2"/><path d="M30 32 m-11 0 a11 11 0 1 0 22 0 a11 11 0 1 0 -22 0 M30 32 m-5 0 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0" fill="none" stroke="#2f5a9a" stroke-width="2"/><path d="M12 42 Q6 46 8 52 Q18 54 22 49" fill="#cfe4ff" stroke="#2f5a9a" stroke-width="2"/>';
+      else if (id === 'auger') v += '<path d="M30 4 L44 50 Q30 58 16 50 Z" fill="#d9b8f0" stroke="#7a4fa8" stroke-width="2"/><path d="M26 16 Q30 19 34 16 M23 26 Q30 30 37 26 M20 36 Q30 41 40 36 M18 46 Q30 52 42 46" fill="none" stroke="#f08ab0" stroke-width="3"/><path d="M30 4 L44 50 Q30 58 16 50 Z" fill="none" stroke="#7a4fa8" stroke-width="2"/>';
+      else if (id === 'moonshell') v += '<circle cx="30" cy="31" r="21" fill="#eef4ff" stroke="#8a9ac8" stroke-width="2"/><path d="M30 31 m-13 0 a13 13 0 1 1 13 13 M30 31 m-6 0 a6 6 0 1 1 6 6" fill="none" stroke="#8a9ac8" stroke-width="2"/><circle cx="30" cy="31" r="2.5" fill="#8a9ac8"/><path d="M14 22 Q20 12 32 11" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>';
+      else if (id === 'urchin') v += '<path d="M8 40 Q8 12 30 12 Q52 12 52 40 Q30 50 8 40 Z" fill="#9b6fd0" stroke="#5a2a86" stroke-width="2"/><g fill="#e8d4ff"><circle cx="30" cy="18" r="2"/><circle cx="30" cy="27" r="2.3"/><circle cx="30" cy="37" r="2.6"/><circle cx="20" cy="22" r="1.9"/><circle cx="17" cy="31" r="2.2"/><circle cx="15" cy="40" r="2.3"/><circle cx="40" cy="22" r="1.9"/><circle cx="43" cy="31" r="2.2"/><circle cx="45" cy="40" r="2.3"/><circle cx="23" cy="42" r="2.2"/><circle cx="37" cy="42" r="2.2"/></g>';
+      else if (id === 'nautilus') v += '<path d="M50 34 Q52 10 28 8 Q6 10 8 32 Q10 52 30 52 Q44 52 44 40 Q44 30 34 30 Q28 31 28 36" fill="#fff3e0" stroke="#8a4a2a" stroke-width="2"/><path d="M28 8 Q30 18 22 22 M14 14 Q22 20 16 28 M8 30 Q18 30 16 40 M18 48 Q22 40 28 44 M36 51 Q34 44 40 42" fill="none" stroke="#e0703a" stroke-width="4" stroke-linecap="round"/><path d="M50 34 Q52 10 28 8 Q6 10 8 32 Q10 52 30 52 Q44 52 44 40 Q44 30 34 30 Q28 31 28 36" fill="none" stroke="#8a4a2a" stroke-width="2"/><circle cx="36" cy="38" r="2.2" fill="#8a4a2a"/>';
+      else if (id === 'abalone') v += '<path d="M10 34 Q8 12 30 10 Q52 10 52 30 Q52 50 30 52 Q14 52 10 34 Z" fill="#7fd8c4" stroke="#3a6a78" stroke-width="2"/><path d="M16 34 Q15 18 30 16 Q46 16 46 30 Q46 45 30 46 Q19 46 16 34 Z" fill="#8fb8ff"/><path d="M22 33 Q22 23 31 22 Q40 22 40 30 Q40 39 31 40 Q24 40 22 33 Z" fill="#d9a8f0"/><path d="M27 32 Q27 27 31 27 Q35 27 35 31 Q35 35 31 35 Q28 35 27 32 Z" fill="#ffc2d9"/><g fill="#3a6a78"><circle cx="14" cy="24" r="1.6"/><circle cx="19" cy="17" r="1.6"/><circle cx="26" cy="13" r="1.6"/><circle cx="34" cy="12" r="1.6"/></g>';
+      else if (id === 'goldscallop') v += '<path d="M30 52 L8 24 Q30 2 52 24 Z" fill="#f2c14e" stroke="#a67c12" stroke-width="2"/><path d="M30 52 L20 16 M30 52 L30 12 M30 52 L40 16 M30 52 L12 22 M30 52 L48 22" stroke="#a67c12" stroke-width="1.5"/><path d="M16 22 Q24 12 34 12" fill="none" stroke="#fff6d8" stroke-width="3" stroke-linecap="round"/><path d="M46 8 l1.6 4 l4 1.6 l-4 1.6 l-1.6 4 l-1.6 -4 l-4 -1.6 l4 -1.6 Z" fill="#fff"/>';
       else if (id === 'conch') v += '<path d="M12 40 Q14 14 40 10 Q52 20 46 34 Q40 50 18 50 Z" fill="#f7c9b0" stroke="#c07a5a" stroke-width="2"/><path d="M40 10 Q30 24 18 50" fill="none" stroke="#c07a5a" stroke-width="2"/>';
       else v += '<path d="M30 52 L8 24 Q30 2 52 24 Z" fill="#f8b4a6" stroke="#c0706a" stroke-width="2"/><path d="M30 52 L20 16 M30 52 L30 12 M30 52 L40 16" stroke="#c0706a" stroke-width="1.5"/>';
     } else if (it.kind === 'fish') {
@@ -253,7 +285,21 @@
   }
 
   /* ================= cruise ship: deck tickets and the prize desk ================= */
-  var PRIZES = [{ id: 'crate', cost: 60 }, { id: 'sailor', cost: 60 }, { id: 'lifering', cost: 100 }, { id: 'mopbot', cost: 120 }, { id: 'dye_ocean', cost: 150 }, { id: 'shipbottle', cost: 250 }, { id: 'dye_gold', cost: 300 }, { id: 'trophy', cost: 320 }, { id: 'crown', cost: 350 }, { id: 'captain', cost: 400 }];
+  var PRIZES = [
+    { id: 'crate', cost: 60 },
+    /* shells: the rare ones and the golden scallop are only sold here */
+    { id: 'cowrie', cost: 25 }, { id: 'clam', cost: 25 }, { id: 'periwinkle', cost: 25 }, { id: 'auger', cost: 50 }, { id: 'moonshell', cost: 50 }, { id: 'urchin', cost: 50 },
+    { id: 'nautilus', cost: 140 }, { id: 'abalone', cost: 160 }, { id: 'goldscallop', cost: 500 },
+    /* colours for the pet */
+    { id: 'dye_ocean', cost: 150 }, { id: 'dye_lagoon', cost: 150 }, { id: 'dye_bubblegum', cost: 150 }, { id: 'dye_berry', cost: 280 }, { id: 'dye_midnight', cost: 280 }, { id: 'dye_gold', cost: 300 },
+    /* toys for the house */
+    { id: 'pinwheel', cost: 40 }, { id: 'lifering', cost: 100 }, { id: 'sandcastle', cost: 100 }, { id: 'anchor', cost: 110 }, { id: 'mopbot', cost: 120 }, { id: 'spyglass', cost: 130 }, { id: 'shipbottle', cost: 250 }, { id: 'treasure', cost: 300 }, { id: 'trophy', cost: 320 },
+    /* hats */
+    { id: 'sailor', cost: 60 }, { id: 'crown', cost: 350 }, { id: 'captain', cost: 400 }
+  ];
+  var SHOP_GROUPS = [['shell', 'Shells'], ['dye', 'Pet colors'], ['toy', 'Toys for your house'], ['acc', 'Hats']];
+  var THANKS = { common: 3, uncommon: 6, rare: 15, legendary: 40 };      /* deck tickets given back for a donated item */
+  var ARMED = null;                                                      /* the item whose Donate button was tapped once */
   function tickets(pid) { return Number(Pets.doc(pid).tickets) || 0; }
   function addTickets(pid, n, tasks) {
     if (EXP) EXP.tickets = (EXP.tickets || 0) + n;
@@ -261,14 +307,27 @@
   }
   /* every 10 jobs in a row gives a captain's bonus; on whole-house-clean days it can hold the rare egg */
   function deckBonus(pid) { var p = passInfo(pid); return p.bonus && !Pets.doc(pid).egg && Math.random() < eggChance('bonus') ? { egg: true } : null; }
+  function prizeRow(pz, have, items) {
+    var crate = pz.id === 'crate', it = crate ? null : ITEMS[pz.id], owned = !crate && items[pz.id];
+    var art = crate ? '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="18" width="40" height="32" rx="3" fill="#b07d4f" stroke="#6b4a2a" stroke-width="2"/><path d="M10 28 h40 M10 40 h40" stroke="#6b4a2a" stroke-width="2"/><text x="30" y="38" font-size="16" font-weight="700" text-anchor="middle" fill="#fff4d0">?</text></svg>' : itemArt(pz.id);
+    return '<div class="prize"><span class="prize-art">' + art + '</span><span class="grow"><strong>' + (crate ? 'Mystery crate' : esc(it.name)) + '</strong><small style="color:' + (crate ? '#7a4fd6' : RAR[it.r].col) + '">' + (crate ? 'Something from the hold' : RAR[it.r].label) + '</small></span>' +
+      (owned ? '<span class="tag plain">Owned</span>' : '<button type="button" class="btn small' + (have >= pz.cost ? ' primary' : '') + '" data-wact="prize" data-id="' + pz.id + '"' + (have >= pz.cost ? '' : ' disabled') + ' aria-label="' + (crate ? 'Mystery crate' : esc(it.name)) + ', ' + pz.cost + ' tickets">' + pz.cost + '</button>') + '</div>';
+  }
   function prizesHtml(pid) {
-    var have = tickets(pid), items = Pets.doc(pid).items || {};
-    return '<div class="fish-t">Prize desk &middot; you have <b class="mono">' + have + '</b> deck ticket' + (have === 1 ? '' : 's') + '</div><div class="prize-list">' + PRIZES.map(function (pz) {
-      var crate = pz.id === 'crate', it = crate ? null : ITEMS[pz.id], owned = !crate && items[pz.id];
-      var art = crate ? '<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="18" width="40" height="32" rx="3" fill="#b07d4f" stroke="#6b4a2a" stroke-width="2"/><path d="M10 28 h40 M10 40 h40" stroke="#6b4a2a" stroke-width="2"/><text x="30" y="38" font-size="16" font-weight="700" text-anchor="middle" fill="#fff4d0">?</text></svg>' : itemArt(pz.id);
-      return '<div class="prize"><span class="prize-art">' + art + '</span><span class="grow"><strong>' + (crate ? 'Mystery crate' : esc(it.name)) + '</strong><small style="color:' + (crate ? '#7a4fd6' : RAR[it.r].col) + '">' + (crate ? 'Something from the hold' : RAR[it.r].label) + '</small></span>' +
-        (owned ? '<span class="tag plain">Owned</span>' : '<button type="button" class="btn small' + (have >= pz.cost ? ' primary' : '') + '" data-wact="prize" data-id="' + pz.id + '"' + (have >= pz.cost ? '' : ' disabled') + '>' + pz.cost + '</button>') + '</div>';
-    }).join('') + '</div><div class="wrap"><button type="button" class="btn" data-wact="closePrizes">Close</button></div>';
+    var have = tickets(pid), d = Pets.doc(pid), items = d.items || {}, pet = d.pet || {};
+    var h = '<div class="fish-t">Prize desk &middot; you have <b class="mono">' + have + '</b> deck ticket' + (have === 1 ? '' : 's') + '</div><div class="prize-list">' + prizeRow(PRIZES[0], have, items) + '</div>';
+    SHOP_GROUPS.forEach(function (g) {
+      var list = PRIZES.filter(function (pz) { return ITEMS[pz.id] && ITEMS[pz.id].kind === g[0]; });
+      if (list.length) h += '<h3 class="prize-h">' + g[1] + '</h3><div class="prize-list">' + list.map(function (pz) { return prizeRow(pz, have, items); }).join('') + '</div>';
+    });
+    /* the donation box: give away what you don't want any more, and get a few tickets as a thank-you */
+    var mine = Object.keys(ITEMS).filter(function (id) { return items[id] > 0; });
+    h += '<h3 class="prize-h">Donation box</h3>' + (mine.length ? '<p class="note">Give away things you don’t want any more. They go to other explorers, and you get a few tickets as a thank-you.</p><div class="prize-list donate-list">' + mine.map(function (id) {
+      var it = ITEMS[id], n = items[id], used = pet.wear === id || pet.dye === id;
+      return '<div class="prize"><span class="prize-art">' + itemArt(id) + '</span><span class="grow"><strong>' + esc(it.name) + (n > 1 ? ' <span class="mono">x' + n + '</span>' : '') + '</strong><small style="color:' + RAR[it.r].col + '">' + (used && n === 1 ? 'Your pet is using this' : RAR[it.r].label) + '</small></span>' +
+        '<button type="button" class="btn small' + (ARMED === id ? ' danger' : '') + '" data-wact="donate" data-id="' + id + '">' + (ARMED === id ? 'Give it away?' : 'Donate +' + THANKS[it.r]) + '</button></div>';
+    }).join('') + '</div>' : '<p class="note">Nothing to give away yet. Things you find on adventures show up here.</p>');
+    return h + '<div class="wrap"><button type="button" class="btn" data-wact="closePrizes">Close</button></div>';
   }
   function buyPrize(pid, id) {
     var pz = null; PRIZES.forEach(function (x) { if (x.id === id) pz = x; });
@@ -277,7 +336,23 @@
     var d = { tickets: DB.inc(-pz.cost) };
     if (res.egg) { var sp = CRE.rares()[Math.floor(Math.random() * CRE.rares().length)]; res.eggSp = sp.id; d.egg = { sp: sp.id, pal: CRE.randomPalette(sp), found: C().today() }; }
     else { d.items = {}; d.items[res.id] = DB.inc(1); }
+    ARMED = null;
     return DB.commit([{ t: 'merge', c: 'pets', id: pid, d: d }]).then(function () { return res; });
+  }
+  /* Donate one of an item. The first tap arms the button, the second gives it away. Resolves {armed} or {id, thanks}. */
+  function donate(pid, id) {
+    var d = Pets.doc(pid), items = d.items || {}, it = ITEMS[id];
+    if (!it || !(items[id] > 0)) { ARMED = null; return Promise.reject({ message: 'You don’t have one of those.' }); }
+    if (ARMED !== id) { ARMED = id; return Promise.resolve({ armed: id }); }
+    ARMED = null;
+    var up = { tickets: DB.inc(THANKS[it.r]), items: {}, donated: DB.inc(1) }, ops;
+    up.items[id] = DB.inc(-1);
+    ops = [{ t: 'merge', c: 'pets', id: pid, d: up }];
+    if (items[id] === 1 && d.pet && (d.pet.wear === id || d.pet.dye === id)) {      /* the last one, and the pet has it on: take it off */
+      var np = assign({}, d.pet); if (np.wear === id) np.wear = ''; if (np.dye === id) np.dye = '';
+      ops.push({ t: 'update', c: 'pets', id: pid, d: { pet: np } });
+    }
+    return DB.commit(ops).then(function () { return { id: id, thanks: THANKS[it.r] }; });
   }
 
   /* ================= collection and wardrobe (shown in the kid's own house) ================= */
@@ -326,6 +401,6 @@
   window.ADV = {
     ITEMS: ITEMS, RAR: RAR, itemArt: itemArt, dyePal: dyePal, passInfo: passInfo, houseStatus: houseStatus, bigJobsToday: bigJobsToday, onVacation: onVacation, kidIds: kidIds,
     gateHtml: gateHtml, loot: loot, grant: grant, reveal: reveal, startExpedition: startExpedition, saveTime: saveTime, exp: function () { return EXP; },
-    wardrobeHtml: wardrobeHtml, tickets: tickets, addTickets: addTickets, deckBonus: deckBonus, prizesHtml: prizesHtml, buyPrize: buyPrize, PRIZES: PRIZES, collectionHtml: collectionHtml, toysIn: toysIn, passesAdminHtml: passesAdminHtml, grantPass: grantPass, cfg: cfg, DEF: DEF, fmtHM: fmtHM
+    wardrobeHtml: wardrobeHtml, tickets: tickets, addTickets: addTickets, deckBonus: deckBonus, prizesHtml: prizesHtml, buyPrize: buyPrize, donate: donate, PRIZES: PRIZES, collectionHtml: collectionHtml, toysIn: toysIn, passesAdminHtml: passesAdminHtml, grantPass: grantPass, cfg: cfg, DEF: DEF, fmtHM: fmtHM
   };
 })();

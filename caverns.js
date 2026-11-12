@@ -105,8 +105,15 @@
     clearInterval(S.timer); S.timer = setInterval(function () { if (S) A().saveTime(false); }, 30000);
     hud(G); RAF(loop);
   }
+  /* cl-v49: on a tablet held sideways, the tallest a board may be so it fits under the header (0 = no limit) */
+  function landH(el, spare) {
+    var vw = window.innerWidth || 0, vh = window.innerHeight || 0; if (!(vw > vh && vh <= 640)) return 0;
+    var hd = document.querySelector('.top'), top = Math.max(hd ? hd.offsetHeight : 0, el && el.getBoundingClientRect ? el.getBoundingClientRect().top : 0);
+    return Math.max(180, vh - top - (spare || 10));
+  }
   function size(G) {
-    var w = G.cv.parentNode.clientWidth || 340, dpr = Math.min(2, window.devicePixelRatio || 1);
+    var st = G.cv.parentNode, mh = landH(st, 40), dpr = Math.min(2, window.devicePixelRatio || 1); st.style.width = '';
+    var w = st.clientWidth || 340; if (mh && w * VH / VW > mh) { w = Math.floor(mh * VW / VH); st.style.width = w + 'px'; }
     G.cv.style.width = w + 'px'; G.cv.style.height = Math.round(w * VH / VW) + 'px';
     G.cv.width = Math.round(w * dpr); G.cv.height = Math.round(w * VH / VW * dpr); G.k = G.cv.width / VW;
   }

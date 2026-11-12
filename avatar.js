@@ -9,12 +9,13 @@
     hairColor: ['#2b1d16', '#5a3a22', '#a0652d', '#e0b35a', '#f2e1a8', '#c2442e', '#141317', '#43281a', '#8f8e93', '#dcdad5'],
     hairFx: ['none', 'streaks', 'sides', 'tips'],
     bangs: ['none', 'straight', 'curly'], tendrils: ['none', 'straight', 'curly'],   // own layer over any hairstyle   // hair 2nd colour: highlights, grey at the sides, ombre tips
-    hair: ['short', 'spiky', 'long', 'ponytail', 'curly', 'buns', 'bun', 'wavy', 'longcurly', 'bob', 'pigtails', 'bald'],
+    hair: ['short', 'spiky', 'long', 'ponytail', 'curly', 'buns', 'bun', 'wavy', 'longcurly', 'bob', 'pigtails', 'bald', 'pixie', 'afro', 'buzz', 'puffs', 'braids'],
     eyes: ['round', 'happy', 'wink'],
-    top: ['tee', 'hoodie', 'dress', 'suit', 'apron'],
-    bottom: ['pants', 'shorts', 'skirt'],   // hidden with a dress
+    mouth: ['smile', 'grin', 'wow'],
+    top: ['tee', 'hoodie', 'dress', 'suit', 'apron', 'jacket', 'sweater', 'chef'],
+    bottom: ['pants', 'shorts', 'skirt', 'leggings', 'tutu', 'cargo'],   // hidden with a dress
     special: ['karate', 'hero', 'gown', 'space', 'wizard', 'jersey'],   // clothing shop outfits (own them to wear them)
-    shoes: ['sneakers', 'hightops', 'boots', 'cowboy', 'flats', 'skates', 'lightup'],   // sneakers for everyone; the rest from the clothing shop
+    shoes: ['sneakers', 'hightops', 'boots', 'cowboy', 'flats', 'skates', 'lightup', 'ankle', 'sandals'],   // sneakers for everyone; the rest from the clothing shop
     shoeColor: ['#2b2233', '#e8453c', '#3a8ed8', '#f2d43a', '#4fb65f', '#e36fae', '#7a5fd6', '#f4f2ec', '#8a5a34', '#f29b38', '#1f8f8a', '#c0c6cf'],
     face: ['none', 'shortbeard', 'beard', 'mustache', 'stubble'],
     height: ['small', 'medium', 'tall'],
@@ -22,8 +23,12 @@
     topColor: ['#e45757', '#f29b38', '#f2d43a', '#4fb65f', '#3a8ed8', '#7a5fd6', '#e36fae', '#3b4252', '#7d1f3a', '#6b7a2a', '#1f8f8a', '#c4198f', '#f4f2ec'],
     pantsColor: ['#3b4a6b', '#6f8fb8', '#253055', '#26262b', '#8a8f98', '#eeeae2', '#c8b48a', '#6b4a2e', '#6b7a2a', '#7d1f3a', '#c0392b', '#e88aa8', '#7a5fd6', '#1f8f8a', '#4f9a5a'],
     pattern: ['solid', 'dots', 'stripes', 'plaid', 'stars', 'hearts', 'camo'],
-    acc: ['none', 'glasses', 'cap', 'bow', 'headband', 'visor']
+    acc: ['none', 'glasses', 'cap', 'bow', 'headband', 'visor', 'beanie', 'chefhat', 'flowers']
   };
+  /* cl-v51: one character for both games. These came over from Lit Town and are earned there by reading (Lit Town's shop,
+     paid in flames); once bought there they can be worn here too. Everything else in the lists is free, as before. */
+  var LITTOWN = { hair: { puffs: 1, braids: 1, buzz: 1 }, top: { jacket: 1, sweater: 1, chef: 1 }, bottom: { leggings: 1, tutu: 1, cargo: 1 }, shoes: { sandals: 1 }, acc: { beanie: 1, chefhat: 1, flowers: 1 } };
+  function litTownOnly(key, v) { return !!(LITTOWN[key] && LITTOWN[key][v]); }
   var ORDER = {
     hairColor: [6, 0, 7, 1, 2, 5, 3, 4, 8, 9],                 // black, espresso, dark brown, brown, light brown, red, blonde, platinum, grey, silver
     topColor: [0, 8, 1, 2, 9, 3, 10, 4, 5, 11, 6, 7, 12]       // red, burgundy, orange, yellow, olive, green, teal, blue, purple, magenta, pink, slate, white
@@ -35,15 +40,15 @@
     if (pat === 'plaid' || pat === 'camo') return shade(hex, lum > 120 ? -80 : -60);
     return lum > 170 ? shade(hex, -110) : '#ffffff';
   }
-  var AV_LABEL = { hair: { short: 'Short', spiky: 'Messy', bob: 'Bob', pigtails: 'Triple tail', long: 'Long', ponytail: 'Ponytail', curly: 'Curly', buns: 'Two buns', bun: 'Top bun', wavy: 'Long & wavy', longcurly: 'Long & curly', bald: 'Bald' },
-    eyes: { round: 'Round', happy: 'Happy', wink: 'Wink' }, top: { tee: 'T-shirt', hoodie: 'Hoodie', dress: 'Dress', suit: 'Suit', apron: 'Apron' },
-    bottom: { pants: 'Pants', shorts: 'Shorts', skirt: 'Skirt' },
+  var AV_LABEL = { hair: { short: 'Short', spiky: 'Messy', bob: 'Bob', pigtails: 'Triple tail', long: 'Long', ponytail: 'Ponytail', curly: 'Curly', buns: 'Two buns', bun: 'Top bun', wavy: 'Long & wavy', longcurly: 'Long & curly', bald: 'Bald', pixie: 'Pixie', afro: 'Afro', buzz: 'Buzz cut', puffs: 'Puffs', braids: 'Braids' },
+    eyes: { round: 'Round', happy: 'Happy', wink: 'Wink' }, mouth: { smile: 'Smile', grin: 'Big grin', wow: 'Wow' }, top: { tee: 'T-shirt', hoodie: 'Hoodie', dress: 'Dress', suit: 'Suit', apron: 'Apron', jacket: 'Jacket', sweater: 'Sweater', chef: 'Chef coat' },
+    bottom: { pants: 'Pants', shorts: 'Shorts', skirt: 'Skirt', leggings: 'Leggings', tutu: 'Tutu', cargo: 'Cargo pants' },
     special: { karate: 'Karate gi', hero: 'Superhero suit', gown: 'Ball gown', space: 'Space suit', wizard: 'Wizard robe', jersey: 'Sports jersey' },
-    shoes: { sneakers: 'Sneakers', hightops: 'High-tops', boots: 'Rain boots', cowboy: 'Cowboy boots', flats: 'Party shoes', skates: 'Roller skates', lightup: 'Light-up sneakers' },
+    shoes: { sneakers: 'Sneakers', hightops: 'High-tops', boots: 'Rain boots', cowboy: 'Cowboy boots', flats: 'Party shoes', skates: 'Roller skates', lightup: 'Light-up sneakers', ankle: 'Boots', sandals: 'Sandals' },
     height: { small: 'Small', medium: 'Medium', tall: 'Tall' },
     build: { slim: 'Slim', medium: 'Medium', large: 'Large' },
     face: { none: 'None', shortbeard: 'Short beard', beard: 'Full beard', mustache: 'Mustache', stubble: 'Stubble' },
-    acc: { none: 'None', glasses: 'Glasses', cap: 'Cap', bow: 'Bow', headband: 'Headband', visor: 'Visor' },
+    acc: { none: 'None', glasses: 'Glasses', cap: 'Cap', bow: 'Bow', headband: 'Headband', visor: 'Visor', beanie: 'Beanie', chefhat: 'Chef hat', flowers: 'Flower crown' },
     hairFx: { none: 'None', streaks: 'Highlights', sides: 'Gray sides', tips: 'Tips' },
     bangs: { none: 'None', straight: 'Straight', curly: 'Curly' }, tendrils: { none: 'None', straight: 'Straight', curly: 'Curly' },
     pattern: { solid: 'Plain', dots: 'Polka dots', stripes: 'Stripes', plaid: 'Plaid', stars: 'Stars', hearts: 'Hearts', camo: 'Camo' } };
@@ -52,7 +57,7 @@
   function randAvatar() {
     function r(n) { return Math.floor(Math.random() * n); }
     return { skin: r(AV.skin.length), hair: AV.hair[r(6)], hairColor: r(AV.hairColor.length), eyes: 'round', top: AV.top[r(3)], topColor: r(AV.topColor.length), acc: 'none', face: 'none', height: 'small',
-      bottom: AV.bottom[r(AV.bottom.length)], pantsColor: r(AV.pantsColor.length), topPat: Math.random() < 0.3 ? AV.pattern[1 + r(AV.pattern.length - 1)] : 'solid', pantsPat: 'solid' };
+      bottom: AV.bottom[r(3)], pantsColor: r(AV.pantsColor.length), topPat: Math.random() < 0.3 ? AV.pattern[1 + r(AV.pattern.length - 1)] : 'solid', pantsPat: 'solid' };
   }
   function shade(hex, amt) {
     var n = parseInt(hex.slice(1), 16), r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
@@ -132,8 +137,16 @@
     if (opts && opts.flip) s = '<g transform="matrix(-1 0 0 1 120 0)">' + s + '</g>';   // the other side of a spin is the mirror image
     return '<svg viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="Character" class="av3d">' + s + '</svg>';
   }
+  /* cl-v49: the look, with its colours chosen, for sprites.js (which draws every person from any side, walking or still) */
+  function look(a) {
+    var hh = heightOf(a), tc = AV.topColor[a.topColor] || AV.topColor[0], pc = a.pantsHex || AV.pantsColor[a.pantsColor] || AV.pantsColor[0], fx = a.hairFx && a.hairFx !== 'none' ? a.hairFx : '';
+    return { h: hh.h, hs: hh.s, build: a.build || 'medium', skin: AV.skin[a.skin] || AV.skin[0], hair: a.hair || 'short', hairCol: AV.hairColor[a.hairColor] || AV.hairColor[0], hairFx: fx, hair2: fx ? AV.hairColor[a.hair2] || hair2Default(fx) : '',
+      bangs: a.bangs, tendrils: a.tendrils, eyes: a.eyes, mouth: a.mouth, face: a.face, top: a.top || 'tee', topCol: tc, topPat: a.topPat, topInk: patInk(tc, a.topPat), bottom: a.bottom || 'pants', pantsCol: pc, pantsPat: a.pantsPat, pantsInk: patInk(pc, a.pantsPat),
+      shoes: AV.shoes.indexOf(a.shoes) >= 0 ? a.shoes : 'sneakers', shoeCol: AV.shoeColor[a.shoeColor] || AV.shoeColor[0], acc: a.acc, accCol: a.accColor != null ? AV.topColor[a.accColor] : undefined };
+  }
   function drawAvatar(a, style, opts) {
     a = a || randAvatar();
+    if (window.SPR && SPR.person && !(opts && opts.flat)) return SPR.person(look(a), opts || {});
     var d3 = draw3d(a, opts || {});
     if (d3) return d3;
     style = style || (window.CHAR && window.CHAR.style) || 'chibi';
@@ -303,5 +316,5 @@
       '<path d="M44 72 Q52 66 60 70 Q68 66 76 72 Q68 78 60 74 Q52 78 44 72 Z" fill="#e9e9ee" stroke="#b8b8c4" stroke-width="1.5"/>' +
       '<ellipse cx="38" cy="66" rx="5" ry="3" fill="#ff8fa3" opacity=".45"/><ellipse cx="82" cy="66" rx="5" ry="3" fill="#ff8fa3" opacity=".45"/></svg>';
   }
-  window.CHAR = { covers: covers, heightOf: heightOf, hair2Default: hair2Default, HEIGHT_PX: HEIGHT_PX, STYLES: STYLES, STYLE_LABEL: STYLE_LABEL, style: 'chibi', AV: AV, AV_LABEL: AV_LABEL, ORDER: ORDER, patInk: patInk, randAvatar: randAvatar, drawAvatar: drawAvatar, professorSvg: professorSvg, PROF: PROF };
+  window.CHAR = { look: look, LITTOWN: LITTOWN, litTownOnly: litTownOnly, covers: covers, heightOf: heightOf, hair2Default: hair2Default, HEIGHT_PX: HEIGHT_PX, STYLES: STYLES, STYLE_LABEL: STYLE_LABEL, style: 'chibi', AV: AV, AV_LABEL: AV_LABEL, ORDER: ORDER, patInk: patInk, randAvatar: randAvatar, drawAvatar: drawAvatar, professorSvg: professorSvg, PROF: PROF };
 })();
