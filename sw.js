@@ -1,5 +1,5 @@
 /* Offline shell: network first, cached copy when offline. Bump VERSION when files change. */
-var VERSION = 'cl-v53';
+var VERSION = 'cl-v54';
 var SHELL = ['./', 'index.html', 'styles.css', 'config.js', 'bank.html', 'starter.js', 'sprites.js', 'creatures.js', 'avatar.js', 'pets.js', 'games.js', 'adventure.js', 'defense.js', 'icecream.js', 'caverns.js', 'bed.js', 'world.js', 'gate.js', 'store.js', 'app.js',
   'firebase-app.js', 'firebase-auth.js', 'firebase-firestore.js', 'firebase-messaging.js', 'icon-192.png'];
 self.addEventListener('install', function (e) {

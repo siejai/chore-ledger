@@ -277,6 +277,8 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .build-slot .ghost { position: absolute; left: 0; right: 0; top: 10px; font-size: 70px; font-weight: 700; color: #DDD4C2; }
 .build-tile { position: relative; width: 104px; height: 104px; margin: 0 8px; font-size: 64px; font-weight: 700; border-radius: 20px; background: #FFFDF7; border-bottom: 8px solid #E4DCCB; }
 .build-slot .build-tile { position: absolute; left: 3px; top: 3px; margin: 0; }
+.build-silent { border-style: solid; border-color: #E4DCCB; background: #F4EFE3; }
+.build-silent-e { display: block; font-size: 70px; font-weight: 700; line-height: 110px; color: #B9AE98; }
 .build.built .build-tile { background: #9BE3B5; border-bottom-color: #4CC27A; }
 .stuck-example { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; margin-top: 12px; padding: 6px 20px; border-radius: 22px; background: #FFFDF7; }
 .stuck-example .pic { width: 110px; height: 110px; margin-right: 14px; }
@@ -318,6 +320,8 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .hotspot { position: absolute; }
 .sign { position: absolute; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; }
 .readline.sign-text { font-size: 44px; font-weight: 700; color: #3B2F45; }
+.sign.chalk .readline.sign-text { color: #FFFDF7; }
+.sign.chalk .readline .word.pressed, .sign.chalk .readline .word.lit { color: #3B2F45; }
 .bubble { position: absolute; width: 340px; padding: 14px 16px; border-radius: 26px; background: #FFFDF7; border: 4px solid #3B2F45; z-index: 6000; text-align: center; }
 .bubble-tail { position: absolute; bottom: -18px; width: 0; height: 0; border-width: 18px 12px 0; border-style: solid; border-color: #3B2F45 transparent transparent; }
 .readline.bubble-text { font-size: 38px; font-weight: 700; }
@@ -587,6 +591,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .fx-glow { -webkit-transition: opacity .35s; transition: opacity .35s; pointer-events: none; }
 .fx.off .fx-glow { opacity: 0; }
 .fx-deco, .fx-bed, .fx-lamp { cursor: pointer; }
+.fx[data-fx="wall"] { pointer-events: none; }   /* wall paint (house fix-up, lesson 48): a picture behind everything, not something to tap */
 .fx-layer svg, .fx-swirl-spin svg, .fx-stream svg, .fx-drop-pic svg, .fx-bubble svg { display: block; width: 100%; height: 100%; }
 
 /* fridge & cupboards: each door folds flat toward its hinge */

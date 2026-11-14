@@ -873,16 +873,26 @@
   /** opts: { answer: [tile...], pool: [tile...], ghost: bool (faint letters to copy), letters: bool (tiles
    *  are letters of a tricky word, so they make no sound), word: string, onFull: fn(right) → 'done' |
    *  'retry' | 'reveal' | 'reset', onDone: fn } */
+  function hasSilent(seg) {
+    for (var i = 0; seg && i < seg.length; i++) { if (seg[i].silent) { return true; } }
+    return false;
+  }
   function buildBox(opts) {
     var box = U.el('div.build'), slots = U.el('div.build-slots'), bank = U.el('div.build-bank');
-    var tiles = [], slotNodes = [], filled = [], done = false;
+    var tiles = [], slotNodes = [], filled = [], done = false, silentNode = null;
+    // a split vowel (a_e in cake) shows as its vowel; the silent e waits, already in place, after the last slot
+    function label(g) { return String(g).replace('_e', ''); }
     opts.answer.forEach(function (g, i) {
       var sl = U.el('div.build-slot', { 'data-slot': String(i) });
-      if (opts.ghost) { sl.appendChild(U.el('span.ghost', { text: g })); }
+      if (opts.ghost) { sl.appendChild(U.el('span.ghost', { text: label(g) })); }
       slots.appendChild(sl);
       slotNodes.push(sl);
       filled.push(null);
     });
+    if (opts.silentE) {
+      silentNode = U.el('div.build-slot.build-silent', {}, [U.el('span.build-silent-e', { text: 'e' })]);
+      slots.appendChild(silentNode);
+    }
     function sound(t) {
       if (!opts.letters && E.isGrapheme(t.g)) { A.phoneme(E.phonemeOf(t.g)); } else { RA.Sfx.play('pop'); }
     }
@@ -933,7 +943,7 @@
       }, 450);
     }
     opts.pool.forEach(function (g) {
-      var t = { g: g, slot: -1, node: U.el('button.build-tile', { type: 'button' }, [U.el('span', { text: g })]) };
+      var t = { g: g, slot: -1, node: U.el('button.build-tile', { type: 'button' }, [U.el('span', { text: label(g) })]) };
       draggable(t.node, function () {
         if (done || busy || Date.now() - shownAt < GUARD_MS) { return; }
         RA.Audio.unlock();
@@ -955,7 +965,7 @@
     // on a phone), and again if the screen turns
     function fit() {
       var W = window.innerWidth || 1024, H = window.innerHeight || 600, availW = W - 48;
-      var nS = opts.answer.length, nB = opts.pool.length, perRow = nB, rows = 1;
+      var nS = opts.answer.length + (silentNode ? 1 : 0), nB = opts.pool.length, perRow = nB, rows = 1;
       var slot = Math.min(120, Math.floor(availW / nS) - 16);
       var tile = Math.min(104, Math.floor(availW / perRow) - 16);
       if (tile < slot - 16 && nB > 3) { rows = 2; perRow = Math.ceil(nB / 2); tile = Math.min(104, Math.floor(availW / perRow) - 16); }
@@ -971,6 +981,12 @@
         var gh = sl.querySelector('.ghost');
         if (gh) { gh.style.fontSize = Math.round(slot * 0.58) + 'px'; gh.style.top = Math.round(slot * 0.08) + 'px'; }
       });
+      if (silentNode) {
+        silentNode.style.width = silentNode.style.height = slot + 'px';
+        silentNode.style.borderRadius = Math.round(slot * 0.18) + 'px';
+        silentNode.firstChild.style.fontSize = Math.round(slot * 0.58) + 'px';
+        silentNode.firstChild.style.lineHeight = slot + 'px';
+      }
       tiles.forEach(function (t) {
         t.node.style.width = t.node.style.height = tile + 'px';
         t.node.style.fontSize = Math.round(tile * 0.615) + 'px';
@@ -994,7 +1010,7 @@
     var hint = missingHint(id, s.w);
     if (hint) { stage.appendChild(hint); }
     stage.appendChild(buildBox({
-      answer: s.answer, pool: s.tiles, word: s.w,
+      answer: s.answer, pool: s.tiles, word: s.w, silentE: hasSilent(s.seg),
       onFull: function (right) {
         if (busy) { return 'reset'; }
         var res = ses.answer(right, fastCheck() ? { ms: Date.now() - shownAt } : {});

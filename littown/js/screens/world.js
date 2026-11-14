@@ -174,7 +174,8 @@
         if (!loc.building || !ART.has(loc.building)) { return; }
         var b = buildingEl(p, loc, true, skip);
         if (!glows(p, loc, skip) || (finaleNow && !E.isUnlocked(p, 'loc:' + loc.id))) { b.appendChild(lockTag(p, loc)); }
-        if (loc.rooms && E.isUnlocked(p, 'loc:' + loc.id) && E.homeNews(p).length) { b.appendChild(newsBadge('bld-news')); }
+        // news in her house (a free fix-up, new versions, a room that opened): the badge goes on her home only
+        if (loc.id === ((E.world().start || {}).location || 'home') && E.homeNews(p).length) { b.appendChild(newsBadge('bld-news')); }
         U.tap(b, function () { tapBuilding(p, loc, b); });
         mapView.scene.appendChild(b);
         els[loc.id] = b;
@@ -344,7 +345,8 @@
     (room.signs || []).forEach(function (sg) {
       var lvl = E.level(p);
       if (lvl < (sg.minLesson || 0) || !E.canRead(p, sg.text)) { return; }
-      var d = U.el('div.sign', { style: 'left:' + sg.x + 'px;top:' + sg.y + 'px;width:' + sg.w + 'px;height:' + sg.h + 'px' });
+      // "chalk": light words for a chalkboard (the school's classroom)
+      var d = U.el('div.sign' + (sg.chalk ? '.chalk' : ''), { style: 'left:' + sg.x + 'px;top:' + sg.y + 'px;width:' + sg.w + 'px;height:' + sg.h + 'px' });
       d.appendChild(UI.readLine(sg.text, 'sign-text'));
       scene.appendChild(d);
     });
@@ -427,6 +429,9 @@
         hud.appendChild(hb);
       }
       hud.appendChild(UI.btn('ui-shop', '', function () { UI.go('shop', 'home'); }, 'small'));
+    } else if (shopTabOf(loc)) {
+      // a place with its own shop tab (the school): a shortcut to the things sold there
+      hud.appendChild(UI.btn('ui-shop', '', function () { UI.go('shop', shopTabOf(loc)); }, 'small place-shop-btn'));
     }
     root.appendChild(hud);
     var counter = UI.flameCount(p);
@@ -436,6 +441,13 @@
     // tap on empty space closes bubbles
     U.tap(bg, function () { closeBubble(); });
     w.addEventListener('resize', view.fit, false);
+  }
+
+  /** The id of the shop tab that sells this place's things (world.json "shop"), or null. */
+  function shopTabOf(loc) {
+    var tabs = (E.world().shop && E.world().shop.tabs) || [], i;
+    for (i = 0; i < tabs.length; i++) { if (tabs[i].location === loc.id) { return tabs[i].id; } }
+    return null;
   }
 
   /* ---------- decorating (places with "decorate": true, i.e. her home) ---------- */

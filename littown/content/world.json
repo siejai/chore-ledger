@@ -15,7 +15,8 @@
     "tabs": [
       {"id": "hair", "slots": ["hair", "eyecolor"]},
       {"id": "clothes", "slots": ["top", "bot", "shoes", "acc"]},
-      {"id": "home", "location": "home", "upgrades": true}
+      {"id": "home", "location": "home", "upgrades": true},
+      {"id": "school", "location": "school"}
     ]
   },
   "finale": { "lesson": 100, "line": "town-lit" },
@@ -91,8 +92,8 @@
         "tiers": [
           {"id": "junk", "art": {"toilet.grime": "fx-toilet-grime", "tub.grime": "fx-tub-grime"}},
           {"id": "fixed", "art": {"toilet.grime": "", "tub.grime": ""}},
-          {"id": "deluxe", "cost": 3, "comingSoon": true},
-          {"id": "premium", "cost": 5, "comingSoon": true}
+          {"id": "deluxe", "cost": 3, "art": {"toilet.base": "fx-toilet-deluxe", "tub.base": "fx-tub-deluxe", "toilet.grime": "", "tub.grime": ""}},
+          {"id": "premium", "cost": 5, "art": {"toilet.base": "fx-toilet-premium", "tub.base": "fx-tub-premium", "toilet.grime": "", "tub.grime": ""}}
         ]
       },
       {
@@ -100,12 +101,12 @@
         "lesson": 28,
         "room": "bedroom",
         "name": "desk",
-        "note": "Her writing desk is scruffy until lesson 28. Board styles and marker colours come with the deluxe and premium versions (not drawn yet).",
+        "note": "Her writing desk is scruffy until lesson 28. Board styles and marker colours come with the deluxe and premium versions.",
         "tiers": [
           {"id": "junk", "art": {"desk.base": "fx-desk-junk"}},
           {"id": "fixed", "art": {"desk.base": "fx-desk-fixed"}},
-          {"id": "deluxe", "cost": 3, "comingSoon": true, "writing": {"board": "rainbow frame", "markers": ["#E5484D", "#3D8BFD", "#4CC27A", "#8E6CEF"]}},
-          {"id": "premium", "cost": 5, "comingSoon": true, "writing": {"board": "glitter frame", "markers": ["#E5484D", "#FF9F43", "#FFD23F", "#4CC27A", "#3D8BFD", "#8E6CEF", "#F76CA8", "#2B2440"]}}
+          {"id": "deluxe", "cost": 3, "art": {"desk.base": "fx-desk-deluxe"}, "writing": {"board": "rainbow frame", "markers": ["#E5484D", "#3D8BFD", "#4CC27A", "#8E6CEF"]}},
+          {"id": "premium", "cost": 5, "art": {"desk.base": "fx-desk-premium"}, "writing": {"board": "glitter frame", "markers": ["#E5484D", "#FF9F43", "#FFD23F", "#4CC27A", "#3D8BFD", "#8E6CEF", "#F76CA8", "#2B2440"]}}
         ]
       },
       {
@@ -113,12 +114,11 @@
         "lesson": 32,
         "room": "kitchen",
         "name": "stove",
-        "comingSoon": true,
         "tiers": [
-          {"id": "junk"},
-          {"id": "fixed"},
-          {"id": "deluxe", "cost": 3},
-          {"id": "premium", "cost": 5}
+          {"id": "junk", "art": {"stove.base": "fx-stove-junk"}},
+          {"id": "fixed", "art": {"stove.base": "fx-stove-fixed"}},
+          {"id": "deluxe", "cost": 3, "art": {"stove.base": "fx-stove-deluxe"}},
+          {"id": "premium", "cost": 5, "art": {"stove.base": "fx-stove-premium"}}
         ]
       },
       {
@@ -126,12 +126,11 @@
         "lesson": 36,
         "room": "kitchen",
         "name": "table and chairs",
-        "comingSoon": true,
         "tiers": [
-          {"id": "junk"},
-          {"id": "fixed"},
-          {"id": "deluxe", "cost": 3},
-          {"id": "premium", "cost": 5}
+          {"id": "junk", "art": {"table.base": "fx-table-junk"}},
+          {"id": "fixed", "art": {"table.base": "fx-table-fixed"}},
+          {"id": "deluxe", "cost": 3, "art": {"table.base": "fx-table-deluxe"}},
+          {"id": "premium", "cost": 5, "art": {"table.base": "fx-table-premium"}}
         ]
       },
       {
@@ -139,12 +138,11 @@
         "lesson": 40,
         "room": "bedroom",
         "name": "bookshelf and books",
-        "comingSoon": true,
         "tiers": [
           {"id": "junk", "art": {"bookbox.base": "fx-bookbox"}},
-          {"id": "fixed"},
-          {"id": "deluxe", "cost": 3},
-          {"id": "premium", "cost": 5}
+          {"id": "fixed", "art": {"bookbox.base": "fx-bookshelf-fixed"}},
+          {"id": "deluxe", "cost": 3, "art": {"bookbox.base": "fx-bookshelf-deluxe"}},
+          {"id": "premium", "cost": 5, "art": {"bookbox.base": "fx-bookshelf-premium"}}
         ]
       },
       {
@@ -152,12 +150,11 @@
         "lesson": 44,
         "room": "bedroom",
         "name": "curtains",
-        "comingSoon": true,
         "tiers": [
-          {"id": "junk"},
-          {"id": "fixed"},
-          {"id": "deluxe", "cost": 3},
-          {"id": "premium", "cost": 5}
+          {"id": "junk", "art": {"curtains.base": "fx-curtains-junk"}},
+          {"id": "fixed", "art": {"curtains.base": "fx-curtains-fixed"}},
+          {"id": "deluxe", "cost": 3, "art": {"curtains.base": "fx-curtains-deluxe"}},
+          {"id": "premium", "cost": 5, "art": {"curtains.base": "fx-curtains-premium"}}
         ]
       },
       {
@@ -165,12 +162,11 @@
         "lesson": 48,
         "room": "bedroom",
         "name": "wall paint",
-        "comingSoon": true,
         "tiers": [
-          {"id": "junk"},
-          {"id": "fixed"},
-          {"id": "deluxe", "cost": 3},
-          {"id": "premium", "cost": 5}
+          {"id": "junk", "art": {"wall.base": "fx-wall-junk"}},
+          {"id": "fixed", "art": {"wall.base": "fx-wall-fixed"}},
+          {"id": "deluxe", "cost": 3, "art": {"wall.base": "fx-wall-deluxe"}},
+          {"id": "premium", "cost": 5, "art": {"wall.base": "fx-wall-premium"}}
         ]
       },
       {
@@ -369,7 +365,9 @@
           "signs": [],
           "hotspots": [],
           "fixtures": [
+            {"id": "wall", "type": "deco", "x": 500, "y": 412, "z": 1, "parts": {"base": "fx-wall-junk"}},
             {"id": "window", "type": "deco", "x": 230, "y": 270, "parts": {"base": "fx-window-junk"}},
+            {"id": "curtains", "type": "deco", "x": 230, "y": 262, "parts": {"base": "fx-curtains-junk"}},
             {"id": "bookbox", "type": "deco", "x": 140, "y": 580, "parts": {"base": "fx-bookbox"}, "say": "box"},
             {"id": "rug", "type": "deco", "x": 420, "y": 598, "z": 2, "parts": {"base": "fx-rug-junk"}, "flat": true},
             {"id": "bed", "type": "bed", "x": 650, "y": 545, "parts": {"base": "fx-bed-junk", "bedding": "fx-bedding-junk"}},
@@ -412,6 +410,8 @@
           ],
           "playerStart": [690, 520],
           "fixtures": [
+            {"id": "stove", "type": "deco", "x": 637, "y": 438, "parts": {"base": "fx-stove-junk"}},
+            {"id": "table", "type": "deco", "x": 872, "y": 452, "parts": {"base": "fx-table-junk"}},
             {"id": "fridge", "type": "container", "x": 82, "y": 446, "parts": {"base": "fx-fridge", "doors": [{"part": "fx-fridge-door", "hinge": "left"}]}, "slots": [[0.3, 0.413], [0.7, 0.413], [0.3, 0.652], [0.7, 0.652], [0.3, 0.891], [0.7, 0.891]], "capacity": 6, "accepts": "food"},
             {"id": "cabinet", "type": "container", "x": 495, "y": 200, "parts": {"base": "fx-cabinet", "doors": [{"part": "fx-cabinet-door-l", "hinge": "left"}, {"part": "fx-cabinet-door-r", "hinge": "right"}]}, "slots": [[0.28, 0.5], [0.72, 0.5], [0.28, 0.882], [0.72, 0.882]], "capacity": 4, "accepts": "food"},
             {"id": "kitchen-sink", "type": "sink", "x": 300, "y": 334, "parts": {"base": "fx-sink-kitchen"}, "spout": [0.454, 0.388], "basin": 0.64},
@@ -572,9 +572,91 @@
       "background": "bg-school",
       "building": "bld-school",
       "hub": [500, 200],
-      "bgColor": "#FFF1DC",
-      "unlockLesson": 40,
-      "comingSoon": true
+      "bgColor": "#CFEAFE",
+      "packs": ["loc-school-rooms"],
+      "rooms": [
+        {
+          "id": "class",
+          "icon": "ui-room-class",
+          "background": "bg-school",
+          "floor": { "y1": 430, "y2": 590 },
+          "surfaces": [
+            {"name": "teacher-desk", "x1": 708, "x2": 970, "y": 324},
+            {"name": "desk-left", "x1": 358, "x2": 502, "y": 396},
+            {"name": "desk-right", "x1": 538, "x2": 682, "y": 396},
+            {"name": "cubby-top", "x1": 92, "x2": 328, "y": 246},
+            {"name": "chalk-tray", "x1": 474, "x2": 590, "y": 252}
+          ],
+          "signs": [
+            {"x": 376, "y": 92, "w": 288, "h": 128, "text": "Class is fun!", "minLesson": 40, "chalk": true},
+            {"x": 846, "y": 132, "w": 112, "h": 72, "text": "math", "minLesson": 40}
+          ],
+          "hotspots": [
+            {"name": "clock", "x": 734, "y": 60, "w": 76, "h": 76, "sfx": "click", "say": "clock"},
+            {"name": "window", "x": 96, "y": 50, "w": 212, "h": 176, "sfx": "chime"},
+            {"name": "chalkboard", "x": 366, "y": 66, "w": 308, "h": 26, "sfx": "squeak"},
+            {"name": "globe", "x": 718, "y": 248, "w": 62, "h": 76, "sfx": "whoosh"}
+          ],
+          "playerStart": [250, 566],
+          "fixtures": [
+            {"id": "cubbies", "type": "container", "x": 210, "y": 440, "parts": {"base": "fx-cubby", "doors": [{"part": "fx-cubby-door-l", "hinge": "left"}, {"part": "fx-cubby-door-r", "hinge": "right"}]}, "slots": [[0.27, 0.49], [0.73, 0.49], [0.27, 0.9], [0.73, 0.9]], "capacity": 4, "accepts": "cubby"}
+          ]
+        },
+        {
+          "id": "library",
+          "icon": "ui-room-library",
+          "background": "bg-school-library",
+          "bgColor": "#EFE8FF",
+          "floor": { "y1": 430, "y2": 590 },
+          "surfaces": [
+            {"name": "window-seat", "x1": 372, "x2": 628, "y": 298},
+            {"name": "shelf-1", "x1": 108, "x2": 316, "y": 164},
+            {"name": "shelf-2", "x1": 108, "x2": 316, "y": 250},
+            {"name": "shelf-3", "x1": 108, "x2": 316, "y": 336},
+            {"name": "beanbag-left", "x1": 290, "x2": 350, "y": 470},
+            {"name": "beanbag-right", "x1": 654, "x2": 714, "y": 472}
+          ],
+          "signs": [
+            {"x": 422, "y": 36, "w": 156, "h": 60, "text": "Hush!", "minLesson": 40}
+          ],
+          "hotspots": [
+            {"name": "rocket", "x": 760, "y": 92, "w": 168, "h": 132, "sfx": "whoosh", "say": "rocket"},
+            {"name": "window", "x": 424, "y": 134, "w": 152, "h": 160, "sfx": "chime"},
+            {"name": "lamp", "x": 326, "y": 176, "w": 54, "h": 46, "sfx": "ding", "say": "lamp"},
+            {"name": "books", "x": 106, "y": 80, "w": 212, "h": 84, "sfx": "sparkle"}
+          ],
+          "playerStart": [500, 572],
+          "fixtures": [
+            {"id": "bookcart", "type": "container", "x": 830, "y": 446, "parts": {"base": "fx-bookcart", "doors": [{"part": "fx-bookcart-door-l", "hinge": "left"}, {"part": "fx-bookcart-door-r", "hinge": "right"}]}, "slots": [[0.3, 0.562], [0.7, 0.562], [0.3, 0.862], [0.7, 0.862]], "capacity": 4, "accepts": "book"}
+          ]
+        },
+        {
+          "id": "music",
+          "icon": "ui-room-music",
+          "background": "bg-school-music",
+          "bgColor": "#DDF5E5",
+          "floor": { "y1": 430, "y2": 590 },
+          "surfaces": [
+            {"name": "bench", "x1": 376, "x2": 624, "y": 390},
+            {"name": "piano-top", "x1": 92, "x2": 332, "y": 188},
+            {"name": "shelf", "x1": 520, "x2": 600, "y": 264}
+          ],
+          "signs": [
+            {"x": 348, "y": 42, "w": 304, "h": 74, "text": "Sing a song!", "minLesson": 40}
+          ],
+          "hotspots": [
+            {"name": "piano", "x": 102, "y": 278, "w": 220, "h": 40, "sfx": "chime"},
+            {"name": "gong", "x": 656, "y": 258, "w": 108, "h": 108, "sfx": "ding", "say": "gong"},
+            {"name": "notes", "x": 384, "y": 136, "w": 232, "h": 80, "sfx": "sparkle"},
+            {"name": "shakers", "x": 408, "y": 216, "w": 104, "h": 48, "sfx": "whoosh"}
+          ],
+          "playerStart": [300, 572],
+          "fixtures": [
+            {"id": "cupboard", "type": "container", "x": 885, "y": 440, "parts": {"base": "fx-music-cupboard", "doors": [{"part": "fx-music-cupboard-door-l", "hinge": "left"}, {"part": "fx-music-cupboard-door-r", "hinge": "right"}]}, "slots": [[0.29, 0.357], [0.71, 0.357], [0.29, 0.643], [0.71, 0.643], [0.29, 0.946], [0.71, 0.946]], "capacity": 6, "accepts": "music"}
+          ]
+        }
+      ],
+      "unlockLesson": 40
     },
     {
       "id": "shop",
@@ -677,7 +759,19 @@
     {"id": "carrot", "sprite": "item-carrot", "label": "carrot", "location": "home", "x": 262, "y": 206, "cost": 1, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"},
     {"id": "pizza", "sprite": "item-pizza", "label": "pizza", "location": "home", "x": 876, "y": 360, "cost": 2, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"},
     {"id": "juice", "sprite": "item-juice", "label": "juice", "location": "home", "x": 478, "y": 308, "cost": 1, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"},
-    {"id": "grapes", "sprite": "item-grapes", "label": "grapes", "location": "home", "x": 920, "y": 360, "cost": 1, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"}
+    {"id": "grapes", "sprite": "item-grapes", "label": "grapes", "location": "home", "x": 920, "y": 360, "cost": 1, "tags": ["food"], "wear": "hand", "fx": "squish", "sfx": "pop", "room": "kitchen"},
+    {"id": "school-bell", "sprite": "item-handbell", "label": "bell", "location": "school", "room": "class", "x": 800, "y": 324, "wear": "hand", "fx": "hop", "sfx": "ding", "cost": 0, "tags": ["cubby", "music"]},
+    {"id": "school-pen", "sprite": "item-pen", "label": "pen", "location": "school", "room": "class", "x": 862, "y": 324, "wear": "hand", "fx": "spin", "sfx": "pop", "cost": 0, "tags": ["cubby"]},
+    {"id": "school-map", "sprite": "item-wallmap", "label": "map", "location": "school", "room": "class", "x": 430, "y": 396, "wear": "hand", "fx": "wiggle", "sfx": "whoosh", "cost": 0, "tags": ["cubby"]},
+    {"id": "school-pad", "sprite": "item-pad", "label": "pad", "location": "school", "room": "class", "x": 610, "y": 396, "wear": "hand", "fx": "wiggle", "sfx": "whoosh", "cost": 0, "tags": ["cubby", "book"]},
+    {"id": "backpack", "sprite": "item-backpack", "label": "backpack", "location": "school", "room": "class", "x": 150, "y": 246, "wear": "hand", "fx": "squish", "sfx": "soft", "cost": 3, "tags": ["cubby"]},
+    {"id": "lunchbox", "sprite": "item-lunchbox", "label": "lunch box", "location": "school", "room": "class", "x": 272, "y": 246, "wear": "hand", "fx": "hop", "sfx": "pop", "cost": 2, "tags": ["cubby"]},
+    {"id": "atlas", "sprite": "item-atlas", "label": "atlas", "location": "school", "room": "library", "x": 460, "y": 298, "wear": "hand", "fx": "wiggle", "sfx": "whoosh", "cost": 0, "tags": ["book"]},
+    {"id": "comic", "sprite": "item-comic", "label": "comic", "location": "school", "room": "library", "x": 548, "y": 298, "wear": "hand", "fx": "spin", "sfx": "whoosh", "cost": 2, "tags": ["book"]},
+    {"id": "puppet", "sprite": "item-puppet", "label": "puppet", "location": "school", "room": "library", "x": 320, "y": 470, "wear": "hand", "fx": "hop", "sfx": "squeak", "cost": 3, "tags": ["book"]},
+    {"id": "school-drum", "sprite": "item-snare", "label": "drum", "location": "school", "room": "music", "x": 440, "y": 390, "wear": "hand", "fx": "squish", "sfx": "drum", "cost": 0, "tags": ["music"]},
+    {"id": "trumpet", "sprite": "item-trumpet", "label": "trumpet", "location": "school", "room": "music", "x": 548, "y": 390, "wear": "hand", "fx": "wiggle", "sfx": "chime", "cost": 4, "tags": ["music"]},
+    {"id": "sax", "sprite": "item-sax", "label": "sax", "location": "school", "room": "music", "x": 292, "y": 188, "wear": "hand", "fx": "hop", "sfx": "boing", "cost": 5, "tags": ["music"]}
   ],
   "characters": [
     {
@@ -763,6 +857,29 @@
         "shoeColor": "#8A5A3B",
         "acc": "glasses",
         "accColor": "#3B2F45"
+      }
+    },
+    {
+      "id": "nell",
+      "name": "Miss Nell",
+      "location": "school",
+      "room": "class",
+      "x": 846,
+      "y": 578,
+      "look": {
+        "skin": "#7D4A2A",
+        "hair": "#2B1E1A",
+        "hairStyle": "highbun",
+        "top": "sweater",
+        "topColor": "#8E6CEF",
+        "top2": "#FFE79A",
+        "bot": "skirt",
+        "botColor": "#2F4C9C",
+        "shoes": "boots",
+        "shoeColor": "#8A5A3B",
+        "acc": "glasses",
+        "accColor": "#E5484D",
+        "height": 1.15
       }
     }
   ],
@@ -855,7 +972,10 @@
     {"id": "dot-hen", "character": "dot", "text": "Get the hen.", "wants": ["hen"], "minLesson": 18},
     {"id": "dot-frog", "character": "dot", "text": "Get the frog!", "wants": ["frog"], "minLesson": 20},
     {"id": "sid-bat", "character": "sid", "text": "Get the bat.", "wants": ["bat"], "minLesson": 19},
-    {"id": "sid-bus", "character": "sid", "text": "Can you get the bus?", "wants": ["bus"], "minLesson": 20}
+    {"id": "sid-bus", "character": "sid", "text": "Can you get the bus?", "wants": ["bus"], "minLesson": 20},
+    {"id": "nell-pen", "character": "nell", "text": "Can you pass me the pen?", "wants": ["school-pen"], "minLesson": 40, "thanks": "Thank you!"},
+    {"id": "nell-map", "character": "nell", "text": "Can you get the map? I want to pin it up.", "wants": ["school-map"], "minLesson": 40, "thanks": "Thanks a lot!"},
+    {"id": "nell-bell", "character": "nell", "text": "Can you get the bell? I want to ring it.", "wants": ["school-bell"], "minLesson": 40, "thanks": "Ding, ding! Thank you."}
   ],
   "extraWords": ["yes", "no"]
 }

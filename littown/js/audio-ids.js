@@ -145,11 +145,17 @@
     var req = world.requests || [];
     for (i = 0; i < req.length; i++) { addSentence(req[i].text); if (req[i].thanks) { addSentence(req[i].thanks); } }
     var locs = world.locations || [];
+    // signs, hotspots and fixtures that say a word: on the place itself and in each of its rooms
     for (i = 0; i < locs.length; i++) {
-      var signs = locs[i].signs || [];
-      for (j = 0; j < signs.length; j++) { addSentence(signs[j].text); }
-      var spots = locs[i].hotspots || [];
-      for (j = 0; j < spots.length; j++) { if (spots[j].say) { addSentence(spots[j].say); } }
+      var scenes = [locs[i]].concat(locs[i].rooms || []);
+      for (var sc = 0; sc < scenes.length; sc++) {
+        var signs = scenes[sc].signs || [];
+        for (j = 0; j < signs.length; j++) { addSentence(signs[j].text); }
+        var spots = scenes[sc].hotspots || [];
+        for (j = 0; j < spots.length; j++) { if (spots[j].say) { addSentence(spots[j].say); } }
+        var fxs = scenes[sc].fixtures || [];
+        for (j = 0; j < fxs.length; j++) { if (fxs[j].say) { addSentence(fxs[j].say); } }
+      }
     }
     for (i = 0; i < (world.extraWords || []).length; i++) { addWord(world.extraWords[i]); }
     return list;

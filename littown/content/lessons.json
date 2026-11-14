@@ -4,89 +4,549 @@
   "settings": {
     "passAccuracy": 0.8,
     "reviewCount": 6,
-    "intervals": [0, 1, 2, 4, 8, 16],
+    "intervals": [
+      0,
+      1,
+      2,
+      4,
+      8,
+      16
+    ],
     "capitalsLesson": 12,
-    "minReadMs": { "letter": 600, "word": 700, "perLetter": 100, "sentence": 1200, "perWord": 220, "tile": 450 },
+    "minReadMs": {
+      "letter": 600,
+      "word": 700,
+      "perLetter": 100,
+      "sentence": 1200,
+      "perWord": 220,
+      "tile": 450
+    },
     "maxFastRequeues": 2,
     "stuckAfter": 3,
     "masteredBox": 3
   },
-
   "phonemes": {
-    "m":  { "ipa": "m",  "kind": "continuant", "say": "mmm",   "example": "map" },
-    "s":  { "ipa": "s",  "kind": "continuant", "say": "sss",   "example": "sun" },
-    "t":  { "ipa": "t",  "kind": "stop",       "say": "t",     "example": "top" },
-    "p":  { "ipa": "p",  "kind": "stop",       "say": "p",     "example": "pig" },
-    "n":  { "ipa": "n",  "kind": "continuant", "say": "nnn",   "example": "nest" },
-    "d":  { "ipa": "d",  "kind": "stop",       "say": "d",     "example": "dog" },
-    "k":  { "ipa": "k",  "kind": "stop",       "say": "k",     "example": "cat" },
-    "g":  { "ipa": "ɡ",  "kind": "stop",       "say": "g",     "example": "gum" },
-    "h":  { "ipa": "h",  "kind": "continuant", "say": "hhh (breathy)", "example": "hat" },
-    "b":  { "ipa": "b",  "kind": "stop",       "say": "b",     "example": "bus" },
-    "f":  { "ipa": "f",  "kind": "continuant", "say": "fff",   "example": "fan" },
-    "l":  { "ipa": "l",  "kind": "continuant", "say": "lll",   "example": "lamp" },
-    "j":  { "ipa": "dʒ", "kind": "affricate",  "say": "j",     "example": "jam" },
-    "w":  { "ipa": "w",  "kind": "glide",      "say": "ww",    "example": "web" },
-    "v":  { "ipa": "v",  "kind": "continuant", "say": "vvv",   "example": "van" },
-    "ks": { "ipa": "ks", "kind": "continuant", "say": "ks",    "example": "box" },
-    "y":  { "ipa": "j",  "kind": "glide",      "say": "yy",    "example": "yes" },
-    "z":  { "ipa": "z",  "kind": "continuant", "say": "zzz",   "example": "zip" },
-    "r":  { "ipa": "ɹ",  "kind": "continuant", "say": "rrr",   "example": "red" },
-    "kw": { "ipa": "kw", "kind": "glide",      "say": "kw",    "example": "quick" },
-    "sh": { "ipa": "ʃ",  "kind": "continuant", "say": "shh",   "example": "ship" },
-    "ch": { "ipa": "tʃ", "kind": "affricate",  "say": "ch",    "example": "chip" },
-    "th": { "ipa": "θ",  "kind": "continuant", "say": "th (quiet, as in thin)", "example": "thin" },
-    "dh": { "ipa": "ð",  "kind": "continuant", "say": "th (buzzy, as in this)", "example": "this" },
-    "ng": { "ipa": "ŋ",  "kind": "continuant", "say": "ng",    "example": "ring" },
-    "nk": { "ipa": "ŋk", "kind": "stop",       "say": "nk",    "example": "pink" },
-    "zh": { "ipa": "ʒ",  "kind": "continuant", "say": "zh",    "example": "treasure" },
-    "a":  { "ipa": "æ",  "kind": "vowel", "say": "short a", "example": "apple" },
-    "e":  { "ipa": "ɛ",  "kind": "vowel", "say": "short e", "example": "egg" },
-    "i":  { "ipa": "ɪ",  "kind": "vowel", "say": "short i", "example": "itch" },
-    "o":  { "ipa": "ɑ",  "kind": "vowel", "say": "short o", "example": "octopus" },
-    "u":  { "ipa": "ʌ",  "kind": "vowel", "say": "short u", "example": "up" },
-    "ay": { "ipa": "eɪ", "kind": "vowel", "say": "long a",  "example": "cake" },
-    "ee": { "ipa": "i",  "kind": "vowel", "say": "long e",  "example": "tree" },
-    "igh":{ "ipa": "aɪ", "kind": "vowel", "say": "long i",  "example": "kite" },
-    "oa": { "ipa": "oʊ", "kind": "vowel", "say": "long o",  "example": "boat" },
-    "yoo":{ "ipa": "ju", "kind": "vowel", "say": "long u (you)", "example": "cute" },
-    "oo": { "ipa": "u",  "kind": "vowel", "say": "oo (moon)", "example": "moon" },
-    "uu": { "ipa": "ʊ",  "kind": "vowel", "say": "oo (book)", "example": "book" },
-    "ow": { "ipa": "aʊ", "kind": "vowel", "say": "ow",      "example": "cow" },
-    "oy": { "ipa": "ɔɪ", "kind": "vowel", "say": "oy",      "example": "boy" },
-    "aw": { "ipa": "ɔ",  "kind": "vowel", "say": "aw",      "example": "saw" },
-    "schwa": { "ipa": "ə", "kind": "vowel", "say": "uh (quick)", "example": "a (as in a cat)" },
-    "ar": { "ipa": "ɑɹ", "kind": "vowel", "say": "ar",      "example": "car" },
-    "or": { "ipa": "ɔɹ", "kind": "vowel", "say": "or",      "example": "fork" },
-    "er": { "ipa": "ɝ",  "kind": "vowel", "say": "er",      "example": "her" },
-    "air":{ "ipa": "ɛɹ", "kind": "vowel", "say": "air",     "example": "chair" },
-    "ear":{ "ipa": "ɪɹ", "kind": "vowel", "say": "ear",     "example": "deer" },
-    "shun":{ "ipa": "ʃən", "kind": "continuant", "say": "shun", "example": "station" }
+    "m": {
+      "ipa": "m",
+      "kind": "continuant",
+      "say": "mmm",
+      "example": "map"
+    },
+    "s": {
+      "ipa": "s",
+      "kind": "continuant",
+      "say": "sss",
+      "example": "sun"
+    },
+    "t": {
+      "ipa": "t",
+      "kind": "stop",
+      "say": "t",
+      "example": "top"
+    },
+    "p": {
+      "ipa": "p",
+      "kind": "stop",
+      "say": "p",
+      "example": "pig"
+    },
+    "n": {
+      "ipa": "n",
+      "kind": "continuant",
+      "say": "nnn",
+      "example": "nest"
+    },
+    "d": {
+      "ipa": "d",
+      "kind": "stop",
+      "say": "d",
+      "example": "dog"
+    },
+    "k": {
+      "ipa": "k",
+      "kind": "stop",
+      "say": "k",
+      "example": "cat"
+    },
+    "g": {
+      "ipa": "ɡ",
+      "kind": "stop",
+      "say": "g",
+      "example": "gum"
+    },
+    "h": {
+      "ipa": "h",
+      "kind": "continuant",
+      "say": "hhh (breathy)",
+      "example": "hat"
+    },
+    "b": {
+      "ipa": "b",
+      "kind": "stop",
+      "say": "b",
+      "example": "bus"
+    },
+    "f": {
+      "ipa": "f",
+      "kind": "continuant",
+      "say": "fff",
+      "example": "fan"
+    },
+    "l": {
+      "ipa": "l",
+      "kind": "continuant",
+      "say": "lll",
+      "example": "lamp"
+    },
+    "j": {
+      "ipa": "dʒ",
+      "kind": "affricate",
+      "say": "j",
+      "example": "jam"
+    },
+    "w": {
+      "ipa": "w",
+      "kind": "glide",
+      "say": "ww",
+      "example": "web"
+    },
+    "v": {
+      "ipa": "v",
+      "kind": "continuant",
+      "say": "vvv",
+      "example": "van"
+    },
+    "ks": {
+      "ipa": "ks",
+      "kind": "continuant",
+      "say": "ks",
+      "example": "box"
+    },
+    "y": {
+      "ipa": "j",
+      "kind": "glide",
+      "say": "yy",
+      "example": "yes"
+    },
+    "z": {
+      "ipa": "z",
+      "kind": "continuant",
+      "say": "zzz",
+      "example": "zip"
+    },
+    "r": {
+      "ipa": "ɹ",
+      "kind": "continuant",
+      "say": "rrr",
+      "example": "red"
+    },
+    "kw": {
+      "ipa": "kw",
+      "kind": "glide",
+      "say": "kw",
+      "example": "quick"
+    },
+    "sh": {
+      "ipa": "ʃ",
+      "kind": "continuant",
+      "say": "shh",
+      "example": "ship"
+    },
+    "ch": {
+      "ipa": "tʃ",
+      "kind": "affricate",
+      "say": "ch",
+      "example": "chip"
+    },
+    "th": {
+      "ipa": "θ",
+      "kind": "continuant",
+      "say": "th (quiet, as in thin)",
+      "example": "thin"
+    },
+    "dh": {
+      "ipa": "ð",
+      "kind": "continuant",
+      "say": "th (buzzy, as in this)",
+      "example": "this"
+    },
+    "ng": {
+      "ipa": "ŋ",
+      "kind": "continuant",
+      "say": "ng",
+      "example": "ring"
+    },
+    "nk": {
+      "ipa": "ŋk",
+      "kind": "stop",
+      "say": "nk",
+      "example": "pink"
+    },
+    "zh": {
+      "ipa": "ʒ",
+      "kind": "continuant",
+      "say": "zh",
+      "example": "treasure"
+    },
+    "a": {
+      "ipa": "æ",
+      "kind": "vowel",
+      "say": "short a",
+      "example": "apple"
+    },
+    "e": {
+      "ipa": "ɛ",
+      "kind": "vowel",
+      "say": "short e",
+      "example": "egg"
+    },
+    "i": {
+      "ipa": "ɪ",
+      "kind": "vowel",
+      "say": "short i",
+      "example": "itch"
+    },
+    "o": {
+      "ipa": "ɑ",
+      "kind": "vowel",
+      "say": "short o",
+      "example": "octopus"
+    },
+    "u": {
+      "ipa": "ʌ",
+      "kind": "vowel",
+      "say": "short u",
+      "example": "up"
+    },
+    "ay": {
+      "ipa": "eɪ",
+      "kind": "vowel",
+      "say": "long a",
+      "example": "cake"
+    },
+    "ee": {
+      "ipa": "i",
+      "kind": "vowel",
+      "say": "long e",
+      "example": "tree"
+    },
+    "igh": {
+      "ipa": "aɪ",
+      "kind": "vowel",
+      "say": "long i",
+      "example": "kite"
+    },
+    "oa": {
+      "ipa": "oʊ",
+      "kind": "vowel",
+      "say": "long o",
+      "example": "boat"
+    },
+    "yoo": {
+      "ipa": "ju",
+      "kind": "vowel",
+      "say": "long u (you)",
+      "example": "cute"
+    },
+    "oo": {
+      "ipa": "u",
+      "kind": "vowel",
+      "say": "oo (moon)",
+      "example": "moon"
+    },
+    "uu": {
+      "ipa": "ʊ",
+      "kind": "vowel",
+      "say": "oo (book)",
+      "example": "book"
+    },
+    "ow": {
+      "ipa": "aʊ",
+      "kind": "vowel",
+      "say": "ow",
+      "example": "cow"
+    },
+    "oy": {
+      "ipa": "ɔɪ",
+      "kind": "vowel",
+      "say": "oy",
+      "example": "boy"
+    },
+    "aw": {
+      "ipa": "ɔ",
+      "kind": "vowel",
+      "say": "aw",
+      "example": "saw"
+    },
+    "schwa": {
+      "ipa": "ə",
+      "kind": "vowel",
+      "say": "uh (quick)",
+      "example": "a (as in a cat)"
+    },
+    "ar": {
+      "ipa": "ɑɹ",
+      "kind": "vowel",
+      "say": "ar",
+      "example": "car"
+    },
+    "or": {
+      "ipa": "ɔɹ",
+      "kind": "vowel",
+      "say": "or",
+      "example": "fork"
+    },
+    "er": {
+      "ipa": "ɝ",
+      "kind": "vowel",
+      "say": "er",
+      "example": "her"
+    },
+    "air": {
+      "ipa": "ɛɹ",
+      "kind": "vowel",
+      "say": "air",
+      "example": "chair"
+    },
+    "ear": {
+      "ipa": "ɪɹ",
+      "kind": "vowel",
+      "say": "ear",
+      "example": "deer"
+    },
+    "shun": {
+      "ipa": "ʃən",
+      "kind": "continuant",
+      "say": "shun",
+      "example": "station"
+    }
   },
-
   "graphemes": {
-    "a": { "sound": "a" }, "e": { "sound": "e" }, "i": { "sound": "i" }, "o": { "sound": "o" }, "u": { "sound": "u" },
-    "m": { "sound": "m" }, "s": { "sound": "s" }, "t": { "sound": "t" }, "p": { "sound": "p" }, "n": { "sound": "n" },
-    "d": { "sound": "d" }, "c": { "sound": "k" }, "k": { "sound": "k" }, "ck": { "sound": "k" }, "g": { "sound": "g" },
-    "h": { "sound": "h" }, "b": { "sound": "b" }, "f": { "sound": "f" }, "l": { "sound": "l" }, "j": { "sound": "j" },
-    "w": { "sound": "w" }, "v": { "sound": "v" }, "x": { "sound": "ks" }, "y": { "sound": "y" }, "z": { "sound": "z" },
-    "r": { "sound": "r" }, "qu": { "sound": "kw" },
-    "ff": { "sound": "f" }, "ll": { "sound": "l" }, "ss": { "sound": "s" }, "zz": { "sound": "z" },
-    "sh": { "sound": "sh" }, "ch": { "sound": "ch" }, "tch": { "sound": "ch" }, "th": { "sound": "th" },
-    "wh": { "sound": "w" }, "ng": { "sound": "ng" }, "nk": { "sound": "nk" },
-    "a_e": { "sound": "ay", "split": true }, "i_e": { "sound": "igh", "split": true }, "o_e": { "sound": "oa", "split": true },
-    "u_e": { "sound": "yoo", "split": true }, "e_e": { "sound": "ee", "split": true },
-    "dge": { "sound": "j" },
-    "ai": { "sound": "ay" }, "ay": { "sound": "ay" }, "ee": { "sound": "ee" }, "ea": { "sound": "ee" },
-    "oa": { "sound": "oa" }, "ow": { "sound": "ow" }, "igh": { "sound": "igh" }, "ie": { "sound": "igh" },
-    "oo": { "sound": "oo" }, "ue": { "sound": "oo" }, "ew": { "sound": "oo" }, "ou": { "sound": "ow" },
-    "oi": { "sound": "oy" }, "oy": { "sound": "oy" }, "au": { "sound": "aw" }, "aw": { "sound": "aw" },
-    "ar": { "sound": "ar" }, "or": { "sound": "or" }, "ore": { "sound": "or" }, "oar": { "sound": "or" },
-    "er": { "sound": "er" }, "ir": { "sound": "er" }, "ur": { "sound": "er" },
-    "air": { "sound": "air" }, "are": { "sound": "air" }, "ear": { "sound": "ear" }, "eer": { "sound": "ear" },
-    "le": { "sound": "l" }, "tion": { "sound": "shun" }
+    "a": {
+      "sound": "a"
+    },
+    "e": {
+      "sound": "e"
+    },
+    "i": {
+      "sound": "i"
+    },
+    "o": {
+      "sound": "o"
+    },
+    "u": {
+      "sound": "u"
+    },
+    "m": {
+      "sound": "m"
+    },
+    "s": {
+      "sound": "s"
+    },
+    "t": {
+      "sound": "t"
+    },
+    "p": {
+      "sound": "p"
+    },
+    "n": {
+      "sound": "n"
+    },
+    "d": {
+      "sound": "d"
+    },
+    "c": {
+      "sound": "k"
+    },
+    "k": {
+      "sound": "k"
+    },
+    "ck": {
+      "sound": "k"
+    },
+    "g": {
+      "sound": "g"
+    },
+    "h": {
+      "sound": "h"
+    },
+    "b": {
+      "sound": "b"
+    },
+    "f": {
+      "sound": "f"
+    },
+    "l": {
+      "sound": "l"
+    },
+    "j": {
+      "sound": "j"
+    },
+    "w": {
+      "sound": "w"
+    },
+    "v": {
+      "sound": "v"
+    },
+    "x": {
+      "sound": "ks"
+    },
+    "y": {
+      "sound": "y"
+    },
+    "z": {
+      "sound": "z"
+    },
+    "r": {
+      "sound": "r"
+    },
+    "qu": {
+      "sound": "kw"
+    },
+    "ff": {
+      "sound": "f"
+    },
+    "ll": {
+      "sound": "l"
+    },
+    "ss": {
+      "sound": "s"
+    },
+    "zz": {
+      "sound": "z"
+    },
+    "sh": {
+      "sound": "sh"
+    },
+    "ch": {
+      "sound": "ch"
+    },
+    "tch": {
+      "sound": "ch"
+    },
+    "th": {
+      "sound": "th"
+    },
+    "wh": {
+      "sound": "w"
+    },
+    "ng": {
+      "sound": "ng"
+    },
+    "nk": {
+      "sound": "nk"
+    },
+    "a_e": {
+      "sound": "ay",
+      "split": true
+    },
+    "i_e": {
+      "sound": "igh",
+      "split": true
+    },
+    "o_e": {
+      "sound": "oa",
+      "split": true
+    },
+    "u_e": {
+      "sound": "yoo",
+      "split": true
+    },
+    "e_e": {
+      "sound": "ee",
+      "split": true
+    },
+    "dge": {
+      "sound": "j"
+    },
+    "ai": {
+      "sound": "ay"
+    },
+    "ay": {
+      "sound": "ay"
+    },
+    "ee": {
+      "sound": "ee"
+    },
+    "ea": {
+      "sound": "ee"
+    },
+    "oa": {
+      "sound": "oa"
+    },
+    "ow": {
+      "sound": "ow"
+    },
+    "igh": {
+      "sound": "igh"
+    },
+    "ie": {
+      "sound": "igh"
+    },
+    "oo": {
+      "sound": "oo"
+    },
+    "ue": {
+      "sound": "oo"
+    },
+    "ew": {
+      "sound": "oo"
+    },
+    "ou": {
+      "sound": "ow"
+    },
+    "oi": {
+      "sound": "oy"
+    },
+    "oy": {
+      "sound": "oy"
+    },
+    "au": {
+      "sound": "aw"
+    },
+    "aw": {
+      "sound": "aw"
+    },
+    "ar": {
+      "sound": "ar"
+    },
+    "or": {
+      "sound": "or"
+    },
+    "ore": {
+      "sound": "or"
+    },
+    "oar": {
+      "sound": "or"
+    },
+    "er": {
+      "sound": "er"
+    },
+    "ir": {
+      "sound": "er"
+    },
+    "ur": {
+      "sound": "er"
+    },
+    "air": {
+      "sound": "air"
+    },
+    "are": {
+      "sound": "air"
+    },
+    "ear": {
+      "sound": "ear"
+    },
+    "eer": {
+      "sound": "ear"
+    },
+    "le": {
+      "sound": "l"
+    },
+    "tion": {
+      "sound": "shun"
+    }
   },
-
   "lines": {
     "hello": "Welcome to Lit Town! Who is reading today?",
     "make-character": "Let's make your character!",
@@ -173,561 +633,6535 @@
     "placement-done": "Wow, you know so much! Let's read!",
     "step-back": "Let's warm up with some easier ones!"
   },
-
   "pictures": {
-    "mat": "item-mat", "map": "item-map", "mitt": "item-mitt", "tin": "item-tin", "pot": "item-pot",
-    "top": "item-top", "cat": "item-cat", "dog": "item-dog", "mask": "item-mask", "sock": "item-sock",
-    "cup": "item-cup", "rat": "item-rat", "drum": "item-drum", "hat": "item-hat", "mug": "item-mug",
-    "gift": "item-gift", "fan": "item-fan", "tent": "item-tent", "cap": "item-cap", "pan": "item-pan",
-    "bun": "item-bun", "bag": "item-bag", "eggs": "item-eggs", "jam": "item-jam", "net": "item-net",
-    "duck": "item-duck", "hen": "item-hen", "bus": "item-bus", "bat": "item-bat", "frog": "item-frog",
-    "nest": "item-nest", "rock": "item-rock", "crab": "item-crab", "lamp": "item-lamp", "plant": "item-plant",
-    "kite": "item-kite", "book": "item-book", "apple": "item-apple", "snack": "item-snack", "ball": "item-ball",
-    "cake": "item-cake", "milk": "item-milk", "carrot": "item-carrot", "pin": "pic-pin", "ant": "pic-ant",
-    "sun": "pic-sun", "nut": "pic-nut", "pig": "pic-pig", "pup": "pic-pup", "gum": "pic-gum",
-    "mop": "pic-mop", "pen": "pic-pen", "web": "pic-web", "wig": "pic-wig", "jet": "pic-jet",
-    "jug": "pic-jug", "log": "pic-log", "lid": "pic-lid", "flag": "pic-flag", "doll": "pic-doll",
-    "fox": "pic-fox", "ox": "pic-ox", "box": "pic-box", "six": "pic-six", "rug": "pic-rug",
-    "tub": "pic-tub", "bed": "pic-bed", "bell": "pic-bell", "fig": "pic-fig", "rabbit": "pic-rabbit",
-    "bug": "pic-bug", "octopus": "pic-octopus", "umbrella": "pic-umbrella"
+    "mat": "item-mat",
+    "map": "item-map",
+    "mitt": "item-mitt",
+    "tin": "item-tin",
+    "pot": "item-pot",
+    "top": "item-top",
+    "cat": "item-cat",
+    "dog": "item-dog",
+    "mask": "item-mask",
+    "sock": "item-sock",
+    "cup": "item-cup",
+    "rat": "item-rat",
+    "drum": "item-drum",
+    "hat": "item-hat",
+    "mug": "item-mug",
+    "gift": "item-gift",
+    "fan": "item-fan",
+    "tent": "item-tent",
+    "cap": "item-cap",
+    "pan": "item-pan",
+    "bun": "item-bun",
+    "bag": "item-bag",
+    "eggs": "item-eggs",
+    "jam": "item-jam",
+    "net": "item-net",
+    "duck": "item-duck",
+    "hen": "item-hen",
+    "bus": "item-bus",
+    "bat": "item-bat",
+    "frog": "item-frog",
+    "nest": "item-nest",
+    "rock": "item-rock",
+    "crab": "item-crab",
+    "lamp": "item-lamp",
+    "plant": "item-plant",
+    "kite": "item-kite",
+    "book": "item-book",
+    "apple": "item-apple",
+    "snack": "item-snack",
+    "ball": "item-ball",
+    "cake": "item-cake",
+    "milk": "item-milk",
+    "carrot": "item-carrot",
+    "pin": "pic-pin",
+    "ant": "pic-ant",
+    "sun": "pic-sun",
+    "nut": "pic-nut",
+    "pig": "pic-pig",
+    "pup": "pic-pup",
+    "gum": "pic-gum",
+    "mop": "pic-mop",
+    "pen": "pic-pen",
+    "web": "pic-web",
+    "wig": "pic-wig",
+    "jet": "pic-jet",
+    "jug": "pic-jug",
+    "log": "pic-log",
+    "lid": "pic-lid",
+    "flag": "pic-flag",
+    "doll": "pic-doll",
+    "fox": "pic-fox",
+    "ox": "pic-ox",
+    "box": "pic-box",
+    "six": "pic-six",
+    "rug": "pic-rug",
+    "tub": "pic-tub",
+    "bed": "pic-bed",
+    "bell": "pic-bell",
+    "fig": "pic-fig",
+    "rabbit": "pic-rabbit",
+    "bug": "pic-bug",
+    "octopus": "pic-octopus",
+    "umbrella": "pic-umbrella",
+    "muffin": "item-muffin",
+    "basket": "item-basket",
+    "bucket": "item-bucket",
+    "cactus": "item-cactus",
+    "van": "pic-van",
+    "vest": "pic-vest",
+    "yak": "pic-yak",
+    "yams": "pic-yams",
+    "zip": "pic-zip",
+    "quilt": "pic-quilt",
+    "squid": "pic-squid",
+    "pumpkin": "pic-pumpkin",
+    "magnet": "pic-magnet",
+    "napkin": "pic-napkin",
+    "laptop": "pic-laptop",
+    "ship": "pic-ship",
+    "shell": "pic-shell",
+    "fish": "pic-fish",
+    "shed": "pic-shed",
+    "chick": "pic-chick",
+    "chimp": "pic-chimp",
+    "bench": "pic-bench",
+    "chess": "pic-chess",
+    "hutch": "pic-hutch",
+    "moth": "pic-moth",
+    "ring": "pic-ring",
+    "king": "pic-king",
+    "wing": "pic-wing",
+    "swing": "pic-swing",
+    "string": "pic-string",
+    "skunk": "pic-skunk",
+    "sink": "pic-sink",
+    "trunk": "pic-trunk",
+    "tank": "pic-tank",
+    "chip": "pic-chip",
+    "whisk": "item-whisk",
+    "snake": "pic-snake",
+    "bike": "pic-bike",
+    "bone": "pic-bone",
+    "rope": "pic-rope",
+    "mule": "pic-mule",
+    "cube": "pic-cube",
+    "flute": "pic-flute",
+    "mice": "pic-mice",
+    "dice": "pic-dice",
+    "plate": "pic-plate",
+    "grape": "pic-grape",
+    "kitten": "pic-kitten",
+    "sled": "pic-sled",
+    "clock": "pic-clock",
+    "plum": "pic-plum",
+    "dress": "pic-dress",
+    "glass": "pic-glass",
+    "brick": "pic-brick",
+    "belt": "pic-belt",
+    "desk": "pic-desk",
+    "raft": "pic-raft",
+    "shrimp": "pic-shrimp",
+    "blanket": "pic-blanket",
+    "gate": "pic-gate",
+    "cave": "pic-cave",
+    "slide": "pic-slide",
+    "stone": "pic-stone",
+    "globe": "pic-globe",
+    "tube": "pic-tube",
+    "ice": "pic-ice",
+    "rice": "pic-rice",
+    "slice": "pic-slice",
+    "bath": "pic-bath",
+    "bank": "pic-bank",
+    "cash": "pic-cash",
+    "chin": "pic-chin",
+    "cliff": "pic-cliff",
+    "clip": "pic-clip",
+    "cot": "pic-cot",
+    "ditch": "pic-ditch",
+    "fin": "pic-fin",
+    "hatch": "pic-hatch",
+    "hut": "pic-hut",
+    "insect": "pic-insect",
+    "lip": "pic-lip",
+    "lunch": "pic-lunch",
+    "match": "pic-match",
+    "path": "pic-path",
+    "picnic": "pic-picnic",
+    "pins": "pic-pins",
+    "pond": "pic-pond",
+    "shelf": "pic-shelf",
+    "shop": "pic-shop",
+    "sketch": "pic-sketch",
+    "sunset": "pic-sunset",
+    "vet": "pic-vet",
+    "vat": "pic-vat",
+    "vent": "pic-vent",
+    "whip": "pic-whip",
+    "splash": "pic-splash",
+    "zigzag": "pic-zigzag"
   },
-  "animals": ["cat", "dog", "rat", "duck", "hen", "frog", "crab", "pig", "ant", "pup", "fox", "ox", "rabbit", "bug"],
-  "lexicon": [
-    "am", "at", "an", "as", "in", "it", "is", "on", "up", "us", "ox", "bad", "bag", "ban", "bat", "bed", "beg",
-    "bet", "bib", "bid", "big", "bin", "bit", "bog", "bop", "bud", "bug", "bun", "bus", "but", "cab", "can", "cap",
-    "cat", "cob", "cod", "cog", "cop", "cot", "cub", "cud", "cup", "cut", "dab", "dad", "dam", "den", "dig", "dim",
-    "din", "dip", "dog", "don", "dot", "dug", "fan", "fed", "fig", "fin", "fit", "fix", "fog", "fox", "fun", "gap",
-    "gas", "get", "gig", "got", "gum", "hat", "hem", "hen", "hid", "him", "hip", "hit", "hog", "hop", "hot", "hug",
-    "hum", "hut", "jab", "jam", "jet", "jig", "job", "jog", "jot", "jug", "kid", "kin", "kit", "lab", "lad", "lag",
-    "lap", "led", "leg", "let", "lid", "lip", "lit", "log", "lot", "mad", "man", "map", "mat", "men", "met", "mid",
-    "mix", "mob", "mom", "mop", "mud", "mug", "nab", "nag", "nap", "net", "nip", "nod", "not", "nut", "pad", "pal",
-    "pan", "pat", "peg", "pen", "pet", "pig", "pin", "pit", "pod", "pop", "pot", "pug", "pup", "rag", "ram", "ran",
-    "rap", "rat", "red", "rib", "rid", "rim", "rip", "rob", "rod", "rub", "rug", "rut", "sad", "sag", "sat", "set",
-    "sip", "sit", "six", "sob", "sod", "sop", "sum", "sun", "sup", "tab", "tag", "tan", "tap", "ten", "tin", "tip",
-    "tog", "top", "tot", "tub", "tug", "van", "vat", "vet", "wag", "web", "wed", "wet", "wig", "win", "wit", "yak",
-    "yam", "yap", "yes", "yet", "zap", "zip", "back", "deck", "dock", "duck", "kick", "lick", "lock", "luck",
-    "neck", "pack", "peck", "pick", "puck", "rack", "rock", "sack", "sick", "sock", "tack", "tick", "tuck", "damp",
-    "camp", "lamp", "ramp", "stamp", "lump", "bump", "jump", "pump", "dump", "hump", "stump", "mint", "hint",
-    "tint", "lint", "pant", "rant", "sand", "band", "hand", "land", "bend", "send", "mend", "lend", "tend", "fond",
-    "pond", "bond", "hunt", "punt", "dent", "tent", "rent", "sent", "went", "bent", "nest", "best", "pest", "rest",
-    "test", "vest", "west", "jest", "mast", "past", "fast", "last", "cast", "must", "dust", "just", "rust", "gust",
-    "mist", "list", "fist", "snap", "snip", "spin", "spit", "spot", "stop", "step", "stem", "stab", "scab", "slab",
-    "slap", "slip", "slid", "slim", "skim", "skip", "skin", "swim", "twin", "trip", "trap", "drip", "drop", "drum",
-    "crab", "grab", "grin", "grip", "grim", "frog", "flag", "flap", "flip", "flop", "clap", "clip", "clop", "plan",
-    "plot", "plug", "glad", "grub", "snug", "spun", "stun", "stub", "club", "crib", "gift", "lift", "raft", "soft",
-    "loft", "tuft", "help", "belt", "melt", "felt", "kilt", "silt", "milk", "silk", "desk", "disk", "mask", "task",
-    "tusk", "doll", "bell", "well", "tell", "sell", "fell", "hill", "fill", "mill", "pill", "will", "spill", "puff",
-    "stuff", "fluff", "cliff", "sniff", "miss", "mess", "fuss", "pass", "less", "kiss", "toss", "boss", "rabbit",
-    "sunset", "muffin", "picnic", "catnip"
+  "animals": [
+    "cat",
+    "dog",
+    "rat",
+    "duck",
+    "hen",
+    "frog",
+    "crab",
+    "pig",
+    "ant",
+    "pup",
+    "fox",
+    "ox",
+    "rabbit",
+    "bug",
+    "yak",
+    "squid",
+    "chick",
+    "chimp",
+    "skunk",
+    "moth"
   ],
-  "blocked": ["ass", "tit", "tits", "fag", "cum", "dic", "dik", "dick", "fuk", "fuc", "sex", "sux", "nig", "pis", "piss", "hell", "damn", "crap", "cok", "cock", "kok", "jiz", "jizz", "nazi", "gay", "fat", "kill", "gun", "dead", "die", "dumb", "pus", "bum", "butt", "poop", "pee", "puke", "barf", "rot", "gut", "tux", "pun"],
-  "blockedParts": ["tit", "fag", "cum", "fuk", "fuc", "fuq", "sex", "nig", "cok", "coc", "kok", "jiz", "dik", "dic", "pis", "ass", "shit", "crap", "porn", "poo", "pee", "gay", "dum", "fat", "kil", "gun", "die", "hel", "dam", "bum", "but", "pus", "wtf"],
-
+  "lexicon": [
+    "am",
+    "at",
+    "an",
+    "as",
+    "in",
+    "it",
+    "is",
+    "on",
+    "up",
+    "us",
+    "ox",
+    "bad",
+    "bag",
+    "ban",
+    "bat",
+    "bed",
+    "beg",
+    "bet",
+    "bib",
+    "bid",
+    "big",
+    "bin",
+    "bit",
+    "bog",
+    "bop",
+    "bud",
+    "bug",
+    "bun",
+    "bus",
+    "but",
+    "cab",
+    "can",
+    "cap",
+    "cat",
+    "cob",
+    "cod",
+    "cog",
+    "cop",
+    "cot",
+    "cub",
+    "cud",
+    "cup",
+    "cut",
+    "dab",
+    "dad",
+    "dam",
+    "den",
+    "dig",
+    "dim",
+    "din",
+    "dip",
+    "dog",
+    "don",
+    "dot",
+    "dug",
+    "fan",
+    "fed",
+    "fig",
+    "fin",
+    "fit",
+    "fix",
+    "fog",
+    "fox",
+    "fun",
+    "gap",
+    "gas",
+    "get",
+    "gig",
+    "got",
+    "gum",
+    "hat",
+    "hem",
+    "hen",
+    "hid",
+    "him",
+    "hip",
+    "hit",
+    "hog",
+    "hop",
+    "hot",
+    "hug",
+    "hum",
+    "hut",
+    "jab",
+    "jam",
+    "jet",
+    "jig",
+    "job",
+    "jog",
+    "jot",
+    "jug",
+    "kid",
+    "kin",
+    "kit",
+    "lab",
+    "lad",
+    "lag",
+    "lap",
+    "led",
+    "leg",
+    "let",
+    "lid",
+    "lip",
+    "lit",
+    "log",
+    "lot",
+    "mad",
+    "man",
+    "map",
+    "mat",
+    "men",
+    "met",
+    "mid",
+    "mix",
+    "mob",
+    "mom",
+    "mop",
+    "mud",
+    "mug",
+    "nab",
+    "nag",
+    "nap",
+    "net",
+    "nip",
+    "nod",
+    "not",
+    "nut",
+    "pad",
+    "pal",
+    "pan",
+    "pat",
+    "peg",
+    "pen",
+    "pet",
+    "pig",
+    "pin",
+    "pit",
+    "pod",
+    "pop",
+    "pot",
+    "pug",
+    "pup",
+    "rag",
+    "ram",
+    "ran",
+    "rap",
+    "rat",
+    "red",
+    "rib",
+    "rid",
+    "rim",
+    "rip",
+    "rob",
+    "rod",
+    "rub",
+    "rug",
+    "rut",
+    "sad",
+    "sag",
+    "sat",
+    "set",
+    "sip",
+    "sit",
+    "six",
+    "sob",
+    "sod",
+    "sop",
+    "sum",
+    "sun",
+    "sup",
+    "tab",
+    "tag",
+    "tan",
+    "tap",
+    "ten",
+    "tin",
+    "tip",
+    "tog",
+    "top",
+    "tot",
+    "tub",
+    "tug",
+    "van",
+    "vat",
+    "vet",
+    "wag",
+    "web",
+    "wed",
+    "wet",
+    "wig",
+    "win",
+    "wit",
+    "yak",
+    "yam",
+    "yap",
+    "yes",
+    "yet",
+    "zap",
+    "zip",
+    "back",
+    "deck",
+    "dock",
+    "duck",
+    "kick",
+    "lick",
+    "lock",
+    "luck",
+    "neck",
+    "pack",
+    "peck",
+    "pick",
+    "puck",
+    "rack",
+    "rock",
+    "sack",
+    "sick",
+    "sock",
+    "tack",
+    "tick",
+    "tuck",
+    "damp",
+    "camp",
+    "lamp",
+    "ramp",
+    "stamp",
+    "lump",
+    "bump",
+    "jump",
+    "pump",
+    "dump",
+    "hump",
+    "stump",
+    "mint",
+    "hint",
+    "tint",
+    "lint",
+    "pant",
+    "rant",
+    "sand",
+    "band",
+    "hand",
+    "land",
+    "bend",
+    "send",
+    "mend",
+    "lend",
+    "tend",
+    "fond",
+    "pond",
+    "bond",
+    "hunt",
+    "punt",
+    "dent",
+    "tent",
+    "rent",
+    "sent",
+    "went",
+    "bent",
+    "nest",
+    "best",
+    "pest",
+    "rest",
+    "test",
+    "vest",
+    "west",
+    "jest",
+    "mast",
+    "past",
+    "fast",
+    "last",
+    "cast",
+    "must",
+    "dust",
+    "just",
+    "rust",
+    "gust",
+    "mist",
+    "list",
+    "fist",
+    "snap",
+    "snip",
+    "spin",
+    "spit",
+    "spot",
+    "stop",
+    "step",
+    "stem",
+    "stab",
+    "scab",
+    "slab",
+    "slap",
+    "slip",
+    "slid",
+    "slim",
+    "skim",
+    "skip",
+    "skin",
+    "swim",
+    "twin",
+    "trip",
+    "trap",
+    "drip",
+    "drop",
+    "drum",
+    "crab",
+    "grab",
+    "grin",
+    "grip",
+    "grim",
+    "frog",
+    "flag",
+    "flap",
+    "flip",
+    "flop",
+    "clap",
+    "clip",
+    "clop",
+    "plan",
+    "plot",
+    "plug",
+    "glad",
+    "grub",
+    "snug",
+    "spun",
+    "stun",
+    "stub",
+    "club",
+    "crib",
+    "gift",
+    "lift",
+    "raft",
+    "soft",
+    "loft",
+    "tuft",
+    "help",
+    "belt",
+    "melt",
+    "felt",
+    "kilt",
+    "silt",
+    "milk",
+    "silk",
+    "desk",
+    "disk",
+    "mask",
+    "task",
+    "tusk",
+    "doll",
+    "bell",
+    "well",
+    "tell",
+    "sell",
+    "fell",
+    "hill",
+    "fill",
+    "mill",
+    "pill",
+    "will",
+    "spill",
+    "puff",
+    "stuff",
+    "fluff",
+    "cliff",
+    "sniff",
+    "miss",
+    "mess",
+    "fuss",
+    "pass",
+    "less",
+    "kiss",
+    "toss",
+    "boss",
+    "rabbit",
+    "sunset",
+    "muffin",
+    "picnic",
+    "catnip"
+  ],
+  "blocked": [
+    "ass",
+    "tit",
+    "tits",
+    "fag",
+    "cum",
+    "dic",
+    "dik",
+    "dick",
+    "fuk",
+    "fuc",
+    "sex",
+    "sux",
+    "nig",
+    "pis",
+    "piss",
+    "hell",
+    "damn",
+    "crap",
+    "cok",
+    "cock",
+    "kok",
+    "jiz",
+    "jizz",
+    "nazi",
+    "gay",
+    "fat",
+    "kill",
+    "gun",
+    "dead",
+    "die",
+    "dumb",
+    "pus",
+    "bum",
+    "butt",
+    "poop",
+    "pee",
+    "puke",
+    "barf",
+    "rot",
+    "gut",
+    "tux",
+    "pun"
+  ],
+  "blockedParts": [
+    "tit",
+    "fag",
+    "cum",
+    "fuk",
+    "fuc",
+    "fuq",
+    "sex",
+    "nig",
+    "cok",
+    "coc",
+    "kok",
+    "jiz",
+    "dik",
+    "dic",
+    "pis",
+    "ass",
+    "shit",
+    "crap",
+    "porn",
+    "poo",
+    "pee",
+    "gay",
+    "dum",
+    "fat",
+    "kil",
+    "gun",
+    "die",
+    "hel",
+    "dam",
+    "bum",
+    "but",
+    "pus",
+    "wtf"
+  ],
   "lessons": [
     {
-      "n": 1, "title": "Meet m, a and t", "skill": "m /m/, a /a/, t /t/; blend VC and CVC words", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "m"}, {"type": "grapheme", "g": "a"}, {"type": "grapheme", "g": "t"}],
-      "words": ["at", "am", "mat"],
-      "build": ["mat", "at"],
-      "sentences": [
-        {"t": "a mat", "yes": true, "pic": "item-mat"},
-        {"t": "a mat", "yes": false, "pic": "item-map"}
+      "n": 1,
+      "title": "Meet m, a and t",
+      "skill": "m /m/, a /a/, t /t/; blend VC and CVC words",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "m"
+        },
+        {
+          "type": "grapheme",
+          "g": "a"
+        },
+        {
+          "type": "grapheme",
+          "g": "t"
+        }
       ],
-      "activity": {"type": "pic-start", "sounds": ["m", "a", "t"]},
+      "words": [
+        "at",
+        "am",
+        "mat"
+      ],
+      "build": [
+        "mat",
+        "at"
+      ],
+      "sentences": [
+        {
+          "t": "a mat",
+          "yes": true,
+          "pic": "item-mat"
+        },
+        {
+          "t": "a mat",
+          "yes": false,
+          "pic": "item-map"
+        }
+      ],
+      "activity": {
+        "type": "pic-start",
+        "sounds": [
+          "m",
+          "a",
+          "t"
+        ]
+      },
       "parentNote": "Three sounds today, so she can read real words right away. Hold mmm, say a short a (as in apple), and a crisp t, not 'tuh'. Blend: mmm-aaa-t, mat."
     },
     {
-      "n": 2, "title": "Meet s and i", "skill": "s /s/, i /i/; tricky word: is", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "s"}, {"type": "grapheme", "g": "i"}, {"type": "sight", "w": "is"}],
-      "review": ["m", "a", "t"],
-      "words": ["it", "sit", "sat", "its", "sits", "mitt", "mitts", "mist", "mast", "mats"],
-      "build": ["sit", "mist"],
-      "sentences": [
-        {"t": "it is a mat.", "yes": true, "pic": "item-mat"},
-        {"t": "is it a mitt?", "yes": true, "pic": "item-mitt"},
-        {"t": "is it a mat?", "yes": false, "pic": "item-mitt"},
-        {"t": "a mitt is a mat.", "yes": false}
+      "n": 2,
+      "title": "Meet s and i",
+      "skill": "s /s/, i /i/; tricky word: is",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "s"
+        },
+        {
+          "type": "grapheme",
+          "g": "i"
+        },
+        {
+          "type": "sight",
+          "w": "is"
+        }
       ],
-      "activity": {"type": "pic-match", "words": ["mat", "mitt"]},
+      "review": [
+        "m",
+        "a",
+        "t"
+      ],
+      "words": [
+        "it",
+        "sit",
+        "sat",
+        "its",
+        "sits",
+        "mitt",
+        "mitts",
+        "mist",
+        "mast",
+        "mats"
+      ],
+      "build": [
+        "sit",
+        "mist"
+      ],
+      "sentences": [
+        {
+          "t": "it is a mat.",
+          "yes": true,
+          "pic": "item-mat"
+        },
+        {
+          "t": "is it a mitt?",
+          "yes": true,
+          "pic": "item-mitt"
+        },
+        {
+          "t": "is it a mat?",
+          "yes": false,
+          "pic": "item-mitt"
+        },
+        {
+          "t": "a mitt is a mat.",
+          "yes": false
+        }
+      ],
+      "activity": {
+        "type": "pic-match",
+        "words": [
+          "mat",
+          "mitt"
+        ]
+      },
       "parentNote": "'is' is a tricky word: its s sounds like z. Questions start now: read it, then tap yes or no."
     },
     {
-      "n": 3, "title": "Meet p", "skill": "p /p/; tricky word: the", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "p"}, {"type": "sight", "w": "the"}],
-      "review": ["s", "i", "is"],
-      "words": ["pat", "pit", "tip", "sip", "tap", "map", "maps", "tips", "spit", "spat", "past", "pass"],
-      "build": ["tap", "spit"],
-      "sentences": [
-        {"t": "tap the map.", "pic": "item-map"},
-        {"t": "is it the map?", "yes": true, "pic": "item-map"},
-        {"t": "is the map a mat?", "yes": false},
-        {"t": "sit, sip, sit, sip."}
+      "n": 3,
+      "title": "Meet p",
+      "skill": "p /p/; tricky word: the",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "p"
+        },
+        {
+          "type": "sight",
+          "w": "the"
+        }
       ],
-      "activity": {"type": "sort", "by": "end", "bins": ["at", "it"], "cards": ["mat", "sat", "pat", "spat", "sit", "pit", "spit"]},
+      "review": [
+        "s",
+        "i",
+        "is"
+      ],
+      "words": [
+        "pat",
+        "pit",
+        "tip",
+        "sip",
+        "tap",
+        "map",
+        "maps",
+        "tips",
+        "spit",
+        "spat",
+        "past",
+        "pass"
+      ],
+      "build": [
+        "tap",
+        "spit"
+      ],
+      "sentences": [
+        {
+          "t": "tap the map.",
+          "pic": "item-map"
+        },
+        {
+          "t": "is it the map?",
+          "yes": true,
+          "pic": "item-map"
+        },
+        {
+          "t": "is the map a mat?",
+          "yes": false
+        },
+        {
+          "t": "sit, sip, sit, sip."
+        }
+      ],
+      "activity": {
+        "type": "sort",
+        "by": "end",
+        "bins": [
+          "at",
+          "it"
+        ],
+        "cards": [
+          "mat",
+          "sat",
+          "pat",
+          "spat",
+          "sit",
+          "pit",
+          "spit"
+        ]
+      },
       "parentNote": "p is a quiet puff of air: p, not 'puh'. Sorting: words that end in -at go in one box, -it in the other."
     },
     {
-      "n": 4, "title": "Meet n", "skill": "n /n/; CVC and blends with n", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "n"}],
-      "review": ["p", "the", "i"],
-      "words": ["nap", "pan", "pin", "tin", "ant", "ants", "pant", "mint", "snap", "spin", "tan", "in"],
-      "build": ["pan", "snap"],
-      "sentences": [
-        {"t": "the ant is in the pan."},
-        {"t": "is the ant in the pan?", "yes": true},
-        {"t": "is a pan a pin?", "yes": false},
-        {"t": "tap, snap, spin!"}
+      "n": 4,
+      "title": "Meet n",
+      "skill": "n /n/; CVC and blends with n",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "n"
+        }
       ],
-      "activity": {"type": "hear-word", "words": ["pin", "pan", "nap", "tan", "mint"]},
+      "review": [
+        "p",
+        "the",
+        "i"
+      ],
+      "words": [
+        "nap",
+        "pan",
+        "pin",
+        "tin",
+        "ant",
+        "ants",
+        "pant",
+        "mint",
+        "snap",
+        "spin",
+        "tan",
+        "in"
+      ],
+      "build": [
+        "pan",
+        "snap"
+      ],
+      "sentences": [
+        {
+          "t": "the ant is in the pan."
+        },
+        {
+          "t": "is the ant in the pan?",
+          "yes": true
+        },
+        {
+          "t": "is a pan a pin?",
+          "yes": false
+        },
+        {
+          "t": "tap, snap, spin!"
+        }
+      ],
+      "activity": {
+        "type": "hear-word",
+        "words": [
+          "pin",
+          "pan",
+          "nap",
+          "tan",
+          "mint"
+        ]
+      },
       "parentNote": "Near-miss words today: pin, pan, pit. She has to look at every letter, not just the first."
     },
     {
-      "n": 5, "title": "Meet o", "skill": "o /o/; CVC and CCVC", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "o"}],
-      "review": ["n", "p", "the"],
-      "words": ["on", "not", "pot", "top", "mop", "stop", "spot", "pop", "pots", "tops", "mom", "pops"],
-      "build": ["top", "stop"],
-      "sentences": [
-        {"t": "the pot is on the mat.", "pic": "item-pot"},
-        {"t": "is the top on the pot?", "yes": false, "pic": "item-top"},
-        {"t": "is a mop a top?", "yes": false},
-        {"t": "stop, mop, pop!"}
+      "n": 5,
+      "title": "Meet o",
+      "skill": "o /o/; CVC and CCVC",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "o"
+        }
       ],
-      "activity": {"type": "finish", "items": [
-        {"t": "it is a _.", "pic": "item-pot", "answer": "pot", "wrong": ["pit", "pat"]},
-        {"t": "it is a _.", "pic": "item-top", "answer": "top", "wrong": ["tip", "tap"]},
-        {"t": "it is a _.", "pic": "pic-mop", "answer": "mop", "wrong": ["map", "mat"]}
-      ]},
+      "review": [
+        "n",
+        "p",
+        "the"
+      ],
+      "words": [
+        "on",
+        "not",
+        "pot",
+        "top",
+        "mop",
+        "stop",
+        "spot",
+        "pop",
+        "pots",
+        "tops",
+        "mom",
+        "pops"
+      ],
+      "build": [
+        "top",
+        "stop"
+      ],
+      "sentences": [
+        {
+          "t": "the pot is on the mat.",
+          "pic": "item-pot"
+        },
+        {
+          "t": "is the top on the pot?",
+          "yes": false,
+          "pic": "item-top"
+        },
+        {
+          "t": "is a mop a top?",
+          "yes": false
+        },
+        {
+          "t": "stop, mop, pop!"
+        }
+      ],
+      "activity": {
+        "type": "finish",
+        "items": [
+          {
+            "t": "it is a _.",
+            "pic": "item-pot",
+            "answer": "pot",
+            "wrong": [
+              "pit",
+              "pat"
+            ]
+          },
+          {
+            "t": "it is a _.",
+            "pic": "item-top",
+            "answer": "top",
+            "wrong": [
+              "tip",
+              "tap"
+            ]
+          },
+          {
+            "t": "it is a _.",
+            "pic": "pic-mop",
+            "answer": "mop",
+            "wrong": [
+              "map",
+              "mat"
+            ]
+          }
+        ]
+      },
       "story": {
         "title": "the spot",
         "pages": [
-          {"t": "a pot sits on the mat.", "pic": "item-pot"},
-          {"t": "stop! a spot is on the pot!"},
-          {"t": "tap it. mop it. tap, tap, mop!", "pic": "pic-mop"},
-          {"t": "the spot is not on the pot. it is on the mop!"}
+          {
+            "t": "a pot sits on the mat.",
+            "pic": "item-pot"
+          },
+          {
+            "t": "stop! a spot is on the pot!"
+          },
+          {
+            "t": "tap it. mop it. tap, tap, mop!",
+            "pic": "pic-mop"
+          },
+          {
+            "t": "the spot is not on the pot. it is on the mop!"
+          }
         ],
-        "question": {"t": "is the spot on the mop?", "yes": true}
+        "question": {
+          "t": "is the spot on the mop?",
+          "yes": true
+        }
       },
       "parentNote": "Short o as in octopus. First mini-story: tap any word to hear it."
     },
     {
-      "n": 6, "title": "Meet d", "skill": "d /d/; tricky word: I", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "d"}, {"type": "sight", "w": "I"}],
-      "review": ["o", "n", "is"],
-      "words": ["dad", "did", "dip", "sad", "and", "sand", "stand", "pad", "dot", "dots", "nod", "pond"],
-      "build": ["dip", "sand"],
-      "sentences": [
-        {"t": "I did it!"},
-        {"t": "dad and I sit on the sand."},
-        {"t": "is the pond damp?", "yes": true},
-        {"t": "is the pond on the pad?", "yes": false}
+      "n": 6,
+      "title": "Meet d",
+      "skill": "d /d/; tricky word: I",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "d"
+        },
+        {
+          "type": "sight",
+          "w": "I"
+        }
       ],
-      "activity": {"type": "direction", "picture": "color-picnic", "steps": [
-        {"t": "tap the mat.", "part": "mat"},
-        {"t": "tap the pot.", "part": "pot"},
-        {"t": "tap the ant.", "part": "ant"},
-        {"t": "tap the pan.", "part": "pan"}
-      ]},
+      "review": [
+        "o",
+        "n",
+        "is"
+      ],
+      "words": [
+        "dad",
+        "did",
+        "dip",
+        "sad",
+        "and",
+        "sand",
+        "stand",
+        "pad",
+        "dot",
+        "dots",
+        "nod",
+        "pond"
+      ],
+      "build": [
+        "dip",
+        "sand"
+      ],
+      "sentences": [
+        {
+          "t": "I did it!"
+        },
+        {
+          "t": "dad and I sit on the sand."
+        },
+        {
+          "t": "is the pond damp?",
+          "yes": true
+        },
+        {
+          "t": "is the pond on the pad?",
+          "yes": false
+        }
+      ],
+      "activity": {
+        "type": "direction",
+        "picture": "color-picnic",
+        "steps": [
+          {
+            "t": "tap the mat.",
+            "part": "mat"
+          },
+          {
+            "t": "tap the pot.",
+            "part": "pot"
+          },
+          {
+            "t": "tap the ant.",
+            "part": "ant"
+          },
+          {
+            "t": "tap the pan.",
+            "part": "pan"
+          }
+        ]
+      },
       "story": {
         "title": "an ant on the mat",
         "pages": [
-          {"t": "dad and I sit on a mat in the sand.", "pic": "item-mat"},
-          {"t": "a pot, a pan and a tin.", "pic": "item-pan"},
-          {"t": "an ant is on the mat!", "pic": "pic-ant"},
-          {"t": "the ant is in the pan! dad and I tip the pan.", "pic": "item-pan"},
-          {"t": "and the ant is on the sand."}
+          {
+            "t": "dad and I sit on a mat in the sand.",
+            "pic": "item-mat"
+          },
+          {
+            "t": "a pot, a pan and a tin.",
+            "pic": "item-pan"
+          },
+          {
+            "t": "an ant is on the mat!",
+            "pic": "pic-ant"
+          },
+          {
+            "t": "the ant is in the pan! dad and I tip the pan.",
+            "pic": "item-pan"
+          },
+          {
+            "t": "and the ant is on the sand."
+          }
         ],
-        "question": {"t": "is the ant in the pond?", "yes": false}
+        "question": {
+          "t": "is the ant in the pond?",
+          "yes": false
+        }
       },
       "parentNote": "d: tongue taps behind the top teeth. 'I' is always a big letter. Follow the directions: tap any colour, then tap the thing she read."
     },
     {
-      "n": 7, "title": "Meet c", "skill": "c says /k/; tricky word: to", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "c"}, {"type": "sight", "w": "to"}],
-      "review": ["d", "o", "I"],
-      "words": ["cat", "cats", "cap", "caps", "can", "cot", "camp", "cast", "act", "scan", "scat", "cod"],
-      "build": ["cap", "camp"],
-      "sentences": [
-        {"t": "I can camp."},
-        {"t": "can a cat sit on a cot?", "yes": true},
-        {"t": "can a cap sit on a cat?", "yes": true},
-        {"t": "can a cot pop?", "yes": false}
+      "n": 7,
+      "title": "Meet c",
+      "skill": "c says /k/; tricky word: to",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "c"
+        },
+        {
+          "type": "sight",
+          "w": "to"
+        }
       ],
-      "activity": {"type": "color", "picture": "color-cat"},
+      "review": [
+        "d",
+        "o",
+        "I"
+      ],
+      "words": [
+        "cat",
+        "cats",
+        "cap",
+        "caps",
+        "can",
+        "cot",
+        "camp",
+        "cast",
+        "act",
+        "scan",
+        "scat",
+        "cod"
+      ],
+      "build": [
+        "cap",
+        "camp"
+      ],
+      "sentences": [
+        {
+          "t": "I can camp."
+        },
+        {
+          "t": "can a cat sit on a cot?",
+          "yes": true
+        },
+        {
+          "t": "can a cap sit on a cat?",
+          "yes": true
+        },
+        {
+          "t": "can a cot pop?",
+          "yes": false
+        }
+      ],
+      "activity": {
+        "type": "color",
+        "picture": "color-cat"
+      },
       "story": {
         "title": "camp cat",
         "pages": [
-          {"t": "dad and I can camp.", "pic": "item-tent"},
-          {"t": "a cat is in the camp!", "pic": "item-cat"},
-          {"t": "the cat sat on the cot. it did a nap."},
-          {"t": "I tap the cat. the cat is in a cap!", "pic": "item-cap"},
-          {"t": "it is a camp cat."}
+          {
+            "t": "dad and I can camp.",
+            "pic": "item-tent"
+          },
+          {
+            "t": "a cat is in the camp!",
+            "pic": "item-cat"
+          },
+          {
+            "t": "the cat sat on the cot to nap."
+          },
+          {
+            "t": "I tap the cat. the cat is in a cap!",
+            "pic": "item-cap"
+          },
+          {
+            "t": "it is a camp cat."
+          }
         ],
-        "question": {"t": "did the cat sit on the cot?", "yes": true}
+        "question": {
+          "t": "did the cat sit on the cot?",
+          "yes": true
+        }
       },
       "parentNote": "c usually says /k/ (cat, cap). Free colouring today: no right or wrong."
     },
     {
-      "n": 8, "title": "Meet g", "skill": "g /g/ (as in gift)", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "g"}],
-      "review": ["c", "to", "d"],
-      "words": ["dog", "dogs", "dig", "digs", "pig", "pigs", "tag", "got", "gap", "snag", "gasp", "gig"],
-      "build": ["dig", "snag"],
-      "sentences": [
-        {"t": "a dog can dig."},
-        {"t": "can a pig dig?", "yes": true},
-        {"t": "can a dog tag a cat?", "yes": true},
-        {"t": "can a pig spin a pan?", "yes": false}
+      "n": 8,
+      "title": "Meet g",
+      "skill": "g /g/ (as in gift)",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "g"
+        }
       ],
-      "activity": {"type": "pic-start", "sounds": ["g", "d", "c"]},
+      "review": [
+        "c",
+        "to",
+        "d"
+      ],
+      "words": [
+        "dog",
+        "dogs",
+        "dig",
+        "digs",
+        "pig",
+        "pigs",
+        "tag",
+        "got",
+        "gap",
+        "snag",
+        "gasp",
+        "gig"
+      ],
+      "build": [
+        "dig",
+        "snag"
+      ],
+      "sentences": [
+        {
+          "t": "a dog can dig."
+        },
+        {
+          "t": "can a pig dig?",
+          "yes": true
+        },
+        {
+          "t": "can a dog tag a cat?",
+          "yes": true
+        },
+        {
+          "t": "can a pig spin a pan?",
+          "yes": false
+        }
+      ],
+      "activity": {
+        "type": "pic-start",
+        "sounds": [
+          "g",
+          "d",
+          "c"
+        ]
+      },
       "story": {
         "title": "tag!",
         "pages": [
-          {"t": "a pig and a dog dig in the sand.", "pic": "pic-pig"},
-          {"t": "the dog got a cap!", "pic": "item-cap"},
-          {"t": "tag! the pig got the cap.", "pic": "pic-pig"},
-          {"t": "the dog digs a pit. is the cap in it? it is!", "pic": "item-dog"}
+          {
+            "t": "a pig and a dog dig in the sand.",
+            "pic": "pic-pig"
+          },
+          {
+            "t": "the dog got a cap!",
+            "pic": "item-cap"
+          },
+          {
+            "t": "tag! the pig got the cap.",
+            "pic": "pic-pig"
+          },
+          {
+            "t": "the dog digs a pit. is the cap in it? it is!",
+            "pic": "item-dog"
+          }
         ],
-        "question": {"t": "did the pig tag the dog?", "yes": true}
+        "question": {
+          "t": "did the pig tag the dog?",
+          "yes": true
+        }
       },
       "parentNote": "g as in gift and dog (hard g). Listen for the first sound: g, d, or c?"
     },
     {
-      "n": 9, "title": "Meet e", "skill": "e /e/ (as in egg)", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "e"}],
-      "review": ["g", "a", "i"],
-      "words": ["pet", "pets", "net", "ten", "pen", "get", "nest", "step", "egg", "eggs", "tent", "den"],
-      "build": ["pet", "nest"],
-      "sentences": [
-        {"t": "ten eggs sit in a nest.", "pic": "item-nest"},
-        {"t": "can a pet get in a tent?", "yes": true},
-        {"t": "is an egg a dog?", "yes": false},
-        {"t": "I set the net on the tent."}
+      "n": 9,
+      "title": "Meet e",
+      "skill": "e /e/ (as in egg)",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "e"
+        }
       ],
-      "activity": {"type": "clue", "items": [
-        {"clues": ["it is a pet.", "it can dig in the sand."], "answer": "dog", "options": ["dog", "hen", "ant"]},
-        {"clues": ["it sits on ten eggs.", "it is in a nest."], "answer": "hen", "options": ["pig", "hen", "cat"]},
-        {"clues": ["it is not a pet.", "it can get in a pan."], "answer": "ant", "options": ["ant", "dog", "pig"]}
-      ]},
+      "review": [
+        "g",
+        "a",
+        "i"
+      ],
+      "words": [
+        "pet",
+        "pets",
+        "net",
+        "ten",
+        "pen",
+        "get",
+        "nest",
+        "step",
+        "egg",
+        "eggs",
+        "tent",
+        "den"
+      ],
+      "build": [
+        "pet",
+        "nest"
+      ],
+      "sentences": [
+        {
+          "t": "ten eggs sit in a nest.",
+          "pic": "item-nest"
+        },
+        {
+          "t": "can a pet get in a tent?",
+          "yes": true
+        },
+        {
+          "t": "is an egg a dog?",
+          "yes": false
+        },
+        {
+          "t": "I set the net on the tent."
+        }
+      ],
+      "activity": {
+        "type": "clue",
+        "items": [
+          {
+            "clues": [
+              "it is a pet.",
+              "it can dig in the sand."
+            ],
+            "answer": "dog",
+            "options": [
+              "dog",
+              "hen",
+              "ant"
+            ]
+          },
+          {
+            "clues": [
+              "it sits on ten eggs.",
+              "it is in a nest."
+            ],
+            "answer": "hen",
+            "options": [
+              "pig",
+              "hen",
+              "cat"
+            ]
+          },
+          {
+            "clues": [
+              "it is not a pet.",
+              "it can get in a pan."
+            ],
+            "answer": "ant",
+            "options": [
+              "ant",
+              "dog",
+              "pig"
+            ]
+          }
+        ]
+      },
       "story": {
         "title": "the tent",
         "pages": [
-          {"t": "dad and I get the tent set.", "pic": "item-tent"},
-          {"t": "I get in the tent. I get a pen and a pad.", "pic": "pic-pen"},
-          {"t": "a pet is in the tent!"},
-          {"t": "it is the cat. it sits on the pad and naps.", "pic": "item-cat"}
+          {
+            "t": "dad and I get the tent set.",
+            "pic": "item-tent"
+          },
+          {
+            "t": "I get in the tent. I get a pen and a pad.",
+            "pic": "pic-pen"
+          },
+          {
+            "t": "a pet is in the tent!"
+          },
+          {
+            "t": "it is the cat. it sits on the pad and naps.",
+            "pic": "item-cat"
+          }
         ],
-        "question": {"t": "did a dog get in the tent?", "yes": false}
+        "question": {
+          "t": "did a dog get in the tent?",
+          "yes": false
+        }
       },
       "parentNote": "Short e (egg) and short i (it) sound close: watch for pen/pin and pet/pit."
     },
     {
-      "n": 10, "title": "Meet u", "skill": "u /u/ (as in up); tricky word: was", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "u"}, {"type": "sight", "w": "was"}],
-      "review": ["e", "o", "to"],
-      "words": ["up", "cup", "cups", "mud", "sun", "nut", "nuts", "cut", "pup", "gum", "mug", "sunset"],
-      "build": ["sun", "cups"],
-      "sentences": [
-        {"t": "the pup was in the mud!", "pic": "pic-pup"},
-        {"t": "can a pup dig up a nut?", "yes": true},
-        {"t": "is the sun a cup?", "yes": false},
-        {"t": "I cut a nut."}
+      "n": 10,
+      "title": "Meet u",
+      "skill": "u /u/ (as in up); tricky word: was",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "u"
+        },
+        {
+          "type": "sight",
+          "w": "was"
+        }
       ],
-      "activity": {"type": "pic-match", "words": ["sun", "nut", "cup", "pup", "mug"]},
+      "review": [
+        "e",
+        "o",
+        "to"
+      ],
+      "words": [
+        "up",
+        "cup",
+        "cups",
+        "mud",
+        "sun",
+        "nut",
+        "nuts",
+        "cut",
+        "pup",
+        "gum",
+        "mug",
+        "sunset"
+      ],
+      "build": [
+        "sun",
+        "cups"
+      ],
+      "sentences": [
+        {
+          "t": "the pup was in the mud!",
+          "pic": "pic-pup"
+        },
+        {
+          "t": "can a pup dig up a nut?",
+          "yes": true
+        },
+        {
+          "t": "is the sun a cup?",
+          "yes": false
+        },
+        {
+          "t": "I cut a nut."
+        }
+      ],
+      "activity": {
+        "type": "pic-match",
+        "words": [
+          "sun",
+          "nut",
+          "cup",
+          "pup",
+          "mug"
+        ]
+      },
       "story": {
         "title": "mud pup",
         "pages": [
-          {"t": "the pup was in the sun.", "pic": "pic-pup"},
-          {"t": "the pup dug in the mud. dig, dig, dig!"},
-          {"t": "mud on the pup! mud on the mat!", "pic": "item-mat"},
-          {"t": "I get a cup and a mop.", "pic": "pic-mop"},
-          {"t": "it is a mud pup, not a sun pup!"}
+          {
+            "t": "the pup was in the sun.",
+            "pic": "pic-pup"
+          },
+          {
+            "t": "the pup dug in the mud. dig, dig, dig!"
+          },
+          {
+            "t": "mud on the pup! mud on the mat!",
+            "pic": "item-mat"
+          },
+          {
+            "t": "I get a cup and a mop.",
+            "pic": "pic-mop"
+          },
+          {
+            "t": "it is a mud pup, not a sun pup!"
+          }
         ],
-        "question": {"t": "was the pup in the mud?", "yes": true}
+        "question": {
+          "t": "was the pup in the mud?",
+          "yes": true
+        }
       },
       "parentNote": "Short u as in up. 'was' is tricky: it sounds like 'wuz'. The bakery lights up today!"
     },
     {
-      "n": 11, "title": "Meet k and ck", "skill": "k and ck both say /k/", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "k"}, {"type": "grapheme", "g": "ck"}],
-      "review": ["u", "c", "was"],
-      "words": ["kit", "kid", "kids", "skip", "sock", "socks", "kick", "pick", "pack", "snack", "duck", "stuck"],
-      "build": ["kick", "duck"],
-      "sentences": [
-        {"t": "I can kick a sock.", "pic": "item-sock"},
-        {"t": "can a duck get stuck in the mud?", "yes": true},
-        {"t": "is a snack a sock?", "yes": false},
-        {"t": "pack a snack and a cup."}
+      "n": 11,
+      "title": "Meet k and ck",
+      "skill": "k and ck both say /k/",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "k"
+        },
+        {
+          "type": "grapheme",
+          "g": "ck"
+        }
       ],
-      "activity": {"type": "finish", "items": [
-        {"t": "it is a _.", "pic": "item-sock", "answer": "sock", "wrong": ["sack", "sick"]},
-        {"t": "it is a _.", "pic": "item-duck", "answer": "duck", "wrong": ["dock", "deck"]},
-        {"t": "I can _ it.", "pic": "item-ball", "answer": "kick", "wrong": ["kit", "pick"]}
-      ]},
+      "review": [
+        "u",
+        "c",
+        "was"
+      ],
+      "words": [
+        "kit",
+        "kid",
+        "kids",
+        "skip",
+        "sock",
+        "socks",
+        "kick",
+        "pick",
+        "pack",
+        "snack",
+        "duck",
+        "stuck"
+      ],
+      "build": [
+        "kick",
+        "duck"
+      ],
+      "sentences": [
+        {
+          "t": "I can kick a sock.",
+          "pic": "item-sock"
+        },
+        {
+          "t": "can a duck get stuck in the mud?",
+          "yes": true
+        },
+        {
+          "t": "is a snack a sock?",
+          "yes": false
+        },
+        {
+          "t": "pack a snack and a cup."
+        }
+      ],
+      "activity": {
+        "type": "finish",
+        "items": [
+          {
+            "t": "it is a _.",
+            "pic": "item-sock",
+            "answer": "sock",
+            "wrong": [
+              "sack",
+              "sick"
+            ]
+          },
+          {
+            "t": "it is a _.",
+            "pic": "item-duck",
+            "answer": "duck",
+            "wrong": [
+              "dock",
+              "deck"
+            ]
+          },
+          {
+            "t": "I can _ it.",
+            "pic": "item-ball",
+            "answer": "kick",
+            "wrong": [
+              "kit",
+              "pick"
+            ]
+          }
+        ]
+      },
       "story": {
         "title": "snack duck",
         "pages": [
-          {"t": "I pack a snack.", "pic": "item-snack"},
-          {"t": "I sit on the dock. I get the snack.", "pic": "item-snack"},
-          {"t": "a duck is on the dock!", "pic": "item-duck"},
-          {"t": "the duck pecks at the snack. peck, peck, peck!"},
-          {"t": "it is a snack duck!", "pic": "item-duck"}
+          {
+            "t": "I pack a snack.",
+            "pic": "item-snack"
+          },
+          {
+            "t": "I sit on the dock. I get the snack.",
+            "pic": "item-snack"
+          },
+          {
+            "t": "a duck is on the dock!",
+            "pic": "item-duck"
+          },
+          {
+            "t": "the duck pecks at the snack. peck, peck, peck!"
+          },
+          {
+            "t": "it is a snack duck!",
+            "pic": "item-duck"
+          }
         ],
-        "question": {"t": "did the duck get the snack?", "yes": true}
+        "question": {
+          "t": "did the duck get the snack?",
+          "yes": true
+        }
       },
       "parentNote": "ck comes at the end of short words after a short vowel (duck, sock). Both k and ck say /k/."
     },
     {
-      "n": 12, "title": "Big letters", "skill": "Capital letters say the same sounds; names", "phase": "Sounds and first words",
+      "n": 12,
+      "title": "Big letters",
+      "skill": "Capital letters say the same sounds; names",
+      "phase": "Sounds and first words",
       "teach": [
-        {"type": "concept", "id": "capitals", "say": "Big letters make the same sounds as small letters. Names and sentences start with a big letter.", "pairs": [["M", "m"], ["A", "a"], ["T", "t"], ["S", "s"], ["I", "i"], ["P", "p"], ["N", "n"], ["O", "o"], ["D", "d"], ["C", "c"], ["G", "g"], ["E", "e"], ["U", "u"], ["K", "k"]], "examples": ["Pip", "Dot", "Tam", "Sid"]}
+        {
+          "type": "concept",
+          "id": "capitals",
+          "say": "Big letters make the same sounds as small letters. Names and sentences start with a big letter.",
+          "pairs": [
+            [
+              "M",
+              "m"
+            ],
+            [
+              "A",
+              "a"
+            ],
+            [
+              "T",
+              "t"
+            ],
+            [
+              "S",
+              "s"
+            ],
+            [
+              "I",
+              "i"
+            ],
+            [
+              "P",
+              "p"
+            ],
+            [
+              "N",
+              "n"
+            ],
+            [
+              "O",
+              "o"
+            ],
+            [
+              "D",
+              "d"
+            ],
+            [
+              "C",
+              "c"
+            ],
+            [
+              "G",
+              "g"
+            ],
+            [
+              "E",
+              "e"
+            ],
+            [
+              "U",
+              "u"
+            ],
+            [
+              "K",
+              "k"
+            ]
+          ],
+          "examples": [
+            "Pip",
+            "Dot",
+            "Tam",
+            "Sid"
+          ]
+        }
       ],
-      "review": ["k", "ck", "u", "e"],
-      "words": ["Pip", "Dot", "Tam", "Sid", "Dad", "Mom"],
-      "build": ["Sid", "Dot"],
+      "review": [
+        "k",
+        "ck",
+        "u",
+        "e"
+      ],
+      "words": [
+        "Pip",
+        "Dot",
+        "Tam",
+        "Sid",
+        "Dad",
+        "Mom"
+      ],
+      "build": [
+        "Sid",
+        "Dot"
+      ],
       "sentences": [
-        {"t": "Pip and Tam sit."},
-        {"t": "Dot can dig."},
-        {"t": "Can Sid spin a top?", "yes": true, "pic": "item-top"},
-        {"t": "Can a pig spin a pan?", "yes": false}
+        {
+          "t": "Pip and Tam sit."
+        },
+        {
+          "t": "Dot can dig."
+        },
+        {
+          "t": "Can Sid spin a top?",
+          "yes": true,
+          "pic": "item-top"
+        },
+        {
+          "t": "Can a pig spin a pan?",
+          "yes": false
+        }
       ],
-      "activity": {"type": "hear-word", "words": ["Pip", "Dot", "Tam", "Sid"]},
+      "activity": {
+        "type": "hear-word",
+        "words": [
+          "Pip",
+          "Dot",
+          "Tam",
+          "Sid"
+        ]
+      },
       "story": {
         "title": "Pip, Dot, Tam, and Sid",
         "pages": [
-          {"t": "Tam can pat a cat.", "pic": "item-cat"},
-          {"t": "Dot can dig in the sand."},
-          {"t": "Sid can spin a top.", "pic": "item-top"},
-          {"t": "And Pip? Pip can nap!"}
+          {
+            "t": "Tam can pat a cat.",
+            "pic": "item-cat"
+          },
+          {
+            "t": "Dot can dig in the sand."
+          },
+          {
+            "t": "Sid can spin a top.",
+            "pic": "item-top"
+          },
+          {
+            "t": "And Pip? Pip can nap!"
+          }
         ],
-        "question": {"t": "Can Dot dig?", "yes": true}
+        "question": {
+          "t": "Can Dot dig?",
+          "yes": true
+        }
       },
       "parentNote": "Meet the four friends from the town. From now on sentences start with a capital and end with a period."
     },
     {
-      "n": 13, "title": "Meet r", "skill": "r /r/; r-blends (tr, dr, gr, cr); tricky word: of", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "r"}, {"type": "sight", "w": "of"}],
-      "review": ["k", "ck", "was"],
-      "words": ["rat", "run", "red", "rip", "rock", "trip", "drop", "grin", "drum", "rug", "truck", "crust"],
-      "build": ["rug", "drum"],
-      "sentences": [
-        {"t": "A rat ran on the rug.", "pic": "item-rat"},
-        {"t": "Can a truck run on a rug?", "yes": false},
-        {"t": "Is the rug red?", "yes": true, "pic": "pic-rug"},
-        {"t": "A cup of nuts is a snack."}
+      "n": 13,
+      "title": "Meet r",
+      "skill": "r /r/; r-blends (tr, dr, gr, cr); tricky word: of",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "r"
+        },
+        {
+          "type": "sight",
+          "w": "of"
+        }
       ],
-      "activity": {"type": "direction", "picture": "color-camp", "steps": [
-        {"t": "Tap red. Tap the tent.", "part": "tent", "color": "red"},
-        {"t": "Tap the sun.", "part": "sun"},
-        {"t": "Tap the rock.", "part": "rock"},
-        {"t": "Tap the pond.", "part": "pond"}
-      ]},
+      "review": [
+        "k",
+        "ck",
+        "was"
+      ],
+      "words": [
+        "rat",
+        "run",
+        "red",
+        "rip",
+        "rock",
+        "trip",
+        "drop",
+        "grin",
+        "drum",
+        "rug",
+        "truck",
+        "crust"
+      ],
+      "build": [
+        "rug",
+        "drum"
+      ],
+      "sentences": [
+        {
+          "t": "A rat ran on the rug.",
+          "pic": "item-rat"
+        },
+        {
+          "t": "Can a truck run on a rug?",
+          "yes": false
+        },
+        {
+          "t": "Is the rug red?",
+          "yes": true,
+          "pic": "pic-rug"
+        },
+        {
+          "t": "A cup of nuts is a snack."
+        }
+      ],
+      "activity": {
+        "type": "direction",
+        "picture": "color-camp",
+        "steps": [
+          {
+            "t": "Tap red. Tap the tent.",
+            "part": "tent",
+            "color": "red"
+          },
+          {
+            "t": "Tap the sun.",
+            "part": "sun"
+          },
+          {
+            "t": "Tap the rock.",
+            "part": "rock"
+          },
+          {
+            "t": "Tap the pond.",
+            "part": "pond"
+          }
+        ]
+      },
       "story": {
         "title": "The Red Drum",
         "pages": [
-          {"t": "Tam got a red drum.", "pic": "item-drum"},
-          {"t": "Tum, tum, tum! Tam can drum."},
-          {"t": "Pip ran in. \"Is it a truck?\""},
-          {"t": "Dot ran in. \"Is it a rock?\"", "pic": "item-rock"},
-          {"t": "It is not a truck. It is Tam and a drum!", "pic": "item-drum"}
+          {
+            "t": "Tam got a red drum.",
+            "pic": "item-drum"
+          },
+          {
+            "t": "Tum, tum, tum! Tam can drum."
+          },
+          {
+            "t": "Pip ran in. \"Is it a truck?\""
+          },
+          {
+            "t": "Dot ran in. \"Is it a rock?\"",
+            "pic": "item-rock"
+          },
+          {
+            "t": "It is not a truck. It is Tam and a drum!",
+            "pic": "item-drum"
+          }
         ],
-        "question": {"t": "Did Tam get a red drum?", "yes": true}
+        "question": {
+          "t": "Did Tam get a red drum?",
+          "yes": true
+        }
       },
       "parentNote": "r is a growl, not 'er'. 'of' is tricky: it sounds like 'uv'."
     },
     {
-      "n": 14, "title": "Meet h", "skill": "h /h/", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "h"}],
-      "review": ["r", "of", "e"],
-      "words": ["hat", "hats", "hot", "hip", "hen", "hug", "hut", "hand", "hum", "hunt", "hop", "had"],
-      "build": ["hen", "hunt"],
-      "sentences": [
-        {"t": "The hen hid in a hut.", "pic": "item-hen"},
-        {"t": "Can a hat hop?", "yes": false},
-        {"t": "Is the sun hot?", "yes": true},
-        {"t": "Dad had a hug and a hot cup."}
+      "n": 14,
+      "title": "Meet h",
+      "skill": "h /h/",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "h"
+        }
       ],
-      "activity": {"type": "sort", "by": "start", "bins": ["h", "r"], "cards": ["hat", "rat", "hug", "rug", "hip", "rip", "hen", "run"]},
+      "review": [
+        "r",
+        "of",
+        "e"
+      ],
+      "words": [
+        "hat",
+        "hats",
+        "hot",
+        "hip",
+        "hen",
+        "hug",
+        "hut",
+        "hand",
+        "hum",
+        "hunt",
+        "hop",
+        "had"
+      ],
+      "build": [
+        "hen",
+        "hunt"
+      ],
+      "sentences": [
+        {
+          "t": "The hen hid in a hut.",
+          "pic": "item-hen"
+        },
+        {
+          "t": "Can a hat hop?",
+          "yes": false
+        },
+        {
+          "t": "Is the sun hot?",
+          "yes": true
+        },
+        {
+          "t": "Dad had a hug and a hot cup."
+        }
+      ],
+      "activity": {
+        "type": "sort",
+        "by": "start",
+        "bins": [
+          "h",
+          "r"
+        ],
+        "cards": [
+          "hat",
+          "rat",
+          "hug",
+          "rug",
+          "hip",
+          "rip",
+          "hen",
+          "run"
+        ]
+      },
       "story": {
         "title": "The Hat Trick",
         "pages": [
-          {"t": "Sid had a tan hat.", "pic": "item-hat"},
-          {"t": "Sid set the hat on a mat."},
-          {"t": "Tap, tap, tap! Up hops a hen!", "pic": "item-hen"},
-          {"t": "Pip and Dot grin. The hen hums."},
-          {"t": "It was a hat trick!", "pic": "item-hat"}
+          {
+            "t": "Sid had a tan hat.",
+            "pic": "item-hat"
+          },
+          {
+            "t": "Sid set the hat on a mat."
+          },
+          {
+            "t": "Tap, tap, tap! Up hops a hen!",
+            "pic": "item-hen"
+          },
+          {
+            "t": "Pip and Dot grin. The hen hums."
+          },
+          {
+            "t": "It was a hat trick!",
+            "pic": "item-hat"
+          }
         ],
-        "question": {"t": "Did a hen hop up?", "yes": true}
+        "question": {
+          "t": "Did a hen hop up?",
+          "yes": true
+        }
       },
       "parentNote": "h is just a breath: h, not 'huh'. Sorting by first sound: h or r?"
     },
     {
-      "n": 15, "title": "Meet b", "skill": "b /b/; tricky word: said", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "b"}, {"type": "sight", "w": "said"}],
-      "review": ["h", "d", "p"],
-      "words": ["bat", "bed", "bus", "big", "bun", "buns", "crab", "grab", "best", "bag", "tub", "rabbit"],
-      "build": ["bus", "crab"],
-      "sentences": [
-        {"t": "Tam said, \"Grab a bun!\"", "pic": "item-bun"},
-        {"t": "Can a bus get on a bed?", "yes": false},
-        {"t": "Can a big bus stop?", "yes": true, "pic": "item-bus"},
-        {"t": "Is a bun a bug?", "yes": false}
+      "n": 15,
+      "title": "Meet b",
+      "skill": "b /b/; tricky word: said",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "b"
+        },
+        {
+          "type": "sight",
+          "w": "said"
+        }
       ],
-      "activity": {"type": "clue", "items": [
-        {"clues": ["It is red.", "It can snap.", "It digs in the sand."], "answer": "crab", "options": ["crab", "frog", "rabbit"]},
-        {"clues": ["It can hop.", "It sits on a pad in the pond."], "answer": "frog", "options": ["duck", "frog", "pig"]},
-        {"clues": ["It can hop.", "It digs a big den."], "answer": "rabbit", "options": ["rabbit", "crab", "hen"]}
-      ]},
+      "review": [
+        "h",
+        "d",
+        "p"
+      ],
+      "words": [
+        "bat",
+        "bed",
+        "bus",
+        "big",
+        "bun",
+        "buns",
+        "crab",
+        "grab",
+        "best",
+        "bag",
+        "tub",
+        "rabbit"
+      ],
+      "build": [
+        "bus",
+        "crab"
+      ],
+      "sentences": [
+        {
+          "t": "Tam said, \"Grab a bun!\"",
+          "pic": "item-bun"
+        },
+        {
+          "t": "Can a bus get on a bed?",
+          "yes": false
+        },
+        {
+          "t": "Can a big bus stop?",
+          "yes": true,
+          "pic": "item-bus"
+        },
+        {
+          "t": "Is a bun a bug?",
+          "yes": false
+        }
+      ],
+      "activity": {
+        "type": "clue",
+        "items": [
+          {
+            "clues": [
+              "It is red.",
+              "It can snap.",
+              "It digs in the sand."
+            ],
+            "answer": "crab",
+            "options": [
+              "crab",
+              "frog",
+              "rabbit"
+            ]
+          },
+          {
+            "clues": [
+              "It can hop.",
+              "It sits on a pad in the pond."
+            ],
+            "answer": "frog",
+            "options": [
+              "duck",
+              "frog",
+              "pig"
+            ]
+          },
+          {
+            "clues": [
+              "It can hop.",
+              "It digs a big den."
+            ],
+            "answer": "rabbit",
+            "options": [
+              "rabbit",
+              "crab",
+              "hen"
+            ]
+          }
+        ]
+      },
       "story": {
         "title": "The Big Bun",
         "pages": [
-          {"t": "Tam had a big bun.", "pic": "item-bun"},
-          {"t": "It was the best bun!"},
-          {"t": "Pip said, \"Can I get a bit?\""},
-          {"t": "Dot said, \"Can I get a bit?\""},
-          {"t": "Tam cut the bun in bits. Pip, Dot, and Tam had a bit."}
+          {
+            "t": "Tam had a big bun.",
+            "pic": "item-bun"
+          },
+          {
+            "t": "It was the best bun!"
+          },
+          {
+            "t": "Pip said, \"Can I get a bit?\""
+          },
+          {
+            "t": "Dot said, \"Can I get a bit?\""
+          },
+          {
+            "t": "Tam cut the bun in bits. Pip, Dot, and Tam had a bit."
+          }
         ],
-        "question": {"t": "Did Tam cut the bun?", "yes": true}
+        "question": {
+          "t": "Did Tam cut the bun?",
+          "yes": true
+        }
       },
       "parentNote": "b vs d: b has its bump on the right (like a bat then a ball). Quote marks show someone talking."
     },
     {
-      "n": 16, "title": "Meet f", "skill": "f /f/; tricky word: you", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "f"}, {"type": "sight", "w": "you"}],
-      "review": ["b", "said", "h"],
-      "words": ["fan", "fun", "fit", "fig", "fog", "fast", "frog", "soft", "gift", "raft", "puff", "stuff"],
-      "build": ["frog", "gift"],
-      "sentences": [
-        {"t": "The frog sat on a raft.", "pic": "item-frog"},
-        {"t": "Can a bus fit in a cup?", "yes": false},
-        {"t": "Can you hop fast?"},
-        {"t": "Is a gift fun?", "yes": true, "pic": "item-gift"}
+      "n": 16,
+      "title": "Meet f",
+      "skill": "f /f/; tricky word: you",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "f"
+        },
+        {
+          "type": "sight",
+          "w": "you"
+        }
       ],
-      "activity": {"type": "color", "picture": "color-camp"},
+      "review": [
+        "b",
+        "said",
+        "h"
+      ],
+      "words": [
+        "fan",
+        "fun",
+        "fit",
+        "fig",
+        "fog",
+        "fast",
+        "frog",
+        "soft",
+        "gift",
+        "raft",
+        "puff",
+        "stuff"
+      ],
+      "build": [
+        "frog",
+        "gift"
+      ],
+      "sentences": [
+        {
+          "t": "The frog sat on a raft.",
+          "pic": "item-frog"
+        },
+        {
+          "t": "Can a bus fit in a cup?",
+          "yes": false
+        },
+        {
+          "t": "Can you hop fast?"
+        },
+        {
+          "t": "Is a gift fun?",
+          "yes": true,
+          "pic": "item-gift"
+        }
+      ],
+      "activity": {
+        "type": "color",
+        "picture": "color-camp"
+      },
       "story": {
         "title": "Fog at Camp",
         "pages": [
-          {"t": "Pip and Dad set up a tent.", "pic": "item-tent"},
-          {"t": "Fog! Pip can not spot the tent."},
-          {"t": "\"Dad! Dad! Can you spot the tent?\""},
-          {"t": "Dad gets a big fan. Puff, puff, puff!", "pic": "item-fan"},
-          {"t": "Pip spots the tent! It is fun at camp.", "pic": "item-tent"}
+          {
+            "t": "Pip and Dad set up a tent.",
+            "pic": "item-tent"
+          },
+          {
+            "t": "Fog! Pip can not spot the tent."
+          },
+          {
+            "t": "\"Dad! Dad! Can you spot the tent?\""
+          },
+          {
+            "t": "Dad gets a big fan. Puff, puff, puff!",
+            "pic": "item-fan"
+          },
+          {
+            "t": "Pip spots the tent! It is fun at camp.",
+            "pic": "item-tent"
+          }
         ],
-        "question": {"t": "Did Pip and Dad set up a tent?", "yes": true}
+        "question": {
+          "t": "Did Pip and Dad set up a tent?",
+          "yes": true
+        }
       },
       "parentNote": "f: top teeth on the bottom lip, then blow. Free colouring again: anything goes."
     },
     {
-      "n": 17, "title": "Meet l", "skill": "l /l/; l-blends; tricky word: he", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "l"}, {"type": "sight", "w": "he"}],
-      "review": ["f", "you", "r"],
-      "words": ["lap", "leg", "lid", "log", "lip", "lamp", "flag", "flip", "clap", "slip", "doll", "help"],
-      "build": ["flag", "lamp"],
-      "sentences": [
-        {"t": "He can flip on the mat."},
-        {"t": "Can a log flip?", "yes": false},
-        {"t": "Is the lamp lit?", "yes": true, "pic": "item-lamp"},
-        {"t": "Clap, clap! He did it!"}
+      "n": 17,
+      "title": "Meet l",
+      "skill": "l /l/; l-blends; tricky word: he",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "l"
+        },
+        {
+          "type": "sight",
+          "w": "he"
+        }
       ],
-      "activity": {"type": "pic-match", "words": ["lid", "log", "lamp", "flag", "doll"]},
+      "review": [
+        "f",
+        "you",
+        "r"
+      ],
+      "words": [
+        "lap",
+        "leg",
+        "lid",
+        "log",
+        "lip",
+        "lamp",
+        "flag",
+        "flip",
+        "clap",
+        "slip",
+        "doll",
+        "help"
+      ],
+      "build": [
+        "flag",
+        "lamp"
+      ],
+      "sentences": [
+        {
+          "t": "He can flip on the mat."
+        },
+        {
+          "t": "Can a log flip?",
+          "yes": false
+        },
+        {
+          "t": "Is the lamp lit?",
+          "yes": true,
+          "pic": "item-lamp"
+        },
+        {
+          "t": "Clap, clap! He did it!"
+        }
+      ],
+      "activity": {
+        "type": "pic-match",
+        "words": [
+          "lid",
+          "log",
+          "lamp",
+          "flag",
+          "doll"
+        ]
+      },
       "story": {
         "title": "The Big Flip",
         "pages": [
-          {"t": "Dot can flip on the mat.", "pic": "item-mat"},
-          {"t": "Pip can flip on the mat."},
-          {"t": "Sid can flip. He runs fast and..."},
-          {"t": "He slips! Bump!"},
-          {"t": "Sid gets up. He can flip! Clap, clap, clap!"}
+          {
+            "t": "Dot can flip on the mat.",
+            "pic": "item-mat"
+          },
+          {
+            "t": "Pip can flip on the mat."
+          },
+          {
+            "t": "Sid can flip. He runs fast and..."
+          },
+          {
+            "t": "He slips! Bump!"
+          },
+          {
+            "t": "Sid gets up. He can flip! Clap, clap, clap!"
+          }
         ],
-        "question": {"t": "Did Sid slip?", "yes": true}
+        "question": {
+          "t": "Did Sid slip?",
+          "yes": true
+        }
       },
       "parentNote": "l: tongue tip up behind the top teeth. Gymnastics story: 'flip' has an l-blend (fl)."
     },
     {
-      "n": 18, "title": "Meet w", "skill": "w /w/; tricky word: are", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "w"}, {"type": "sight", "w": "are"}],
-      "review": ["l", "he", "f"],
-      "words": ["wet", "wig", "web", "win", "swim", "twin", "twins", "wind", "went", "wag", "well", "west"],
-      "build": ["swim", "web"],
-      "sentences": [
-        {"t": "The twins swim fast."},
-        {"t": "Are the pups wet?", "yes": true, "pic": "pic-pup"},
-        {"t": "Can a wig swim?", "yes": false, "pic": "pic-wig"},
-        {"t": "Dot and Pip went to the pond."}
+      "n": 18,
+      "title": "Meet w",
+      "skill": "w /w/; tricky word: are",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "w"
+        },
+        {
+          "type": "sight",
+          "w": "are"
+        }
       ],
-      "activity": {"type": "finish", "items": [
-        {"t": "It is a _.", "pic": "pic-web", "answer": "web", "wrong": ["wed", "wet"]},
-        {"t": "It is a _.", "pic": "pic-wig", "answer": "wig", "wrong": ["wag", "dig"]},
-        {"t": "The dog can _.", "pic": "item-dog", "answer": "swim", "wrong": ["slim", "skim"]}
-      ]},
+      "review": [
+        "l",
+        "he",
+        "f"
+      ],
+      "words": [
+        "wet",
+        "wig",
+        "web",
+        "win",
+        "swim",
+        "twin",
+        "twins",
+        "wind",
+        "went",
+        "wag",
+        "well",
+        "west"
+      ],
+      "build": [
+        "swim",
+        "web"
+      ],
+      "sentences": [
+        {
+          "t": "The twins swim fast."
+        },
+        {
+          "t": "Are the pups wet?",
+          "yes": true,
+          "pic": "pic-pup"
+        },
+        {
+          "t": "Can a wig swim?",
+          "yes": false,
+          "pic": "pic-wig"
+        },
+        {
+          "t": "Dot and Pip went to the pond."
+        }
+      ],
+      "activity": {
+        "type": "finish",
+        "items": [
+          {
+            "t": "It is a _.",
+            "pic": "pic-web",
+            "answer": "web",
+            "wrong": [
+              "wed",
+              "wet"
+            ]
+          },
+          {
+            "t": "It is a _.",
+            "pic": "pic-wig",
+            "answer": "wig",
+            "wrong": [
+              "wag",
+              "dig"
+            ]
+          },
+          {
+            "t": "The dog can _.",
+            "pic": "item-dog",
+            "answer": "swim",
+            "wrong": [
+              "slim",
+              "skim"
+            ]
+          }
+        ]
+      },
       "story": {
         "title": "Swim Fast!",
         "pages": [
-          {"t": "Dot and Pip are twins."},
-          {"t": "The twins swim in the pond."},
-          {"t": "\"I will win!\" said Dot. \"I will win!\" said Pip."},
-          {"t": "Swim, swim, swim! The wind is wet and fast."},
-          {"t": "Dot and Pip get to the end. It is a twin win!"}
+          {
+            "t": "Dot and Pip are twins."
+          },
+          {
+            "t": "The twins swim in the pond."
+          },
+          {
+            "t": "\"I will win!\" said Dot. \"I will win!\" said Pip."
+          },
+          {
+            "t": "Swim, swim, swim! The twins are fast!"
+          },
+          {
+            "t": "Dot and Pip get to the end. It is a twin win!"
+          }
         ],
-        "question": {"t": "Did the twins swim?", "yes": true}
+        "question": {
+          "t": "Did the twins swim?",
+          "yes": true
+        }
       },
       "parentNote": "w: round lips, like blowing out a candle. 'are' is tricky."
     },
     {
-      "n": 19, "title": "Meet j", "skill": "j /j/; tricky word: she", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "j"}, {"type": "sight", "w": "she"}],
-      "review": ["w", "are", "b"],
-      "words": ["jam", "jet", "jets", "jog", "jug", "jump", "jumps", "job", "just", "jab", "jest", "jugs"],
-      "build": ["jump", "jet"],
-      "sentences": [
-        {"t": "She can jump."},
-        {"t": "Can a jet jog?", "yes": false, "pic": "pic-jet"},
-        {"t": "Is the jet big?", "yes": true, "pic": "pic-jet"},
-        {"t": "She jumps up and up!"}
+      "n": 19,
+      "title": "Meet j",
+      "skill": "j /j/; tricky word: she",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "j"
+        },
+        {
+          "type": "sight",
+          "w": "she"
+        }
       ],
-      "activity": {"type": "clue", "items": [
-        {"clues": ["It can jump.", "It is in the pond."], "answer": "frog", "options": ["frog", "fox", "duck"]},
-        {"clues": ["It is a pet.", "It can jump and run.", "It can wag."], "answer": "pup", "options": ["crab", "pup", "hen"]},
-        {"clues": ["It is red.", "It can not jump.", "It digs in the sand."], "answer": "crab", "options": ["pup", "frog", "crab"]}
-      ]},
+      "review": [
+        "w",
+        "are",
+        "b"
+      ],
+      "words": [
+        "jam",
+        "jet",
+        "jets",
+        "jog",
+        "jug",
+        "jump",
+        "jumps",
+        "job",
+        "just",
+        "jab",
+        "jest",
+        "jugs"
+      ],
+      "build": [
+        "jump",
+        "jet"
+      ],
+      "sentences": [
+        {
+          "t": "She can jump."
+        },
+        {
+          "t": "Can a jet jog?",
+          "yes": false,
+          "pic": "pic-jet"
+        },
+        {
+          "t": "Is the jet big?",
+          "yes": true,
+          "pic": "pic-jet"
+        },
+        {
+          "t": "She jumps up and up!"
+        }
+      ],
+      "activity": {
+        "type": "clue",
+        "items": [
+          {
+            "clues": [
+              "It can jump.",
+              "It is in the pond."
+            ],
+            "answer": "frog",
+            "options": [
+              "frog",
+              "fox",
+              "duck"
+            ]
+          },
+          {
+            "clues": [
+              "It is a pet.",
+              "It can jump and run.",
+              "It can wag."
+            ],
+            "answer": "pup",
+            "options": [
+              "crab",
+              "pup",
+              "hen"
+            ]
+          },
+          {
+            "clues": [
+              "It is red.",
+              "It can not jump.",
+              "It digs in the sand."
+            ],
+            "answer": "crab",
+            "options": [
+              "pup",
+              "frog",
+              "crab"
+            ]
+          }
+        ]
+      },
       "story": {
         "title": "Jump!",
         "pages": [
-          {"t": "Dot can jump."},
-          {"t": "She jumps on the mat. Jump, jump, jump!"},
-          {"t": "She jumps on a big rock.", "pic": "item-rock"},
-          {"t": "She can not jump on a bus!", "pic": "item-bus"},
-          {"t": "She jumps in the pond. Plop! It is fun!"}
+          {
+            "t": "Dot can jump."
+          },
+          {
+            "t": "She jumps on the mat. Jump, jump, jump!"
+          },
+          {
+            "t": "She jumps on a big rock.",
+            "pic": "item-rock"
+          },
+          {
+            "t": "She can not jump on a bus!",
+            "pic": "item-bus"
+          },
+          {
+            "t": "She jumps in the pond. Plop! It is fun!"
+          }
         ],
-        "question": {"t": "Did Dot jump on a rock?", "yes": true}
+        "question": {
+          "t": "Did Dot jump on a rock?",
+          "yes": true
+        }
       },
       "parentNote": "j: like the start of jam. 'she' is tricky until we learn sh."
     },
     {
-      "n": 20, "title": "Meet x", "skill": "x says /ks/; tricky word: my", "phase": "Sounds and first words",
-      "teach": [{"type": "grapheme", "g": "x"}, {"type": "sight", "w": "my"}],
-      "review": ["j", "she", "l"],
-      "words": ["fox", "box", "six", "mix", "fix", "ox", "wax", "next", "foxes", "boxes", "sax", "flex"],
-      "build": ["box", "six"],
-      "sentences": [
-        {"t": "My fox is in a box!", "pic": "pic-fox"},
-        {"t": "Can an ox fit in a box?", "yes": false, "pic": "pic-ox"},
-        {"t": "Can a fox jump?", "yes": true, "pic": "pic-fox"},
-        {"t": "Mix the jam in a cup."}
+      "n": 20,
+      "title": "Meet x",
+      "skill": "x says /ks/; tricky word: my",
+      "phase": "Sounds and first words",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "x"
+        },
+        {
+          "type": "sight",
+          "w": "my"
+        }
       ],
-      "activity": {"type": "sort", "by": "has", "bins": ["o", "i"], "cards": ["fox", "fix", "top", "tip", "hop", "hip", "box", "mix"]},
+      "review": [
+        "j",
+        "she",
+        "l"
+      ],
+      "words": [
+        "fox",
+        "box",
+        "six",
+        "mix",
+        "fix",
+        "ox",
+        "wax",
+        "next",
+        "foxes",
+        "boxes",
+        "sax",
+        "flex"
+      ],
+      "build": [
+        "box",
+        "six"
+      ],
+      "sentences": [
+        {
+          "t": "My fox is in a box!",
+          "pic": "pic-fox"
+        },
+        {
+          "t": "Can an ox fit in a box?",
+          "yes": false,
+          "pic": "pic-ox"
+        },
+        {
+          "t": "Can a fox jump?",
+          "yes": true,
+          "pic": "pic-fox"
+        },
+        {
+          "t": "Mix the jam in a cup."
+        }
+      ],
+      "activity": {
+        "type": "sort",
+        "by": "has",
+        "bins": [
+          "o",
+          "i"
+        ],
+        "cards": [
+          "fox",
+          "fix",
+          "top",
+          "tip",
+          "hop",
+          "hip",
+          "box",
+          "mix"
+        ]
+      },
       "story": {
         "title": "The Fox Box",
         "pages": [
-          {"t": "My gift is in a big box.", "pic": "item-gift"},
-          {"t": "I tug and tug. It is stuck!"},
-          {"t": "Mom helps fix it."},
-          {"t": "Pop! In the box is a red fox!", "pic": "pic-fox"},
-          {"t": "It is a soft fox. I hug it. It is the best gift!"}
+          {
+            "t": "My gift is in a big box.",
+            "pic": "item-gift"
+          },
+          {
+            "t": "I tug and tug. It is stuck!"
+          },
+          {
+            "t": "Mom helps fix it."
+          },
+          {
+            "t": "Pop! In the box is a red fox!",
+            "pic": "pic-fox"
+          },
+          {
+            "t": "It is a soft fox. I hug it. It is the best gift!"
+          }
         ],
-        "question": {"t": "Was a fox in the box?", "yes": true}
+        "question": {
+          "t": "Was a fox in the box?",
+          "yes": true
+        }
       },
       "parentNote": "x makes two sounds together: k-s (box = b-o-ks). 'my' is tricky until we learn y. The park lights up today!"
+    },
+    {
+      "n": 21,
+      "title": "Meet v",
+      "skill": "v /v/; tricky word: do",
+      "phase": "The rest of the letters",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "v"
+        },
+        {
+          "type": "sight",
+          "w": "do"
+        }
+      ],
+      "review": [
+        "x",
+        "my",
+        "j"
+      ],
+      "words": [
+        "van",
+        "vet",
+        "vest",
+        "vat",
+        "vent",
+        "vast",
+        "velvet",
+        {
+          "w": "vans",
+          "seg": [
+            "v",
+            "a",
+            "n",
+            "s:z"
+          ]
+        },
+        {
+          "w": "vets",
+          "seg": [
+            "v",
+            "e",
+            "t",
+            "s:z"
+          ]
+        },
+        "vests"
+      ],
+      "build": [
+        "van",
+        "vest"
+      ],
+      "sentences": [
+        {
+          "t": "The vet can fix the pup.",
+          "pic": "pic-pup"
+        },
+        {
+          "t": "Do vets help pets?",
+          "yes": true
+        },
+        {
+          "t": "Is the cat in a vest?",
+          "yes": false,
+          "pic": "item-cat"
+        },
+        {
+          "t": "Dad has a big red van."
+        }
+      ],
+      "activity": {
+        "type": "hear-word",
+        "words": [
+          "van",
+          "vet",
+          "vest",
+          "vat",
+          "vent"
+        ]
+      },
+      "story": {
+        "title": "The Vet",
+        "pages": [
+          {
+            "t": "Dot has a sick pup.",
+            "pic": "pic-pup"
+          },
+          {
+            "t": "Mom and Dot get in the van."
+          },
+          {
+            "t": "The van stops at the vet."
+          },
+          {
+            "t": "The vet pats the pup. The pup will get well."
+          },
+          {
+            "t": "The pup is well! It licks Dot."
+          }
+        ],
+        "question": {
+          "t": "Did the vet help the pup?",
+          "yes": true
+        }
+      },
+      "parentNote": "v: top teeth on the bottom lip, with a buzz (van). 'do' is tricky: the o says oo."
+    },
+    {
+      "n": 22,
+      "title": "Meet y",
+      "skill": "y says /y/; tricky word: they",
+      "phase": "The rest of the letters",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "y"
+        },
+        {
+          "type": "sight",
+          "w": "they"
+        }
+      ],
+      "review": [
+        "v",
+        "do",
+        "x"
+      ],
+      "words": [
+        "yes",
+        "yet",
+        "yum",
+        "yell",
+        "yak",
+        "yap",
+        "yelp",
+        "yuck",
+        "yip",
+        {
+          "w": "yells",
+          "seg": [
+            "y",
+            "e",
+            "l",
+            "l",
+            "s:z"
+          ]
+        },
+        {
+          "w": "yams",
+          "seg": [
+            "y",
+            "a",
+            "m",
+            "s:z"
+          ]
+        },
+        "yaks"
+      ],
+      "build": [
+        "yes",
+        "yum"
+      ],
+      "sentences": [
+        {
+          "t": "They yell, \"Yes!\""
+        },
+        {
+          "t": "Can a pup yap?",
+          "yes": true,
+          "pic": "pic-pup"
+        },
+        {
+          "t": "Can a yak fit in a cup?",
+          "yes": false,
+          "pic": "item-cup"
+        },
+        {
+          "t": "Yum! They had jam and buns.",
+          "pic": "item-jam"
+        }
+      ],
+      "activity": {
+        "type": "clue",
+        "items": [
+          {
+            "clues": [
+              "It is a pet.",
+              "It can yap.",
+              "It can dig."
+            ],
+            "answer": "pup",
+            "options": [
+              "cat",
+              "pup",
+              "pig"
+            ]
+          },
+          {
+            "clues": [
+              "It is a bug.",
+              "It has six legs.",
+              "It digs in the sand."
+            ],
+            "answer": "ant",
+            "options": [
+              "ant",
+              "frog",
+              "crab"
+            ]
+          },
+          {
+            "clues": [
+              "It is pink.",
+              "It digs in the mud."
+            ],
+            "answer": "pig",
+            "options": [
+              "ox",
+              "duck",
+              "pig"
+            ]
+          }
+        ]
+      },
+      "story": {
+        "title": "Yum!",
+        "pages": [
+          {
+            "t": "Sid has a big pot of yams.",
+            "pic": "item-pot"
+          },
+          {
+            "t": "The yams get hot in the pot."
+          },
+          {
+            "t": "Sid and Dot sit on the rug.",
+            "pic": "pic-rug"
+          },
+          {
+            "t": "They get a yam. Yum, yum!"
+          },
+          {
+            "t": "Dot yells, \"Yes! It is the best yam!\""
+          }
+        ],
+        "question": {
+          "t": "Did they get yams?",
+          "yes": true
+        }
+      },
+      "parentNote": "y at the start of a word says /y/ (yes, yum). 'they' is tricky."
+    },
+    {
+      "n": 23,
+      "title": "Meet z and zz",
+      "skill": "z and zz say /z/; tricky word: one",
+      "phase": "The rest of the letters",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "z"
+        },
+        {
+          "type": "grapheme",
+          "g": "zz"
+        },
+        {
+          "type": "sight",
+          "w": "one"
+        }
+      ],
+      "review": [
+        "y",
+        "they",
+        "v"
+      ],
+      "words": [
+        "zip",
+        "zap",
+        "zest",
+        "zigzag",
+        {
+          "w": "zips",
+          "seg": [
+            "z",
+            "i",
+            "p",
+            "s:z"
+          ]
+        },
+        "buzz",
+        "fizz",
+        "fuzz",
+        "jazz",
+        "buzzes",
+        "fizzes"
+      ],
+      "build": [
+        "zip",
+        "buzz"
+      ],
+      "sentences": [
+        {
+          "t": "One bug can buzz.",
+          "pic": "pic-bug"
+        },
+        {
+          "t": "Can a bug zigzag?",
+          "yes": true,
+          "pic": "pic-bug"
+        },
+        {
+          "t": "Can a rock buzz?",
+          "yes": false,
+          "pic": "item-rock"
+        },
+        {
+          "t": "Zip up the bag.",
+          "pic": "item-bag"
+        }
+      ],
+      "activity": {
+        "type": "finish",
+        "items": [
+          {
+            "t": "The bug can _.",
+            "pic": "pic-bug",
+            "answer": "buzz",
+            "wrong": [
+              "bus",
+              "fuzz"
+            ]
+          },
+          {
+            "t": "Zip up the _.",
+            "pic": "item-bag",
+            "answer": "bag",
+            "wrong": [
+              "big",
+              "bat"
+            ]
+          },
+          {
+            "t": "It is one big _.",
+            "pic": "pic-ox",
+            "answer": "ox",
+            "wrong": [
+              "box",
+              "fox"
+            ]
+          }
+        ]
+      },
+      "story": {
+        "title": "Buzz!",
+        "pages": [
+          {
+            "t": "One bug zigzags in the sun.",
+            "pic": "pic-bug"
+          },
+          {
+            "t": "Buzz, buzz! It lands on the cap.",
+            "pic": "item-cap"
+          },
+          {
+            "t": "Sid gets up. The bug zips off!"
+          },
+          {
+            "t": "It lands on a big red plant.",
+            "pic": "item-plant"
+          },
+          {
+            "t": "The bug sits on the plant. It is glad. Buzz!"
+          }
+        ],
+        "question": {
+          "t": "Did the bug land on a plant?",
+          "yes": true
+        }
+      },
+      "parentNote": "z buzzes like a bee. Two z's at the end (buzz) still make one sound. 'one' is tricky."
+    },
+    {
+      "n": 24,
+      "title": "Meet qu",
+      "skill": "qu says /kw/; tricky word: have",
+      "phase": "The rest of the letters",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "qu"
+        },
+        {
+          "type": "sight",
+          "w": "have"
+        }
+      ],
+      "review": [
+        "z",
+        "one",
+        "y"
+      ],
+      "words": [
+        "quit",
+        "quick",
+        "quiz",
+        "quest",
+        "quilt",
+        "quack",
+        "squid",
+        "squint",
+        "liquid",
+        "quizzes",
+        "quilts",
+        "quacks"
+      ],
+      "build": [
+        "quiz",
+        "quilt"
+      ],
+      "sentences": [
+        {
+          "t": "I have a red quilt."
+        },
+        {
+          "t": "Can a duck quack?",
+          "yes": true,
+          "pic": "item-duck"
+        },
+        {
+          "t": "Can a quilt quack?",
+          "yes": false
+        },
+        {
+          "t": "The quiz is quick!"
+        }
+      ],
+      "activity": {
+        "type": "direction",
+        "picture": "color-camp",
+        "steps": [
+          {
+            "t": "Tap red. Tap the tent.",
+            "part": "tent",
+            "color": "red"
+          },
+          {
+            "t": "Tap the rock.",
+            "part": "rock"
+          },
+          {
+            "t": "Tap the sun.",
+            "part": "sun"
+          },
+          {
+            "t": "Tap the pond.",
+            "part": "pond"
+          }
+        ]
+      },
+      "story": {
+        "title": "The Lost Quilt",
+        "pages": [
+          {
+            "t": "Dot has lost a quilt. It is red."
+          },
+          {
+            "t": "She hunts in the tent.",
+            "pic": "item-tent"
+          },
+          {
+            "t": "It is not in the box.",
+            "pic": "pic-box"
+          },
+          {
+            "t": "A duck quacks at the pond. Quack, quack!",
+            "pic": "item-duck"
+          },
+          {
+            "t": "The quilt is on the duck! The duck has a nap."
+          }
+        ],
+        "question": {
+          "t": "Was the quilt on the duck?",
+          "yes": true
+        }
+      },
+      "parentNote": "q always comes with u: qu says /kw/ (quick). 'have' is tricky: the e makes no sound."
+    },
+    {
+      "n": 25,
+      "title": "s can say /z/",
+      "skill": "s at the end can say /z/ (dogs, has); tricky word: from",
+      "phase": "The rest of the letters",
+      "teach": [
+        {
+          "type": "concept",
+          "id": "s-says-z",
+          "say": "At the end of a word, s can say z, like in dogs, has and his.",
+          "examples": [
+            "dogs",
+            "has",
+            "his",
+            "pins"
+          ]
+        },
+        {
+          "type": "sight",
+          "w": "from"
+        }
+      ],
+      "review": [
+        "qu",
+        "have",
+        "z"
+      ],
+      "words": [
+        {
+          "w": "has",
+          "seg": [
+            "h",
+            "a",
+            "s:z"
+          ]
+        },
+        {
+          "w": "his",
+          "seg": [
+            "h",
+            "i",
+            "s:z"
+          ]
+        },
+        {
+          "w": "as",
+          "seg": [
+            "a",
+            "s:z"
+          ]
+        },
+        {
+          "w": "dogs",
+          "seg": [
+            "d",
+            "o",
+            "g",
+            "s:z"
+          ]
+        },
+        {
+          "w": "beds",
+          "seg": [
+            "b",
+            "e",
+            "d",
+            "s:z"
+          ]
+        },
+        {
+          "w": "pins",
+          "seg": [
+            "p",
+            "i",
+            "n",
+            "s:z"
+          ]
+        },
+        {
+          "w": "bugs",
+          "seg": [
+            "b",
+            "u",
+            "g",
+            "s:z"
+          ]
+        },
+        {
+          "w": "hens",
+          "seg": [
+            "h",
+            "e",
+            "n",
+            "s:z"
+          ]
+        },
+        {
+          "w": "pigs",
+          "seg": [
+            "p",
+            "i",
+            "g",
+            "s:z"
+          ]
+        },
+        {
+          "w": "legs",
+          "seg": [
+            "l",
+            "e",
+            "g",
+            "s:z"
+          ]
+        },
+        {
+          "w": "cans",
+          "seg": [
+            "c",
+            "a",
+            "n",
+            "s:z"
+          ]
+        },
+        {
+          "w": "rugs",
+          "seg": [
+            "r",
+            "u",
+            "g",
+            "s:z"
+          ]
+        }
+      ],
+      "build": [
+        "dogs",
+        "pins"
+      ],
+      "sentences": [
+        {
+          "t": "His dogs dig in the sand.",
+          "pic": "item-dog"
+        },
+        {
+          "t": "Do pigs have six legs?",
+          "yes": false,
+          "pic": "pic-pig"
+        },
+        {
+          "t": "Do hens have legs?",
+          "yes": true,
+          "pic": "item-hen"
+        },
+        {
+          "t": "She has six pins from Mom."
+        }
+      ],
+      "activity": {
+        "type": "sort",
+        "by": "start",
+        "bins": [
+          "h",
+          "d"
+        ],
+        "cards": [
+          "hug",
+          "dug",
+          "hen",
+          "den",
+          "hip",
+          "dip",
+          "hot",
+          "dot"
+        ]
+      },
+      "story": {
+        "title": "Six Dogs",
+        "pages": [
+          {
+            "t": "Sid has six dogs.",
+            "pic": "item-dog"
+          },
+          {
+            "t": "The dogs dig and dig in the sand."
+          },
+          {
+            "t": "His dogs run to the pond."
+          },
+          {
+            "t": "They swim and get wet."
+          },
+          {
+            "t": "Six wet dogs run from the pond to Sid. Sid gets wet!"
+          }
+        ],
+        "question": {
+          "t": "Did Sid get wet?",
+          "yes": true
+        }
+      },
+      "parentNote": "At the end of a word s often says /z/: dogs, has, his. Read it either way and listen for the real word. 'from' is tricky."
+    },
+    {
+      "n": 26,
+      "title": "ff, ll and ss",
+      "skill": "ff, ll, ss at the end of short words; tricky word: some",
+      "phase": "The rest of the letters",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "ff"
+        },
+        {
+          "type": "grapheme",
+          "g": "ll"
+        },
+        {
+          "type": "grapheme",
+          "g": "ss"
+        },
+        {
+          "type": "sight",
+          "w": "some"
+        }
+      ],
+      "review": [
+        "s",
+        "from",
+        "qu"
+      ],
+      "words": [
+        "puff",
+        "huff",
+        "off",
+        "cliff",
+        "sniff",
+        "doll",
+        "bell",
+        "tell",
+        "fill",
+        "spill",
+        "mess",
+        "hiss"
+      ],
+      "build": [
+        "bell",
+        "cliff"
+      ],
+      "sentences": [
+        {
+          "t": "Some dolls sit on the bed.",
+          "pic": "pic-bed"
+        },
+        {
+          "t": "Can a doll huff and puff?",
+          "yes": false,
+          "pic": "pic-doll"
+        },
+        {
+          "t": "Is it a bell?",
+          "yes": true,
+          "pic": "pic-bell"
+        },
+        {
+          "t": "Do not spill the milk!",
+          "pic": "item-milk"
+        }
+      ],
+      "activity": {
+        "type": "pic-match",
+        "words": [
+          "doll",
+          "bell",
+          "mitt",
+          "eggs",
+          "nest"
+        ]
+      },
+      "story": {
+        "title": "The Big Mess",
+        "pages": [
+          {
+            "t": "Some pups ran in the den.",
+            "pic": "pic-pup"
+          },
+          {
+            "t": "They tug at a doll and a bell.",
+            "pic": "pic-doll"
+          },
+          {
+            "t": "The milk spills on the rug. It is a big mess!",
+            "pic": "item-milk"
+          },
+          {
+            "t": "Mom huffs and puffs."
+          },
+          {
+            "t": "The pups help. They lick up the milk!"
+          }
+        ],
+        "question": {
+          "t": "Did the milk spill?",
+          "yes": true
+        }
+      },
+      "parentNote": "At the end of a short word, f, l and s are often doubled: puff, bell, mess. The two letters make one sound. 'some' is tricky."
+    },
+    {
+      "n": 27,
+      "title": "a or i?",
+      "skill": "Short a and short i, near misses; tricky word: come",
+      "phase": "The rest of the letters",
+      "teach": [
+        {
+          "type": "sight",
+          "w": "come"
+        }
+      ],
+      "review": [
+        "ff",
+        "ll",
+        "some"
+      ],
+      "words": [
+        "pan",
+        "pin",
+        "bat",
+        "bit",
+        "hat",
+        "hit",
+        "fan",
+        "fin",
+        "lap",
+        "lip",
+        "clap",
+        "clip"
+      ],
+      "build": [
+        "flap",
+        "clip"
+      ],
+      "sentences": [
+        {
+          "t": "Come and sit on my lap."
+        },
+        {
+          "t": "Is it a pin?",
+          "yes": true,
+          "pic": "pic-pin"
+        },
+        {
+          "t": "Is it a pan?",
+          "yes": false,
+          "pic": "pic-pin"
+        },
+        {
+          "t": "Come in and sit. Dad has a snack.",
+          "pic": "item-snack"
+        }
+      ],
+      "activity": {
+        "type": "finish",
+        "items": [
+          {
+            "t": "It is a _.",
+            "pic": "pic-pin",
+            "answer": "pin",
+            "wrong": [
+              "pan",
+              "pen"
+            ]
+          },
+          {
+            "t": "It is a _.",
+            "pic": "item-hat",
+            "answer": "hat",
+            "wrong": [
+              "hit",
+              "hot"
+            ]
+          },
+          {
+            "t": "It is a _.",
+            "pic": "item-fan",
+            "answer": "fan",
+            "wrong": [
+              "fin",
+              "fun"
+            ]
+          }
+        ]
+      },
+      "story": {
+        "title": "The Fan",
+        "pages": [
+          {
+            "t": "It is hot. Dot has a fan.",
+            "pic": "item-fan"
+          },
+          {
+            "t": "Sid comes in. He is hot."
+          },
+          {
+            "t": "\"Come and sit,\" Dot said."
+          },
+          {
+            "t": "The fan spins and spins."
+          },
+          {
+            "t": "Sid and Dot sit and sip milk. It is not hot!",
+            "pic": "item-milk"
+          }
+        ],
+        "question": {
+          "t": "Did Dot have a fan?",
+          "yes": true
+        }
+      },
+      "parentNote": "A review of short a and short i. Near misses (pan/pin, hat/hit) teach her to look at every letter. 'come' is tricky."
+    },
+    {
+      "n": 28,
+      "title": "o, u or e?",
+      "skill": "Short o, u and e, near misses; tricky word: there",
+      "phase": "The rest of the letters",
+      "teach": [
+        {
+          "type": "sight",
+          "w": "there"
+        }
+      ],
+      "review": [
+        "come",
+        "a",
+        "i"
+      ],
+      "words": [
+        "bed",
+        "bud",
+        "hot",
+        "hut",
+        "cot",
+        "cut",
+        "pet",
+        "pot",
+        "nut",
+        "net",
+        "pond",
+        "hunt"
+      ],
+      "build": [
+        "pond",
+        "hunt"
+      ],
+      "sentences": [
+        {
+          "t": "There is a nut on the log.",
+          "pic": "pic-nut"
+        },
+        {
+          "t": "Is there a bed in the tub?",
+          "yes": false,
+          "pic": "pic-tub"
+        },
+        {
+          "t": "Is it hot in the sun?",
+          "yes": true,
+          "pic": "pic-sun"
+        },
+        {
+          "t": "There is a hut at the pond."
+        }
+      ],
+      "activity": {
+        "type": "pic-start",
+        "sounds": [
+          "o",
+          "u",
+          "e"
+        ]
+      },
+      "story": {
+        "title": "The Hut",
+        "pages": [
+          {
+            "t": "There is a hut at the pond."
+          },
+          {
+            "t": "Sid and Dot get a net.",
+            "pic": "item-net"
+          },
+          {
+            "t": "They sit on a log. They get a crab!",
+            "pic": "item-crab"
+          },
+          {
+            "t": "The crab nips the net. Snap!"
+          },
+          {
+            "t": "They let the crab hop back in the pond."
+          }
+        ],
+        "question": {
+          "t": "Did they get a crab?",
+          "yes": true
+        }
+      },
+      "parentNote": "A review of short o, u and e: bed/bud, hot/hut. 'there' is tricky."
+    },
+    {
+      "n": 29,
+      "title": "Long words",
+      "skill": "Two-part words: sun-set, nap-kin; tricky word: what",
+      "phase": "The rest of the letters",
+      "teach": [
+        {
+          "type": "sight",
+          "w": "what"
+        }
+      ],
+      "review": [
+        "there",
+        "e",
+        "u"
+      ],
+      "words": [
+        "sunset",
+        "napkin",
+        "picnic",
+        "rabbit",
+        "muffin",
+        "basket",
+        "bucket",
+        "cactus",
+        "laptop",
+        "magnet",
+        "insect",
+        "pumpkin"
+      ],
+      "build": [
+        "sunset",
+        "napkin"
+      ],
+      "sentences": [
+        {
+          "t": "What is in the basket?",
+          "pic": "item-basket"
+        },
+        {
+          "t": "Is a rabbit in the bucket?",
+          "yes": false,
+          "pic": "item-bucket"
+        },
+        {
+          "t": "Can a rabbit hop?",
+          "yes": true,
+          "pic": "pic-rabbit"
+        },
+        {
+          "t": "Dad and I had a picnic at sunset."
+        }
+      ],
+      "activity": {
+        "type": "pic-match",
+        "words": [
+          "muffin",
+          "basket",
+          "bucket",
+          "cactus",
+          "rabbit"
+        ]
+      },
+      "story": {
+        "title": "The Picnic",
+        "pages": [
+          {
+            "t": "Mom and Dot have a picnic."
+          },
+          {
+            "t": "There is a big basket on the mat.",
+            "pic": "item-basket"
+          },
+          {
+            "t": "What is in it? Muffins and a napkin!",
+            "pic": "item-muffin"
+          },
+          {
+            "t": "A rabbit hops up to the mat.",
+            "pic": "pic-rabbit"
+          },
+          {
+            "t": "Dot hands it a bit of muffin. It is a fun picnic!"
+          }
+        ],
+        "question": {
+          "t": "Did a rabbit come to the picnic?",
+          "yes": true
+        }
+      },
+      "parentNote": "Long words are short words stuck together: sun + set, nap + kin. Cover half with a finger, read each part, then put them together. 'what' is tricky."
+    },
+    {
+      "n": 30,
+      "title": "Quiz time!",
+      "skill": "Review of lessons 21 to 29; tricky word: we",
+      "phase": "The rest of the letters",
+      "teach": [
+        {
+          "type": "sight",
+          "w": "we"
+        }
+      ],
+      "review": [
+        "what",
+        "qu",
+        "zz"
+      ],
+      "words": [
+        "quiz",
+        "quick",
+        "buzz",
+        "yes",
+        "van",
+        "vest",
+        "hiss",
+        "bell",
+        "sunset",
+        "picnic",
+        {
+          "w": "his",
+          "seg": [
+            "h",
+            "i",
+            "s:z"
+          ]
+        },
+        "quilt"
+      ],
+      "build": [
+        "quick",
+        "sunset"
+      ],
+      "sentences": [
+        {
+          "t": "We have a quiz!"
+        },
+        {
+          "t": "Can a van fit in a cup?",
+          "yes": false,
+          "pic": "item-cup"
+        },
+        {
+          "t": "Is the rabbit quick?",
+          "yes": true,
+          "pic": "pic-rabbit"
+        },
+        {
+          "t": "We yell, \"Yes!\""
+        }
+      ],
+      "activity": {
+        "type": "direction",
+        "picture": "color-picnic",
+        "steps": [
+          {
+            "t": "Tap red. Tap the mat.",
+            "part": "mat",
+            "color": "red"
+          },
+          {
+            "t": "Tap the pot.",
+            "part": "pot"
+          },
+          {
+            "t": "Tap the ant.",
+            "part": "ant"
+          },
+          {
+            "t": "Tap the pan.",
+            "part": "pan"
+          }
+        ]
+      },
+      "story": {
+        "title": "The Big Quiz",
+        "pages": [
+          {
+            "t": "We are at the big quiz. Dot and Sid sit up."
+          },
+          {
+            "t": "\"What can buzz?\" the man asks. Sid hits the bell. \"A bug!\"",
+            "pic": "pic-bell"
+          },
+          {
+            "t": "\"Yes!\" said the man. Dot gets the next one."
+          },
+          {
+            "t": "\"What has six legs?\" Dot hits the bell. \"An ant!\"",
+            "pic": "pic-ant"
+          },
+          {
+            "t": "We clap and yell. Dot and Sid win the quiz!"
+          }
+        ],
+        "question": {
+          "t": "Did Dot and Sid win the quiz?",
+          "yes": true
+        }
+      },
+      "parentNote": "A review of lessons 21 to 29. Read the story together twice: the second time, she reads it on her own. 'we' is tricky."
+    },
+    {
+      "n": 31,
+      "title": "Meet sh",
+      "skill": "sh says /sh/; tricky word: me",
+      "phase": "Two letters, one sound",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "sh"
+        },
+        {
+          "type": "sight",
+          "w": "me"
+        }
+      ],
+      "review": [
+        "we",
+        "what",
+        "qu"
+      ],
+      "words": [
+        "ship",
+        "shop",
+        "shed",
+        "shut",
+        "fish",
+        "dash",
+        "cash",
+        "mash",
+        "wish",
+        "shell",
+        "shelf",
+        "splash"
+      ],
+      "build": [
+        "ship",
+        "fish"
+      ],
+      "sentences": [
+        {
+          "t": "Hand me the shell."
+        },
+        {
+          "t": "Can a fish swim?",
+          "yes": true,
+          "pic": "item-fishbowl"
+        },
+        {
+          "t": "Can a ship fit in a cup?",
+          "yes": false,
+          "pic": "item-cup"
+        },
+        {
+          "t": "Hush! The cat naps on the shelf.",
+          "pic": "item-cat"
+        }
+      ],
+      "activity": {
+        "type": "hear-word",
+        "words": [
+          "ship",
+          "shop",
+          "shed",
+          "fish",
+          "wish"
+        ]
+      },
+      "story": {
+        "title": "The Fish Shop",
+        "pages": [
+          {
+            "t": "Mom and Dot shop at the fish shop."
+          },
+          {
+            "t": "There is a big fish in a tank."
+          },
+          {
+            "t": "Dot wishes she had a fish."
+          },
+          {
+            "t": "Mom gets Dot a fish in a dish.",
+            "pic": "item-fishbowl"
+          },
+          {
+            "t": "Dot is glad. Splash, splash! The fish swims."
+          }
+        ],
+        "question": {
+          "t": "Did Dot get a fish?",
+          "yes": true
+        }
+      },
+      "parentNote": "sh: two letters, one sound, like asking for quiet. 'me' is tricky: the e says its name."
+    },
+    {
+      "n": 32,
+      "title": "Meet ch",
+      "skill": "ch says /ch/; tricky word: be",
+      "phase": "Two letters, one sound",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "ch"
+        },
+        {
+          "type": "sight",
+          "w": "be"
+        }
+      ],
+      "review": [
+        "sh",
+        "me",
+        "ff"
+      ],
+      "words": [
+        "chip",
+        "chop",
+        "chin",
+        "chat",
+        "chess",
+        "chick",
+        "chimp",
+        "much",
+        "such",
+        "rich",
+        "lunch",
+        "bench"
+      ],
+      "build": [
+        "chip",
+        "lunch"
+      ],
+      "sentences": [
+        {
+          "t": "Can we have lunch on the bench?"
+        },
+        {
+          "t": "Can a chick chop logs?",
+          "yes": false,
+          "pic": "pic-log"
+        },
+        {
+          "t": "Can a chick be in an egg?",
+          "yes": true,
+          "pic": "item-eggs"
+        },
+        {
+          "t": "The chimp has chips at lunch."
+        }
+      ],
+      "activity": {
+        "type": "clue",
+        "items": [
+          {
+            "clues": [
+              "It has a chick.",
+              "It sits on eggs."
+            ],
+            "answer": "hen",
+            "options": [
+              "hen",
+              "duck",
+              "fox"
+            ]
+          },
+          {
+            "clues": [
+              "It munches on plants.",
+              "It can hop."
+            ],
+            "answer": "rabbit",
+            "options": [
+              "frog",
+              "rabbit",
+              "pig"
+            ]
+          },
+          {
+            "clues": [
+              "It is in the pond.",
+              "It can swim.",
+              "It can quack."
+            ],
+            "answer": "duck",
+            "options": [
+              "crab",
+              "frog",
+              "duck"
+            ]
+          }
+        ]
+      },
+      "story": {
+        "title": "Lunch on the Bench",
+        "pages": [
+          {
+            "t": "Sid has lunch on a bench."
+          },
+          {
+            "t": "He has chips and a big bun.",
+            "pic": "item-bun"
+          },
+          {
+            "t": "A chick hops up on the bench."
+          },
+          {
+            "t": "The chick pecks at a chip."
+          },
+          {
+            "t": "Sid hands the chick a chip. It munches it. Yum!"
+          }
+        ],
+        "question": {
+          "t": "Did the chick get a chip?",
+          "yes": true
+        }
+      },
+      "parentNote": "ch: like a sneeze, ch-ch-ch (chip, lunch). 'be' is tricky: the e says its name."
+    },
+    {
+      "n": 33,
+      "title": "Meet tch",
+      "skill": "tch says /ch/ after a short vowel; tricky word: her",
+      "phase": "Two letters, one sound",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "tch"
+        },
+        {
+          "type": "sight",
+          "w": "her"
+        }
+      ],
+      "review": [
+        "ch",
+        "be",
+        "sh"
+      ],
+      "words": [
+        "catch",
+        "match",
+        "patch",
+        "latch",
+        "hatch",
+        "itch",
+        "pitch",
+        "stitch",
+        "sketch",
+        "fetch",
+        "ditch",
+        "hutch"
+      ],
+      "build": [
+        "catch",
+        "match"
+      ],
+      "sentences": [
+        {
+          "t": "She can catch it in her mitt.",
+          "pic": "item-mitt"
+        },
+        {
+          "t": "Can a dog fetch?",
+          "yes": true,
+          "pic": "item-dog"
+        },
+        {
+          "t": "Can a rock catch a fish?",
+          "yes": false,
+          "pic": "item-rock"
+        },
+        {
+          "t": "Dot sketches her cat.",
+          "pic": "item-cat"
+        }
+      ],
+      "activity": {
+        "type": "finish",
+        "items": [
+          {
+            "t": "The dog can _ a stick.",
+            "pic": "item-dog",
+            "answer": "fetch"
+          },
+          {
+            "t": "I can _ it in my mitt.",
+            "pic": "item-mitt",
+            "answer": "catch"
+          },
+          {
+            "t": "The chick is in the _.",
+            "answer": "hutch"
+          }
+        ]
+      },
+      "story": {
+        "title": "The Hatch",
+        "pages": [
+          {
+            "t": "There is an egg in the hutch.",
+            "pic": "item-eggs"
+          },
+          {
+            "t": "Tap, tap! The egg has a crack."
+          },
+          {
+            "t": "Dot sits still."
+          },
+          {
+            "t": "Pop! The egg hatches. It is a chick!"
+          },
+          {
+            "t": "Dot sketches the chick in her pad."
+          }
+        ],
+        "question": {
+          "t": "Did the egg hatch?",
+          "yes": true
+        }
+      },
+      "parentNote": "tch says /ch/ at the end of a word after a short vowel (catch, itch). The t makes no sound of its own. 'her' is tricky."
+    },
+    {
+      "n": 34,
+      "title": "Meet th",
+      "skill": "th (quiet, as in thin); tricky word: who",
+      "phase": "Two letters, one sound",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "th"
+        },
+        {
+          "type": "sight",
+          "w": "who"
+        }
+      ],
+      "review": [
+        "tch",
+        "her",
+        "ch"
+      ],
+      "words": [
+        "thin",
+        "thick",
+        "thud",
+        "thump",
+        "bath",
+        "math",
+        "moth",
+        "path",
+        "cloth",
+        "broth",
+        "tenth",
+        "fifth"
+      ],
+      "build": [
+        "bath",
+        "thick"
+      ],
+      "sentences": [
+        {
+          "t": "Who has a bath?",
+          "pic": "pic-tub"
+        },
+        {
+          "t": "Can a moth sit on a lamp?",
+          "yes": true,
+          "pic": "item-lamp"
+        },
+        {
+          "t": "Is this log thin?",
+          "yes": false,
+          "pic": "pic-log"
+        },
+        {
+          "t": "Thump! Who is at the hut?"
+        }
+      ],
+      "activity": {
+        "type": "pic-match",
+        "words": [
+          "lamp",
+          "tent",
+          "nest",
+          "gift",
+          "plant"
+        ]
+      },
+      "story": {
+        "title": "Who Is It?",
+        "pages": [
+          {
+            "t": "Thump, thump! Who is on the path?"
+          },
+          {
+            "t": "It is not a moth. A moth is thin."
+          },
+          {
+            "t": "It is not a cat. A cat can not thump."
+          },
+          {
+            "t": "It is a rabbit! It thumps on the path.",
+            "pic": "pic-rabbit"
+          },
+          {
+            "t": "The rabbit hops off to the pond. Thump, thump!"
+          }
+        ],
+        "question": {
+          "t": "Was it a rabbit?",
+          "yes": true
+        }
+      },
+      "parentNote": "th: tongue between the teeth, just air (thin, bath). 'who' is tricky."
+    },
+    {
+      "n": 35,
+      "title": "th can buzz",
+      "skill": "th can buzz (this, that); tricky word: were",
+      "phase": "Two letters, one sound",
+      "teach": [
+        {
+          "type": "concept",
+          "id": "th-buzz",
+          "say": "th can also buzz, like in this, that and then.",
+          "examples": [
+            "this",
+            "that",
+            "then",
+            "them"
+          ]
+        },
+        {
+          "type": "sight",
+          "w": "were"
+        }
+      ],
+      "review": [
+        "th",
+        "who",
+        "tch"
+      ],
+      "words": [
+        {
+          "w": "this",
+          "seg": [
+            "th:dh",
+            "i",
+            "s"
+          ]
+        },
+        {
+          "w": "that",
+          "seg": [
+            "th:dh",
+            "a",
+            "t"
+          ]
+        },
+        {
+          "w": "then",
+          "seg": [
+            "th:dh",
+            "e",
+            "n"
+          ]
+        },
+        {
+          "w": "them",
+          "seg": [
+            "th:dh",
+            "e",
+            "m"
+          ]
+        },
+        {
+          "w": "than",
+          "seg": [
+            "th:dh",
+            "a",
+            "n"
+          ]
+        },
+        {
+          "w": "with",
+          "seg": [
+            "w",
+            "i",
+            "th:dh"
+          ]
+        }
+      ],
+      "build": [
+        "that",
+        "then"
+      ],
+      "sentences": [
+        {
+          "t": "This is my hat.",
+          "pic": "item-hat"
+        },
+        {
+          "t": "Is that a fox?",
+          "yes": true,
+          "pic": "pic-fox"
+        },
+        {
+          "t": "Is this a bus?",
+          "yes": false,
+          "pic": "item-cup"
+        },
+        {
+          "t": "We were at the pond, and then we went back."
+        }
+      ],
+      "activity": {
+        "type": "direction",
+        "picture": "color-cat",
+        "steps": [
+          {
+            "t": "Tap red. Tap the hat.",
+            "part": "hat",
+            "color": "red"
+          },
+          {
+            "t": "Tap the cat.",
+            "part": "cat"
+          },
+          {
+            "t": "Tap the mat.",
+            "part": "mat"
+          }
+        ]
+      },
+      "story": {
+        "title": "Then What?",
+        "pages": [
+          {
+            "t": "We are at the pond."
+          },
+          {
+            "t": "Then a duck swims up to us.",
+            "pic": "item-duck"
+          },
+          {
+            "t": "Then a frog hops on a log.",
+            "pic": "item-frog"
+          },
+          {
+            "t": "Then the sun sets.",
+            "pic": "pic-sun"
+          },
+          {
+            "t": "That is the end of this fun trip."
+          }
+        ],
+        "question": {
+          "t": "Did a duck swim up?",
+          "yes": true
+        }
+      },
+      "parentNote": "th has a second sound with a buzz in it (this, that, then). Feel your throat buzz. 'were' is tricky."
+    },
+    {
+      "n": 36,
+      "title": "Meet wh",
+      "skill": "wh says /w/; tricky word: where",
+      "phase": "Two letters, one sound",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "wh"
+        },
+        {
+          "type": "sight",
+          "w": "where"
+        }
+      ],
+      "review": [
+        "th",
+        "were",
+        "tch"
+      ],
+      "words": [
+        "when",
+        "which",
+        "whip",
+        "whisk",
+        "whiff",
+        "wham",
+        "whack",
+        "whiz"
+      ],
+      "build": [
+        "whisk",
+        "when"
+      ],
+      "sentences": [
+        {
+          "t": "Where is the whisk?",
+          "pic": "item-whisk"
+        },
+        {
+          "t": "Can a whisk mix eggs?",
+          "yes": true,
+          "pic": "item-whisk"
+        },
+        {
+          "t": "Can a whisk swim?",
+          "yes": false,
+          "pic": "item-whisk"
+        },
+        {
+          "t": "When is lunch?"
+        }
+      ],
+      "activity": {
+        "type": "clue",
+        "items": [
+          {
+            "clues": [
+              "It is a bug.",
+              "It can buzz."
+            ],
+            "answer": "bug",
+            "options": [
+              "bug",
+              "ant",
+              "crab"
+            ]
+          },
+          {
+            "clues": [
+              "It is a pet.",
+              "It can catch rats."
+            ],
+            "answer": "cat",
+            "options": [
+              "hen",
+              "cat",
+              "duck"
+            ]
+          },
+          {
+            "clues": [
+              "It has a red shell.",
+              "It runs on the sand."
+            ],
+            "answer": "crab",
+            "options": [
+              "frog",
+              "ox",
+              "crab"
+            ]
+          }
+        ]
+      },
+      "story": {
+        "title": "Where Is It?",
+        "pages": [
+          {
+            "t": "Mom has a whisk. Where is it?",
+            "pic": "item-whisk"
+          },
+          {
+            "t": "Is it in the pot? It is not.",
+            "pic": "item-pot"
+          },
+          {
+            "t": "Is it in the box? It is not.",
+            "pic": "pic-box"
+          },
+          {
+            "t": "Which pup has it? Sid's pup!",
+            "pic": "pic-pup"
+          },
+          {
+            "t": "Mom gets the whisk. The pup gets a hug."
+          }
+        ],
+        "question": {
+          "t": "Did the pup have the whisk?",
+          "yes": true
+        }
+      },
+      "parentNote": "wh says /w/ (when, whisk). Most question words start with wh. 'where' is tricky."
+    },
+    {
+      "n": 37,
+      "title": "Meet ng",
+      "skill": "ng says /ng/; tricky word: your",
+      "phase": "Two letters, one sound",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "ng"
+        },
+        {
+          "type": "sight",
+          "w": "your"
+        }
+      ],
+      "review": [
+        "wh",
+        "where",
+        "th"
+      ],
+      "words": [
+        "sing",
+        "ring",
+        "king",
+        "wing",
+        "long",
+        "song",
+        "hang",
+        "bang",
+        "swing",
+        "string",
+        "strong",
+        "sting"
+      ],
+      "build": [
+        "ring",
+        "swing"
+      ],
+      "sentences": [
+        {
+          "t": "Is that your ring?"
+        },
+        {
+          "t": "Can a king sing?",
+          "yes": true
+        },
+        {
+          "t": "Can a rock sing?",
+          "yes": false,
+          "pic": "item-rock"
+        },
+        {
+          "t": "Bang! The bell rang.",
+          "pic": "pic-bell"
+        }
+      ],
+      "activity": {
+        "type": "finish",
+        "items": [
+          {
+            "t": "The bell can _.",
+            "pic": "pic-bell",
+            "answer": "ring"
+          },
+          {
+            "t": "Sid can sing a _.",
+            "answer": "song"
+          },
+          {
+            "t": "The duck has a _.",
+            "pic": "item-duck",
+            "answer": "wing"
+          }
+        ]
+      },
+      "story": {
+        "title": "The King's Song",
+        "pages": [
+          {
+            "t": "The king has a long song."
+          },
+          {
+            "t": "He sings it on the swing."
+          },
+          {
+            "t": "Ding, dong! The bell rings.",
+            "pic": "pic-bell"
+          },
+          {
+            "t": "The king sings and sings. His song is long!"
+          },
+          {
+            "t": "\"Is your song at the end?\" Dot asks. \"Not yet!\""
+          }
+        ],
+        "question": {
+          "t": "Was the song long?",
+          "yes": true
+        }
+      },
+      "parentNote": "ng is one sound made at the back of the mouth (sing, long). 'your' is tricky."
+    },
+    {
+      "n": 38,
+      "title": "Meet nk",
+      "skill": "nk says /ngk/; tricky word: want",
+      "phase": "Two letters, one sound",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "nk"
+        },
+        {
+          "type": "sight",
+          "w": "want"
+        }
+      ],
+      "review": [
+        "ng",
+        "your",
+        "wh"
+      ],
+      "words": [
+        "pink",
+        "sink",
+        "wink",
+        "think",
+        "bunk",
+        "junk",
+        "skunk",
+        "honk",
+        "bank",
+        "tank",
+        "drink",
+        "trunk"
+      ],
+      "build": [
+        "pink",
+        "skunk"
+      ],
+      "sentences": [
+        {
+          "t": "I want a pink drink."
+        },
+        {
+          "t": "Can a skunk honk?",
+          "yes": false
+        },
+        {
+          "t": "Can a duck drink?",
+          "yes": true,
+          "pic": "item-duck"
+        },
+        {
+          "t": "Think! What is in the trunk?"
+        }
+      ],
+      "activity": {
+        "type": "sort",
+        "by": "end",
+        "bins": [
+          "ng",
+          "nk"
+        ],
+        "cards": [
+          "sing",
+          "sink",
+          "wing",
+          "wink",
+          "bang",
+          "bank",
+          "sang",
+          "sank"
+        ]
+      },
+      "story": {
+        "title": "The Skunk",
+        "pages": [
+          {
+            "t": "Sid and Dot sit in the van. Honk, honk!"
+          },
+          {
+            "t": "A skunk is on the path."
+          },
+          {
+            "t": "\"I want to pet it!\" Sid said."
+          },
+          {
+            "t": "\"Think, Sid! It is a skunk!\" said Dot."
+          },
+          {
+            "t": "Then the skunk runs off. Dot and Sid grin."
+          }
+        ],
+        "question": {
+          "t": "Did Sid pet the skunk?",
+          "yes": false
+        }
+      },
+      "parentNote": "nk sounds like ng with a k at the end (pink, think). 'want' is tricky: the a says o."
+    },
+    {
+      "n": 39,
+      "title": "Endings: -ed",
+      "skill": "-ed says /t/, /d/ or /id/; tricky word: could",
+      "phase": "Two letters, one sound",
+      "teach": [
+        {
+          "type": "concept",
+          "id": "ed-ending",
+          "say": "ed at the end means it already happened. It can say t, like jumped, d, like filled, or id, like landed.",
+          "examples": [
+            "jumped",
+            "filled",
+            "landed"
+          ]
+        },
+        {
+          "type": "sight",
+          "w": "could"
+        }
+      ],
+      "review": [
+        "nk",
+        "want",
+        "ng"
+      ],
+      "words": [
+        {
+          "w": "jumped",
+          "seg": [
+            "j",
+            "u",
+            "m",
+            "p",
+            "_e",
+            "d:t"
+          ]
+        },
+        {
+          "w": "fished",
+          "seg": [
+            "f",
+            "i",
+            "sh",
+            "_e",
+            "d:t"
+          ]
+        },
+        {
+          "w": "kicked",
+          "seg": [
+            "k",
+            "i",
+            "ck",
+            "_e",
+            "d:t"
+          ]
+        },
+        {
+          "w": "packed",
+          "seg": [
+            "p",
+            "a",
+            "ck",
+            "_e",
+            "d:t"
+          ]
+        },
+        {
+          "w": "filled",
+          "seg": [
+            "f",
+            "i",
+            "ll",
+            "_e",
+            "d"
+          ]
+        },
+        {
+          "w": "yelled",
+          "seg": [
+            "y",
+            "e",
+            "ll",
+            "_e",
+            "d"
+          ]
+        },
+        {
+          "w": "spilled",
+          "seg": [
+            "s",
+            "p",
+            "i",
+            "ll",
+            "_e",
+            "d"
+          ]
+        },
+        {
+          "w": "hummed",
+          "seg": [
+            "h",
+            "u",
+            "m",
+            "m",
+            "_e",
+            "d"
+          ]
+        },
+        {
+          "w": "landed",
+          "seg": [
+            "l",
+            "a",
+            "n",
+            "d",
+            "e:i",
+            "d"
+          ]
+        },
+        {
+          "w": "ended",
+          "seg": [
+            "e",
+            "n",
+            "d",
+            "e:i",
+            "d"
+          ]
+        },
+        {
+          "w": "melted",
+          "seg": [
+            "m",
+            "e",
+            "l",
+            "t",
+            "e:i",
+            "d"
+          ]
+        },
+        {
+          "w": "rested",
+          "seg": [
+            "r",
+            "e",
+            "s",
+            "t",
+            "e:i",
+            "d"
+          ]
+        }
+      ],
+      "build": [
+        "fish",
+        "melt"
+      ],
+      "sentences": [
+        {
+          "t": "The pup jumped up on the bed.",
+          "pic": "pic-bed"
+        },
+        {
+          "t": "Could a rock swim?",
+          "yes": false,
+          "pic": "item-rock"
+        },
+        {
+          "t": "Could a duck swim?",
+          "yes": true,
+          "pic": "item-duck"
+        },
+        {
+          "t": "Sid kicked the can, and it landed in the pond."
+        }
+      ],
+      "activity": {
+        "type": "color",
+        "picture": "color-camp"
+      },
+      "story": {
+        "title": "The Big Splash",
+        "pages": [
+          {
+            "t": "Dot and Sid fished at the pond."
+          },
+          {
+            "t": "The net filled up. It was a big fish!"
+          },
+          {
+            "t": "The fish jumped and kicked."
+          },
+          {
+            "t": "Splash! It landed back in the pond."
+          },
+          {
+            "t": "Sid yelled, and then he grinned."
+          }
+        ],
+        "question": {
+          "t": "Did the fish land in the pond?",
+          "yes": true
+        }
+      },
+      "parentNote": "-ed means it already happened. It says /t/ (jumped), /d/ (filled) or /id/ after t or d (landed). The e is often silent. 'could' is tricky."
+    },
+    {
+      "n": 40,
+      "title": "Endings: -ing",
+      "skill": "-ing endings; tricky word: would",
+      "phase": "Two letters, one sound",
+      "teach": [
+        {
+          "type": "concept",
+          "id": "ing-ending",
+          "say": "ing at the end means it is happening now: jumping, fishing, singing.",
+          "examples": [
+            "jumping",
+            "fishing",
+            "singing"
+          ]
+        },
+        {
+          "type": "sight",
+          "w": "would"
+        }
+      ],
+      "review": [
+        "could",
+        "nk",
+        "sh"
+      ],
+      "words": [
+        "jumping",
+        "fishing",
+        "singing",
+        "kicking",
+        "resting",
+        "melting",
+        "yelling",
+        "hunting",
+        {
+          "w": "swimming",
+          "seg": [
+            "s",
+            "w",
+            "i",
+            "m",
+            "m",
+            "i",
+            "ng"
+          ]
+        },
+        {
+          "w": "digging",
+          "seg": [
+            "d",
+            "i",
+            "g",
+            "g",
+            "i",
+            "ng"
+          ]
+        },
+        {
+          "w": "hopping",
+          "seg": [
+            "h",
+            "o",
+            "p",
+            "p",
+            "i",
+            "ng"
+          ]
+        },
+        {
+          "w": "running",
+          "seg": [
+            "r",
+            "u",
+            "n",
+            "n",
+            "i",
+            "ng"
+          ]
+        }
+      ],
+      "build": [
+        "fishing",
+        "singing"
+      ],
+      "sentences": [
+        {
+          "t": "The pup is digging in the sand.",
+          "pic": "pic-pup"
+        },
+        {
+          "t": "Would a frog be hopping?",
+          "yes": true,
+          "pic": "item-frog"
+        },
+        {
+          "t": "Is the rock singing?",
+          "yes": false,
+          "pic": "item-rock"
+        },
+        {
+          "t": "We are fishing at the pond."
+        }
+      ],
+      "activity": {
+        "type": "finish",
+        "items": [
+          {
+            "t": "The pup is _ in the sand.",
+            "pic": "pic-pup",
+            "answer": "digging"
+          },
+          {
+            "t": "The frog is _ on a log.",
+            "pic": "item-frog",
+            "answer": "hopping"
+          },
+          {
+            "t": "Sid is _ a song.",
+            "answer": "singing"
+          }
+        ]
+      },
+      "story": {
+        "title": "Fishing",
+        "pages": [
+          {
+            "t": "Mom and Dot are fishing at the pond."
+          },
+          {
+            "t": "A frog is hopping on a log.",
+            "pic": "item-frog"
+          },
+          {
+            "t": "A duck is swimming. Quack!",
+            "pic": "item-duck"
+          },
+          {
+            "t": "Dot gets a tug. It is a fish!"
+          },
+          {
+            "t": "\"It can swim back,\" said Dot. Splash!"
+          }
+        ],
+        "question": {
+          "t": "Did Dot get a fish?",
+          "yes": true
+        }
+      },
+      "parentNote": "-ing means it is happening now (jumping). Short words double their last letter first: swim, swimming. 'would' is tricky."
+    },
+    {
+      "n": 41,
+      "title": "Blends with l",
+      "skill": "l-blends: bl, cl, fl, gl, pl, sl; tricky word: should",
+      "phase": "Blends",
+      "teach": [
+        {
+          "type": "concept",
+          "id": "l-blends",
+          "say": "Two sounds can blend at the start of a word, like b and l in black. Say them fast: bl, black.",
+          "examples": [
+            "black",
+            "clap",
+            "flag",
+            "plum"
+          ]
+        },
+        {
+          "type": "sight",
+          "w": "should"
+        }
+      ],
+      "review": [
+        "would",
+        "nk",
+        "ch"
+      ],
+      "words": [
+        "black",
+        "clap",
+        "flip",
+        "glad",
+        "plum",
+        "slept",
+        "flag",
+        "plant",
+        "clock",
+        "sled",
+        "glass",
+        "blend"
+      ],
+      "build": [
+        "flag",
+        "plum"
+      ],
+      "sentences": [
+        {
+          "t": "The flag is black and red.",
+          "pic": "pic-flag"
+        },
+        {
+          "t": "Can a plant clap?",
+          "yes": false,
+          "pic": "item-plant"
+        },
+        {
+          "t": "Can a frog flip?",
+          "yes": true,
+          "pic": "item-frog"
+        },
+        {
+          "t": "I should get the sled.",
+          "pic": "pic-sled"
+        }
+      ],
+      "activity": {
+        "type": "sort",
+        "by": "start",
+        "bins": [
+          "bl",
+          "fl"
+        ],
+        "cards": [
+          "bled",
+          "fled",
+          "blip",
+          "flip",
+          "block",
+          "flock",
+          "blush",
+          "flush"
+        ]
+      },
+      "story": {
+        "title": "The Black Sled",
+        "pages": [
+          {
+            "t": "Dot has a black sled.",
+            "pic": "pic-sled"
+          },
+          {
+            "t": "Sid and Dot drag the sled up the hill."
+          },
+          {
+            "t": "Then they sit on it. Zip! The sled slips and spins."
+          },
+          {
+            "t": "Flop! Dot and Sid land in a big drift."
+          },
+          {
+            "t": "\"We should do that from the top!\" said Sid."
+          }
+        ],
+        "question": {
+          "t": "Is the sled black?",
+          "yes": true
+        }
+      },
+      "parentNote": "Blends are two sounds said fast together (bl, cl, fl, gl, pl, sl). If she stops between them, say both sounds, then say them faster. 'should' is tricky."
+    },
+    {
+      "n": 42,
+      "title": "Blends with r",
+      "skill": "r-blends: br, cr, dr, fr, gr, pr, tr; tricky word: two",
+      "phase": "Blends",
+      "teach": [
+        {
+          "type": "concept",
+          "id": "r-blends",
+          "say": "r can blend with the sound before it, like b and r in brick. Say them fast: br, brick.",
+          "examples": [
+            "brick",
+            "crab",
+            "frog",
+            "drum"
+          ]
+        },
+        {
+          "type": "sight",
+          "w": "two"
+        }
+      ],
+      "review": [
+        "should",
+        "wh",
+        "ng"
+      ],
+      "words": [
+        "brick",
+        "crab",
+        "dress",
+        "frog",
+        "grin",
+        "trust",
+        "drum",
+        "trip",
+        "press",
+        "crisp",
+        "grab",
+        "track"
+      ],
+      "build": [
+        "crab",
+        "drum"
+      ],
+      "sentences": [
+        {
+          "t": "Two crabs sit on a rock.",
+          "pic": "item-crab"
+        },
+        {
+          "t": "Can a drum hop?",
+          "yes": false,
+          "pic": "item-drum"
+        },
+        {
+          "t": "Can a frog swim?",
+          "yes": true,
+          "pic": "item-frog"
+        },
+        {
+          "t": "Fred has a red dress and a drum.",
+          "pic": "pic-dress"
+        }
+      ],
+      "activity": {
+        "type": "clue",
+        "items": [
+          {
+            "clues": [
+              "It has a shell.",
+              "It can pinch."
+            ],
+            "answer": "crab",
+            "options": [
+              "crab",
+              "frog",
+              "ant"
+            ]
+          },
+          {
+            "clues": [
+              "It is wet and it can swim.",
+              "It can hop from a log to a rock."
+            ],
+            "answer": "frog",
+            "options": [
+              "frog",
+              "duck",
+              "crab"
+            ]
+          },
+          {
+            "clues": [
+              "It naps in the mud.",
+              "It is pink."
+            ],
+            "answer": "pig",
+            "options": [
+              "pig",
+              "rabbit",
+              "dog"
+            ]
+          }
+        ]
+      },
+      "story": {
+        "title": "The Trip",
+        "pages": [
+          {
+            "t": "Fred and Dot get on a bus. It is a big trip.",
+            "pic": "item-bus"
+          },
+          {
+            "t": "At the pond, Fred spots a frog.",
+            "pic": "item-frog"
+          },
+          {
+            "t": "The frog grins at Fred. Fred grins back."
+          },
+          {
+            "t": "Then Dot spots two frogs on a big brick.",
+            "pic": "pic-brick"
+          },
+          {
+            "t": "\"Two frogs!\" said Dot. \"What a trip!\""
+          }
+        ],
+        "question": {
+          "t": "Did Fred spot a frog?",
+          "yes": true
+        }
+      },
+      "parentNote": "r-blends: br, cr, dr, fr, gr, pr, tr. Say the first sound and slide into the r. 'two' is tricky."
+    },
+    {
+      "n": 43,
+      "title": "Blends with s",
+      "skill": "s-blends: sc, sk, sm, sn, sp, st, sw; tricky word review: was",
+      "phase": "Blends",
+      "teach": [
+        {
+          "type": "concept",
+          "id": "s-blends",
+          "say": "s can blend with the next sound, like s and n in snap. Say them fast: sn, snap.",
+          "examples": [
+            "snap",
+            "spot",
+            "swim",
+            "skunk"
+          ]
+        }
+      ],
+      "review": [
+        "was",
+        "two",
+        "qu"
+      ],
+      "words": [
+        "scab",
+        "skunk",
+        "smell",
+        "snap",
+        "spot",
+        "swim",
+        "stop",
+        "snack",
+        "swing",
+        "spin",
+        "step",
+        "skip"
+      ],
+      "build": [
+        "snap",
+        "swim"
+      ],
+      "sentences": [
+        {
+          "t": "The skunk has a bad smell.",
+          "pic": "pic-skunk"
+        },
+        {
+          "t": "Can a fish swim?",
+          "yes": true,
+          "pic": "pic-fish"
+        },
+        {
+          "t": "Can a snack sing?",
+          "yes": false,
+          "pic": "item-snack"
+        },
+        {
+          "t": "Stop! Was that a skunk?"
+        }
+      ],
+      "activity": {
+        "type": "pic-match",
+        "words": [
+          "skunk",
+          "snack",
+          "swing"
+        ]
+      },
+      "story": {
+        "title": "Snack Stop",
+        "pages": [
+          {
+            "t": "Sam has a snack in a bag.",
+            "pic": "item-snack"
+          },
+          {
+            "t": "He sits on a swing to snack.",
+            "pic": "pic-swing"
+          },
+          {
+            "t": "Then a skunk steps up.",
+            "pic": "pic-skunk"
+          },
+          {
+            "t": "Sam stops. The skunk sniffs the snack."
+          },
+          {
+            "t": "Sam lets the skunk snack. That was the end of the snack!"
+          }
+        ],
+        "question": {
+          "t": "Did the skunk get the snack?",
+          "yes": true
+        }
+      },
+      "parentNote": "s-blends: sc, sk, sm, sn, sp, st, sw. Hold the s, then slide to the next sound. 'was' comes back for practice."
+    },
+    {
+      "n": 44,
+      "title": "Blends at the end",
+      "skill": "end blends: -nd, -nt, -st, -mp, -lt, -ft, -sk, -lk; tricky word: put",
+      "phase": "Blends",
+      "teach": [
+        {
+          "type": "concept",
+          "id": "end-blends",
+          "say": "Two sounds can blend at the end of a word too, like n and d in pond. Say them both: nd, pond.",
+          "examples": [
+            "pond",
+            "tent",
+            "lamp",
+            "gift"
+          ]
+        },
+        {
+          "type": "sight",
+          "w": "put"
+        }
+      ],
+      "review": [
+        "two",
+        "was",
+        "nk"
+      ],
+      "words": [
+        "pond",
+        "tent",
+        "nest",
+        "lamp",
+        "belt",
+        "gift",
+        "desk",
+        "milk",
+        "hand",
+        "jump",
+        "melt",
+        "raft"
+      ],
+      "build": [
+        "lamp",
+        "gift"
+      ],
+      "sentences": [
+        {
+          "t": "Put the lamp on the desk.",
+          "pic": "item-lamp"
+        },
+        {
+          "t": "Can you put milk in a cup?",
+          "yes": true,
+          "pic": "item-milk"
+        },
+        {
+          "t": "Can a lamp jump?",
+          "yes": false,
+          "pic": "item-lamp"
+        },
+        {
+          "t": "Put the gift on the desk.",
+          "pic": "item-gift"
+        }
+      ],
+      "activity": {
+        "type": "hear-word",
+        "words": [
+          "pond",
+          "tent",
+          "nest",
+          "lamp",
+          "belt",
+          "gift",
+          "desk",
+          "milk"
+        ]
+      },
+      "story": {
+        "title": "The Gift",
+        "pages": [
+          {
+            "t": "Mom hands Dot a gift.",
+            "pic": "item-gift"
+          },
+          {
+            "t": "Dot rips the top off the box."
+          },
+          {
+            "t": "In the box is a tent!",
+            "pic": "item-tent"
+          },
+          {
+            "t": "Dot and Mom set up the tent."
+          },
+          {
+            "t": "Dot gets in the tent with a lamp and her pup.",
+            "pic": "item-lamp"
+          }
+        ],
+        "question": {
+          "t": "Was the gift a tent?",
+          "yes": true
+        }
+      },
+      "parentNote": "End blends: -nd, -nt, -st, -mp, -lt, -ft, -sk, -lk. Make sure she says both last sounds (tent, not ten). 'put' is tricky."
+    },
+    {
+      "n": 45,
+      "title": "Three-letter blends",
+      "skill": "three-letter blends: scr, spr, str, spl, squ, shr, thr; tricky word: push",
+      "phase": "Blends",
+      "teach": [
+        {
+          "type": "concept",
+          "id": "three-blends",
+          "say": "Three sounds can blend at the start, like s, t and r in strap. Say them fast: str, strap.",
+          "examples": [
+            "strap",
+            "splash",
+            "scrub",
+            "shrimp"
+          ]
+        },
+        {
+          "type": "sight",
+          "w": "push"
+        }
+      ],
+      "review": [
+        "put",
+        "th",
+        "sh"
+      ],
+      "words": [
+        "scrub",
+        "sprint",
+        "strap",
+        "splash",
+        "squid",
+        "shrimp",
+        "thrill",
+        "string",
+        "spring",
+        "scrap",
+        "split",
+        "strict"
+      ],
+      "build": [
+        "strap",
+        "splash"
+      ],
+      "sentences": [
+        {
+          "t": "Can a squid swim?",
+          "yes": true,
+          "pic": "pic-squid"
+        },
+        {
+          "t": "Can a string sprint?",
+          "yes": false,
+          "pic": "pic-string"
+        },
+        {
+          "t": "The shrimp swim in the splash.",
+          "pic": "pic-shrimp"
+        },
+        {
+          "t": "Push the swing, and I will hang on.",
+          "pic": "pic-swing"
+        }
+      ],
+      "activity": {
+        "type": "finish",
+        "items": [
+          {
+            "t": "The _ can swim.",
+            "pic": "pic-squid",
+            "answer": "squid"
+          },
+          {
+            "t": "Tug the _.",
+            "pic": "pic-string",
+            "answer": "string"
+          },
+          {
+            "t": "Mom will _ the pan.",
+            "pic": "item-pan",
+            "answer": "scrub",
+            "wrong": [
+              "strap",
+              "sprint"
+            ]
+          }
+        ]
+      },
+      "story": {
+        "title": "Splash!",
+        "pages": [
+          {
+            "t": "It is spring. Dot and Sid run to the pond."
+          },
+          {
+            "t": "Sid sprints to the end of the dock."
+          },
+          {
+            "t": "Splash! Sid is in the pond!",
+            "pic": "pic-splash"
+          },
+          {
+            "t": "Dot tugs Sid up on a strap."
+          },
+          {
+            "t": "Sid is wet, but he grins. What a thrill!"
+          }
+        ],
+        "question": {
+          "t": "Did Sid splash in the pond?",
+          "yes": true
+        }
+      },
+      "parentNote": "Three-letter blends: scr, spr, str, spl, squ, shr, thr. Go slowly, one sound at a time, then faster. 'push' is tricky."
+    },
+    {
+      "n": 46,
+      "title": "The Lost Kitten",
+      "skill": "Review of blends and short vowels; tricky word: pull",
+      "phase": "Blends",
+      "teach": [
+        {
+          "type": "sight",
+          "w": "pull"
+        }
+      ],
+      "review": [
+        "push",
+        "put",
+        "should"
+      ],
+      "words": [
+        "kitten",
+        "lost",
+        "black",
+        "crisp",
+        "spot",
+        "shelf",
+        "trunk",
+        "pond",
+        "sniff",
+        "blanket",
+        "basket",
+        "twitch"
+      ],
+      "build": [
+        "kitten",
+        "blanket"
+      ],
+      "sentences": [
+        {
+          "t": "Pull the blanket up.",
+          "pic": "pic-blanket"
+        },
+        {
+          "t": "Is the kitten in the basket?",
+          "yes": true,
+          "pic": "item-basket"
+        },
+        {
+          "t": "Can a trunk sing?",
+          "yes": false,
+          "pic": "pic-trunk"
+        },
+        {
+          "t": "The kitten is lost. Help!"
+        }
+      ],
+      "activity": {
+        "type": "direction",
+        "picture": "color-cat",
+        "steps": [
+          {
+            "t": "Tap tan. Tap the cat.",
+            "part": "cat",
+            "color": "tan"
+          },
+          {
+            "t": "Tap red. Tap the hat.",
+            "part": "hat",
+            "color": "red"
+          },
+          {
+            "t": "Tap the mat.",
+            "part": "mat"
+          }
+        ]
+      },
+      "story": {
+        "title": "The Lost Kitten",
+        "pages": [
+          {
+            "t": "Dot has a black kitten, Mittens.",
+            "pic": "pic-kitten"
+          },
+          {
+            "t": "Then Mittens is lost! Dot checks the basket. It is not in the basket.",
+            "pic": "item-basket"
+          },
+          {
+            "t": "Dot checks the shelf and the trunk. It is not there.",
+            "pic": "pic-trunk"
+          },
+          {
+            "t": "Then Dot spots a lump in the blanket. The lump twitches!"
+          },
+          {
+            "t": "Dot pulls the blanket. It is Mittens! The kitten was in the blanket.",
+            "pic": "pic-blanket"
+          }
+        ],
+        "question": {
+          "t": "Was the kitten in the basket?",
+          "yes": false
+        }
+      },
+      "parentNote": "A review of blends. The story is a little mystery: before the last page, ask her where she thinks the kitten is. 'pull' is tricky."
+    },
+    {
+      "n": 47,
+      "title": "Meet a_e",
+      "skill": "a with silent e (cake, game); tricky word: give",
+      "phase": "Long vowels: silent e",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "a_e"
+        },
+        {
+          "type": "sight",
+          "w": "give"
+        }
+      ],
+      "review": [
+        "pull",
+        "push",
+        "ch"
+      ],
+      "words": [
+        "cake",
+        "game",
+        "plate",
+        "snake",
+        "grape",
+        "make",
+        "gate",
+        "lake",
+        "name",
+        "cave",
+        "shape",
+        "skate"
+      ],
+      "build": [
+        "cake",
+        "snake"
+      ],
+      "sentences": [
+        {
+          "t": "Give me the cake!",
+          "pic": "item-cake"
+        },
+        {
+          "t": "Can a snake skate?",
+          "yes": false,
+          "pic": "pic-snake"
+        },
+        {
+          "t": "Can you make a cake?",
+          "yes": true,
+          "pic": "item-cake"
+        },
+        {
+          "t": "Kate made a shape on the plate.",
+          "pic": "pic-plate"
+        }
+      ],
+      "activity": {
+        "type": "sort",
+        "by": "end",
+        "bins": [
+          "ake",
+          "ate"
+        ],
+        "cards": [
+          "lake",
+          "late",
+          "make",
+          "mate",
+          "rake",
+          "rate",
+          "cake",
+          "gate"
+        ]
+      },
+      "story": {
+        "title": "The Snake Cake",
+        "pages": [
+          {
+            "t": "Kate and Sid make a cake.",
+            "pic": "item-cake"
+          },
+          {
+            "t": "They bake it in a pan. Then they put it on a plate."
+          },
+          {
+            "t": "Kate can make a snake shape on the cake.",
+            "pic": "pic-snake"
+          },
+          {
+            "t": "\"We can name it The Snake Cake!\" said Sid."
+          },
+          {
+            "t": "They give the Snake Cake to Mom. Mom has a big grin."
+          }
+        ],
+        "question": {
+          "t": "Is there a snake on the cake?",
+          "yes": true
+        }
+      },
+      "parentNote": "Silent e makes the a say its name: cap becomes cape. The e at the end makes no sound. 'give' is tricky."
+    },
+    {
+      "n": 48,
+      "title": "Meet i_e",
+      "skill": "i with silent e (kite, bike); tricky word: live",
+      "phase": "Long vowels: silent e",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "i_e"
+        },
+        {
+          "type": "sight",
+          "w": "live"
+        }
+      ],
+      "review": [
+        "give",
+        "a_e",
+        "sh"
+      ],
+      "words": [
+        "bike",
+        "kite",
+        "slide",
+        "smile",
+        "prize",
+        "time",
+        "line",
+        "hide",
+        "ride",
+        "pine",
+        "fine",
+        "white"
+      ],
+      "build": [
+        "kite",
+        "smile"
+      ],
+      "sentences": [
+        {
+          "t": "We live in a red hut."
+        },
+        {
+          "t": "Can a kite ride a bike?",
+          "yes": false,
+          "pic": "item-kite"
+        },
+        {
+          "t": "Can you ride a bike?",
+          "yes": true,
+          "pic": "pic-bike"
+        },
+        {
+          "t": "Mike has a big smile."
+        }
+      ],
+      "activity": {
+        "type": "pic-match",
+        "words": [
+          "kite",
+          "bike",
+          "slide"
+        ]
+      },
+      "story": {
+        "title": "The Kite Prize",
+        "pages": [
+          {
+            "t": "Mike has a white kite.",
+            "pic": "item-kite"
+          },
+          {
+            "t": "He can ride his bike up the hill with it.",
+            "pic": "pic-bike"
+          },
+          {
+            "t": "The wind lifts the kite up and up."
+          },
+          {
+            "t": "It is the best kite on the hill!"
+          },
+          {
+            "t": "Mike wins the prize. What a big smile!"
+          }
+        ],
+        "question": {
+          "t": "Did Mike win the prize?",
+          "yes": true
+        }
+      },
+      "parentNote": "Silent e makes the i say its name: kit becomes kite. 'live' is tricky (it rhymes with give)."
+    },
+    {
+      "n": 49,
+      "title": "Meet o_e",
+      "skill": "o with silent e (home, bone); tricky word: done",
+      "phase": "Long vowels: silent e",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "o_e"
+        },
+        {
+          "type": "sight",
+          "w": "done"
+        }
+      ],
+      "review": [
+        "live",
+        "i_e",
+        "a_e"
+      ],
+      "words": [
+        "home",
+        "bone",
+        "stone",
+        "hope",
+        "rope",
+        "hole",
+        "pole",
+        "joke",
+        "smoke",
+        "note",
+        "globe",
+        "stove"
+      ],
+      "build": [
+        "bone",
+        "rope"
+      ],
+      "sentences": [
+        {
+          "t": "The dog is done with the bone.",
+          "pic": "item-dog"
+        },
+        {
+          "t": "Can a stone tell a joke?",
+          "yes": false,
+          "pic": "pic-stone"
+        },
+        {
+          "t": "Can a dog dig a hole?",
+          "yes": true,
+          "pic": "item-dog"
+        },
+        {
+          "t": "I hope we get home in time."
+        }
+      ],
+      "activity": {
+        "type": "hear-word",
+        "words": [
+          "home",
+          "bone",
+          "stone",
+          "hope",
+          "rope",
+          "note"
+        ]
+      },
+      "story": {
+        "title": "Rex and the Bone",
+        "pages": [
+          {
+            "t": "Rex the dog has a big bone.",
+            "pic": "item-dog"
+          },
+          {
+            "t": "He digs a hole and drops the bone in it.",
+            "pic": "pic-bone"
+          },
+          {
+            "t": "Then Rex trots home."
+          },
+          {
+            "t": "Rex can nap. The bone is safe in the hole."
+          },
+          {
+            "t": "When Rex is done with his nap, he digs up the bone. Yum!"
+          }
+        ],
+        "question": {
+          "t": "Did Rex dig a hole?",
+          "yes": true
+        }
+      },
+      "parentNote": "Silent e makes the o say its name: hop becomes hope. 'done' is tricky."
+    },
+    {
+      "n": 50,
+      "title": "Meet u_e",
+      "skill": "u with silent e (cute, tune); tricky word: gone",
+      "phase": "Long vowels: silent e",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "u_e"
+        },
+        {
+          "type": "sight",
+          "w": "gone"
+        }
+      ],
+      "review": [
+        "done",
+        "o_e",
+        "i_e"
+      ],
+      "words": [
+        "cute",
+        "mule",
+        "cube",
+        "mute",
+        {
+          "w": "tune",
+          "seg": [
+            "t",
+            "u_e:oo",
+            "n",
+            "_e"
+          ]
+        },
+        {
+          "w": "flute",
+          "seg": [
+            "f",
+            "l",
+            "u_e:oo",
+            "t",
+            "_e"
+          ]
+        },
+        {
+          "w": "June",
+          "seg": [
+            "j",
+            "u_e:oo",
+            "n",
+            "_e"
+          ]
+        },
+        {
+          "w": "rule",
+          "seg": [
+            "r",
+            "u_e:oo",
+            "l",
+            "_e"
+          ]
+        },
+        {
+          "w": "tube",
+          "seg": [
+            "t",
+            "u_e:oo",
+            "b",
+            "_e"
+          ]
+        },
+        {
+          "w": "dune",
+          "seg": [
+            "d",
+            "u_e:oo",
+            "n",
+            "_e"
+          ]
+        },
+        {
+          "w": "prune",
+          "seg": [
+            "p",
+            "r",
+            "u_e:oo",
+            "n",
+            "_e"
+          ]
+        },
+        "huge"
+      ],
+      "build": [
+        "cube",
+        "mule"
+      ],
+      "sentences": [
+        {
+          "t": "The mule has gone up the hill.",
+          "pic": "pic-mule"
+        },
+        {
+          "t": "Is a cube a cute pet?",
+          "yes": false,
+          "pic": "pic-cube"
+        },
+        {
+          "t": "Can you hum a tune?",
+          "yes": true
+        },
+        {
+          "t": "June has a flute.",
+          "pic": "pic-flute"
+        }
+      ],
+      "activity": {
+        "type": "finish",
+        "items": [
+          {
+            "t": "June has a _.",
+            "pic": "pic-flute",
+            "answer": "flute",
+            "wrong": [
+              "flat",
+              "flip"
+            ]
+          },
+          {
+            "t": "The _ is a cute pet.",
+            "pic": "pic-pup",
+            "answer": "pup"
+          },
+          {
+            "t": "Sid hums a _.",
+            "answer": "tune",
+            "wrong": [
+              "tub",
+              "ten"
+            ]
+          }
+        ]
+      },
+      "story": {
+        "title": "June and the Mule",
+        "pages": [
+          {
+            "t": "June has a cute mule.",
+            "pic": "pic-mule"
+          },
+          {
+            "t": "The mule can hum a tune with June."
+          },
+          {
+            "t": "Then the mule is gone!"
+          },
+          {
+            "t": "June hums the mule tune. Hum, hum, hum!"
+          },
+          {
+            "t": "The mule trots back to June. What a cute mule!"
+          }
+        ],
+        "question": {
+          "t": "Did the mule come back?",
+          "yes": true
+        }
+      },
+      "parentNote": "Silent e makes the u say its name (cute, mule) or /oo/ (tune, flute, June). Try both and listen for the real word. 'gone' is tricky."
+    },
+    {
+      "n": 51,
+      "title": "Meet e_e",
+      "skill": "e with silent e (these, Pete), and silent e review; tricky word: love",
+      "phase": "Long vowels: silent e",
+      "teach": [
+        {
+          "type": "grapheme",
+          "g": "e_e"
+        },
+        {
+          "type": "sight",
+          "w": "love"
+        }
+      ],
+      "review": [
+        "gone",
+        "u_e",
+        "a_e"
+      ],
+      "words": [
+        {
+          "w": "these",
+          "seg": [
+            "th:dh",
+            "e_e",
+            "s:z",
+            "_e"
+          ]
+        },
+        "Pete",
+        "theme",
+        "Steve",
+        "eve",
+        "compete",
+        "complete",
+        "concrete",
+        "stampede",
+        "athlete",
+        "kite",
+        "cube"
+      ],
+      "build": [
+        "theme",
+        "compete"
+      ],
+      "sentences": [
+        {
+          "t": "I love these kids!"
+        },
+        {
+          "t": "Can a cube compete?",
+          "yes": false,
+          "pic": "pic-cube"
+        },
+        {
+          "t": "Can an athlete run fast?",
+          "yes": true
+        },
+        {
+          "t": "Pete and Steve love to skate."
+        }
+      ],
+      "activity": {
+        "type": "color",
+        "picture": "color-camp"
+      },
+      "story": {
+        "title": "Pete and Steve",
+        "pages": [
+          {
+            "t": "Pete and Steve are twins."
+          },
+          {
+            "t": "These twins love to compete."
+          },
+          {
+            "t": "Pete can skate fast. Steve can ride a bike fast.",
+            "pic": "pic-bike"
+          },
+          {
+            "t": "At the lake, the twins get to the end at the same time."
+          },
+          {
+            "t": "\"We love to compete,\" said Steve. \"Let us do it next June!\""
+          }
+        ],
+        "question": {
+          "t": "Are Pete and Steve twins?",
+          "yes": true
+        }
+      },
+      "parentNote": "Silent e makes the e say its name: Pete, these, theme. Not many words use it, so this lesson also reviews a_e, i_e, o_e and u_e. 'love' is tricky."
+    },
+    {
+      "n": 52,
+      "title": "Soft c",
+      "skill": "c says /s/ before e and i (ice, face, cent); tricky word: once",
+      "phase": "Long vowels: silent e",
+      "teach": [
+        {
+          "type": "concept",
+          "id": "soft-c",
+          "say": "c can say s when e or i comes next, like in ice, face and mice.",
+          "examples": [
+            "ice",
+            "face",
+            "mice",
+            "space"
+          ]
+        },
+        {
+          "type": "sight",
+          "w": "once"
+        }
+      ],
+      "review": [
+        "love",
+        "e_e",
+        "o_e"
+      ],
+      "words": [
+        {
+          "w": "ice",
+          "seg": [
+            "i_e",
+            "c:s",
+            "_e"
+          ]
+        },
+        {
+          "w": "face",
+          "seg": [
+            "f",
+            "a_e",
+            "c:s",
+            "_e"
+          ]
+        },
+        {
+          "w": "mice",
+          "seg": [
+            "m",
+            "i_e",
+            "c:s",
+            "_e"
+          ]
+        },
+        {
+          "w": "space",
+          "seg": [
+            "s",
+            "p",
+            "a_e",
+            "c:s",
+            "_e"
+          ]
+        },
+        {
+          "w": "race",
+          "seg": [
+            "r",
+            "a_e",
+            "c:s",
+            "_e"
+          ]
+        },
+        {
+          "w": "rice",
+          "seg": [
+            "r",
+            "i_e",
+            "c:s",
+            "_e"
+          ]
+        },
+        {
+          "w": "nice",
+          "seg": [
+            "n",
+            "i_e",
+            "c:s",
+            "_e"
+          ]
+        },
+        {
+          "w": "slice",
+          "seg": [
+            "s",
+            "l",
+            "i_e",
+            "c:s",
+            "_e"
+          ]
+        },
+        {
+          "w": "place",
+          "seg": [
+            "p",
+            "l",
+            "a_e",
+            "c:s",
+            "_e"
+          ]
+        },
+        {
+          "w": "dice",
+          "seg": [
+            "d",
+            "i_e",
+            "c:s",
+            "_e"
+          ]
+        },
+        {
+          "w": "cent",
+          "seg": [
+            "c:s",
+            "e",
+            "n",
+            "t"
+          ]
+        },
+        {
+          "w": "cell",
+          "seg": [
+            "c:s",
+            "e",
+            "ll"
+          ]
+        }
+      ],
+      "build": [
+        "stone",
+        "plate"
+      ],
+      "sentences": [
+        {
+          "t": "Once, two mice ran a race.",
+          "pic": "pic-mice"
+        },
+        {
+          "t": "Is ice hot?",
+          "yes": false,
+          "pic": "pic-ice"
+        },
+        {
+          "t": "Can mice run fast?",
+          "yes": true
+        },
+        {
+          "t": "Give me a slice of cake.",
+          "pic": "pic-slice"
+        }
+      ],
+      "activity": {
+        "type": "clue",
+        "items": [
+          {
+            "clues": [
+              "It is a pet.",
+              "It can chase mice."
+            ],
+            "answer": "cat",
+            "options": [
+              "cat",
+              "dog",
+              "rat"
+            ]
+          },
+          {
+            "clues": [
+              "It is wet and it can swim.",
+              "It can hop on a stone in the pond."
+            ],
+            "answer": "frog",
+            "options": [
+              "frog",
+              "duck",
+              "fox"
+            ]
+          },
+          {
+            "clues": [
+              "It has a shell.",
+              "It can pinch."
+            ],
+            "answer": "crab",
+            "options": [
+              "crab",
+              "bug",
+              "ant"
+            ]
+          }
+        ]
+      },
+      "story": {
+        "title": "Mice in Space",
+        "pages": [
+          {
+            "t": "Once, two mice made a space ship.",
+            "pic": "pic-mice"
+          },
+          {
+            "t": "They put rice and a slice of cake in it.",
+            "pic": "pic-rice"
+          },
+          {
+            "t": "Then they went up, up, up to space!"
+          },
+          {
+            "t": "In space, the mice spin and race. What a nice place!"
+          },
+          {
+            "t": "Then the mice came home. What a fun trip!"
+          }
+        ],
+        "question": {
+          "t": "Did the mice take rice?",
+          "yes": true
+        }
+      },
+      "parentNote": "c says /s/ when e, i or y comes after it (ice, face, cent). Before a, o and u it says /k/ (cat, cot, cup). 'once' is tricky."
     }
   ]
 }

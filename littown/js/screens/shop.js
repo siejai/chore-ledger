@@ -5,16 +5,17 @@
   var RA = w.RA, U = RA.U, UI = RA.UI, S = RA.Screens, E = RA.Engine, A = RA.Audio;
   var ART = w.ART;
 
-  var TAB_ICONS = { hair: 'ui-hanger', clothes: 'ui-hanger', home: 'ui-decor' };
-  var TAB_LABELS = { hair: 'Hair', clothes: 'Clothes', home: 'Home' };
+  var TAB_ICONS = { hair: 'ui-hanger', clothes: 'ui-hanger', home: 'ui-decor', school: 'ui-room-class' };
+  var TAB_LABELS = { hair: 'Hair', clothes: 'Clothes', home: 'Home', school: 'School' };
   var LOOK_KEY = { hair: 'hairStyle', top: 'top', bot: 'bot', shoes: 'shoes', acc: 'acc', eyecolor: 'eye' };
   var CROP = { hair: 'head', eyecolor: 'head' };
 
-  function tabs() {
+  function tabs(p) {
     var t = (E.world().shop && E.world().shop.tabs) || [
       { id: 'hair', slots: ['hair'] }, { id: 'clothes', slots: ['top', 'bot', 'shoes', 'acc'] }, { id: 'home', location: 'home' }
     ];
-    return t;
+    // a place's tab (the school) shows up once that place is lit
+    return t.filter(function (tab) { return !tab.location || !p || E.isUnlocked(p, 'loc:' + tab.location); });
   }
 
   /** Picture for a catalog entry: her own character wearing it, or the item itself. */
@@ -39,7 +40,7 @@
   S.shop = {
     show: function (root, tabId) {
       var p = RA.state.profile;
-      var list = tabs();
+      var list = tabs(p);
       var tab = list[0], i;
       for (i = 0; i < list.length; i++) { if (list[i].id === tabId) { tab = list[i]; } }
 

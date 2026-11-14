@@ -160,7 +160,8 @@
     // tricky words (and anything she can't sound out) get real look-alike words only
     if (P.isSight(t, n) || !P.segment(t, n)) { return lookAlikes(target, n, need); }
     var tg = graphemesOf(t, n);
-    var cands = realWords(n).filter(function (w) { return w !== t; }).map(function (w) { return { w: w, d: soundDistance(tg, graphemesOf(w, n)), g: graphemesOf(w, n) }; })
+    // (not tricky words: they don't sound the way they're spelled, so "do" is no near miss for "doll")
+    var cands = realWords(n).filter(function (w) { return w !== t && !P.isSight(w, n); }).map(function (w) { return { w: w, d: soundDistance(tg, graphemesOf(w, n)), g: graphemesOf(w, n) }; })
       .filter(function (c) { return c.d < 9; });
     cands = U.shuffle(cands);
     // one-sound swaps first, spread over different positions (beginning, middle, end)
@@ -324,7 +325,9 @@
     var seg = P.segment(word, n);
     if (!seg || seg.length < 2) { return null; }
     var tiles = seg.filter(function (x) { return !x.silent; }).map(function (x) { return x.g; });
-    var known = P.knownGraphemes(n).filter(function (g) { return g.indexOf('_') < 0 && g.length === 1 && !U.contains(tiles, g); });
+    // a split vowel tile (a_e) shows as its letter, so a plain "a" spare would look the same: leave those out
+    var splitVowels = tiles.filter(function (g) { return g.indexOf('_') > 0; }).map(function (g) { return g.charAt(0); });
+    var known = P.knownGraphemes(n).filter(function (g) { return g.indexOf('_') < 0 && g.length === 1 && !U.contains(tiles, g) && !U.contains(splitVowels, g); });
     // the spare tile is a near miss: a sound that is easy to mix up with one in the word (mat → n, p, o…)
     var near = [];
     tiles.forEach(function (g) { (CONFUSE[g] || []).forEach(function (c) { if (U.contains(known, c) && !U.contains(near, c)) { near.push(c); } }); });
